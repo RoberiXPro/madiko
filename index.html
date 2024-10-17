@@ -119,11 +119,11 @@ function joinRoom() {
                 messages: {}
             });
             alert("Room créé avec succès !");
-            document.getElementById("room-name-display").textContent = "Room : " + roomName;
+            document.getElementById("room-name-display").textContent = "Villa : " + roomName;
             switchToChat();
         } else if (dbPassword === password) {
             alert("Connexion réussie !");
-            document.getElementById("room-name-display").textContent = "Room : " + roomName;
+            document.getElementById("room-name-display").textContent = "Villa : " + roomName;
             switchToChat();
         } else {
             alert("Mot de passe incorrect !");
