@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RS-Chat - Room sécurisé</title>
+    <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -63,12 +63,12 @@
     </style>
 </head>
 <body>
-    <h1>RS-Chat</h1>
+    <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
     <div id="login-container">
-        <input type="text" id="username" placeholder="Votre pseudo" required><br>
-        <input type="text" id="room-name-input" placeholder="Nom du room" required><br>
+        <input type="text" id="username" placeholder="Eto ny pseudo" required><br>
+        <input type="text" id="room-name-input" placeholder="Nom du villa" required><br>
         <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Rejoindre le room</button>
     </div>
@@ -77,7 +77,7 @@
     <div id="chat-container">
         <div id="messages"></div>
         <div id="input-section">
-            <input type="text" id="message-input" placeholder="Votre message">
+            <input type="text" id="message-input" placeholder="Eto ny message">
             <button onclick="sendMessage()">Envoyer</button>
             <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
