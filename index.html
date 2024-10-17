@@ -1,90 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat en temps réel</title>
-    <!-- Ajoutez les SDK Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>Chat Room sécurisé</title>
+    <!-- Inclure Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            background-color: #2e2e2e;
             font-family: Arial, sans-serif;
-            background-color: #f3f5f7;
-            margin: 0;
+            color: #ffffff;
         }
+        .chat-title {
+    font-size: 2em;
+    color: #00bcd4;
+    text-align: center;
+    margin-bottom: 20px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
         #chat-container {
-            width: 400px;
-            background: #ffffff;
+            width: 60%;
+            max-width: 600px;
+            background-color: #3c3c3c;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            border-radius: 10px;
         }
-        #chat-window {
+        #messages {
             max-height: 300px;
             overflow-y: auto;
-            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #2e2e2e;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
         .message {
-            padding: 10px;
-            border-radius: 10px;
-            margin: 5px 0;
-            color: #ffffff;
+            padding: 5px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            word-wrap: break-word;
             max-width: 70%;
-            display: inline-block;
-            text-align: left;
+            color: #fff;
         }
-        .message.sent {
-            background-color: #4caf50;
-            align-self: flex-end;
-        }
-        .message.received {
-            background-color: #2196F3;
-            align-self: flex-start;
-        }
+        .message.user1 { background-color: #8b9dc3; align-self: flex-start; }
+        .message.user2 { background-color: #f7ca88; align-self: flex-end; }
         #input-section {
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            gap: 5px;
         }
-        input[type="text"] {
-            padding: 8px;
-            width: 70%;
-            border: 1px solid #ddd;
+        input, button {
+            padding: 10px;
             border-radius: 5px;
-            margin-right: 5px;
-        }
-        button {
-            padding: 8px 10px;
             border: none;
-            background-color: #4caf50;
-            color: #ffffff;
-            border-radius: 5px;
-            cursor: pointer;
+            outline: none;
         }
+        button { background-color: #5a5a5a; color: white; cursor: pointer; }
+        button:hover { background-color: #4c4c4c; }
+        #clear-btn { background-color: #ff5c5c; }
+        #clear-btn:hover { background-color: #ff3636; }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <h2>Room Chat</h2>
-        <div id="login-section">
-            <input type="text" id="username" placeholder="Entrez votre pseudo" />
-            <input type="password" id="room-password" placeholder="Mot de passe de la room" />
-            <button onclick="joinRoom()">Rejoindre la room</button>
-        </div>
-        <div id="chat-section" style="display: none;">
-            <div id="chat-window"></div>
-            <div id="input-section">
-                <input type="text" id="message" placeholder="Votre message" onkeydown="checkEnter(event)">
-                <button onclick="sendMessage()">Envoyer</button>
-            </div>
+         <h1 class="chat-title">RS-Chat</h1>
+        <div id="messages"></div>
+        <div id="input-section">
+            <input type="text" id="message-input" placeholder="Votre message">
+            <button onclick="sendMessage()">Envoyer</button>
+            <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
     </div>
 
     <script>
-        // Configuration Firebase
+        // Configurer Firebase
         var firebaseConfig = {
             apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
             authDomain: "madiko-rs.firebaseapp.com",
@@ -92,56 +86,44 @@
             projectId: "madiko-rs",
             storageBucket: "madiko-rs.appspot.com",
             messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:aac67e41473794d906b57e"
+            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+            measurementId: "G-EBWFWCMWFT"
         };
         firebase.initializeApp(firebaseConfig);
 
-        let username, roomRef;
+        // Référence à la base de données
+        var db = firebase.database().ref("messages");
 
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            const roomPassword = document.getElementById("room-password").value;
-
-            if (username && roomPassword) {
-                roomRef = firebase.database().ref("rooms/" + roomPassword + "/messages");
-                roomRef.on("child_added", function(snapshot) {
-                    const message = snapshot.val();
-                    displayMessage(message.text, message.user);
-                });
-
-                document.getElementById("login-section").style.display = "none";
-                document.getElementById("chat-section").style.display = "block";
-            } else {
-                alert("Veuillez entrer un pseudo et un mot de passe de room.");
-            }
-        }
-
+        // Fonction d'envoi
         function sendMessage() {
-            const messageText = document.getElementById("message").value;
-            if (messageText) {
-                const message = {
-                    text: messageText,
-                    user: username
-                };
-                roomRef.push().set(message);
-                document.getElementById("message").value = "";
-            }
+            var messageInput = document.getElementById("message-input");
+            var message = messageInput.value;
+            db.push().set({ "user": "user1", "message": message });
+            messageInput.value = '';
         }
 
-        function displayMessage(text, user) {
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message");
-            messageDiv.classList.add(user === username ? "sent" : "received");
-            messageDiv.textContent = `${user}: ${text}`;
-            document.getElementById("chat-window").appendChild(messageDiv);
-            document.getElementById("chat-window").scrollTop = document.getElementById("chat-window").scrollHeight;
+        // Fonction d'affichage des messages
+        db.on("child_added", function(snapshot) {
+            var data = snapshot.val();
+            var msgDiv = document.createElement("div");
+            msgDiv.className = data.user == "user1" ? "message user1" : "message user2";
+            msgDiv.textContent = data.message;
+            document.getElementById("messages").appendChild(msgDiv);
+        });
+
+        // Effacer les messages
+        function clearChat() {
+            db.remove();
+            document.getElementById("messages").innerHTML = '';
         }
 
-        function checkEnter(event) {
+        // Envoyer avec la touche Entrée
+        document.getElementById("message-input").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
+                event.preventDefault();
                 sendMessage();
             }
-        }
+        });
     </script>
 </body>
 </html>
