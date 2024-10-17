@@ -1,61 +1,86 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Chat en Temps Réel avec Suppression</title>
-    <!-- Firebase SDKs -->
+    <title>Chat en temps réel</title>
+    <!-- Ajoutez les SDK Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
+            font-family: Arial, sans-serif;
             background-color: #f3f5f7;
+            margin: 0;
         }
         #chat-container {
-            width: 300px;
+            width: 400px;
+            background: #ffffff;
             padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
         #chat-window {
-            border: 1px solid #ddd;
-            height: 200px;
+            max-height: 300px;
             overflow-y: auto;
-            margin-bottom: 10px;
-            padding: 10px;
+            margin-bottom: 15px;
         }
-        input[type="text"], button {
-            width: 100%;
+        .message {
             padding: 10px;
+            border-radius: 10px;
             margin: 5px 0;
-            border-radius: 5px;
+            color: #ffffff;
+            max-width: 70%;
+            display: inline-block;
+            text-align: left;
+        }
+        .message.sent {
+            background-color: #4caf50;
+            align-self: flex-end;
+        }
+        .message.received {
+            background-color: #2196F3;
+            align-self: flex-start;
+        }
+        #input-section {
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 70%;
             border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 5px;
         }
         button {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
+            padding: 8px 10px;
+            border: none;
+            background-color: #4caf50;
+            color: #ffffff;
+            border-radius: 5px;
             cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <h3>Chat Room</h3>
-        <div id="chat-window"></div>
-        <input type="text" id="message" placeholder="Votre message" onkeypress="checkEnter(event)">
-        <button onclick="sendMessage()">Envoyer</button>
-        <button onclick="clearMessages()">Effacer les messages</button>
+        <h2>Room Chat</h2>
+        <div id="login-section">
+            <input type="text" id="username" placeholder="Entrez votre pseudo" />
+            <input type="password" id="room-password" placeholder="Mot de passe de la room" />
+            <button onclick="joinRoom()">Rejoindre la room</button>
+        </div>
+        <div id="chat-section" style="display: none;">
+            <div id="chat-window"></div>
+            <div id="input-section">
+                <input type="text" id="message" placeholder="Votre message" onkeydown="checkEnter(event)">
+                <button onclick="sendMessage()">Envoyer</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -67,45 +92,53 @@
             projectId: "madiko-rs",
             storageBucket: "madiko-rs.appspot.com",
             messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-            measurementId: "G-EBWFWCMWFT"
+            appId: "1:746083664475:web:aac67e41473794d906b57e"
         };
         firebase.initializeApp(firebaseConfig);
 
-        // Référence à la base de données
-        var db = firebase.database().ref("messages");
+        let username, roomRef;
 
-        // Envoyer un message
-        function sendMessage() {
-            var message = document.getElementById("message").value;
-            if (message) {
-                db.push().set({
-                    "message": message
+        function joinRoom() {
+            username = document.getElementById("username").value;
+            const roomPassword = document.getElementById("room-password").value;
+
+            if (username && roomPassword) {
+                roomRef = firebase.database().ref("rooms/" + roomPassword + "/messages");
+                roomRef.on("child_added", function(snapshot) {
+                    const message = snapshot.val();
+                    displayMessage(message.text, message.user);
                 });
-                document.getElementById("message").value = '';
+
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("chat-section").style.display = "block";
+            } else {
+                alert("Veuillez entrer un pseudo et un mot de passe de room.");
             }
         }
 
-        // Écouter les messages
-        db.on("child_added", function(snapshot) {
-            var msg = snapshot.val().message;
-            var msgDiv = document.createElement("div");
-            msgDiv.textContent = msg;
-            document.getElementById("chat-window").appendChild(msgDiv);
-        });
-
-        // Effacer les messages
-        function clearMessages() {
-            if (confirm("Voulez-vous vraiment supprimer tous les messages ?")) {
-                db.remove()
-                    .then(() => alert("Tous les messages ont été supprimés."))
-                    .catch(error => console.error("Erreur lors de la suppression :", error));
+        function sendMessage() {
+            const messageText = document.getElementById("message").value;
+            if (messageText) {
+                const message = {
+                    text: messageText,
+                    user: username
+                };
+                roomRef.push().set(message);
+                document.getElementById("message").value = "";
             }
         }
 
-        // Vérifier si la touche Entrée est pressée
+        function displayMessage(text, user) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            messageDiv.classList.add(user === username ? "sent" : "received");
+            messageDiv.textContent = `${user}: ${text}`;
+            document.getElementById("chat-window").appendChild(messageDiv);
+            document.getElementById("chat-window").scrollTop = document.getElementById("chat-window").scrollHeight;
+        }
+
         function checkEnter(event) {
-            if (event.key === 'Enter') {
+            if (event.key === "Enter") {
                 sendMessage();
             }
         }
