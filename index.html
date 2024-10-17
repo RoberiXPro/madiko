@@ -3,7 +3,6 @@
 <head>
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
-    <link rel="stylesheet" href="https://unpkg.com/emoji-button@4.6.3/dist/emoji-button.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
@@ -80,13 +79,13 @@
 <div id="room-name-display" style="font-size: 1.2em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
         <div id="messages"></div>
         <div id="input-section">
-             <button id="emoji-btn">😊</button> <!-- Bouton Emoji -->
+
             <input type="text" id="message-input" placeholder="Eto ny message">
             <button onclick="sendMessage()">Envoyer</button>
             <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
     </div>
-<script src="https://unpkg.com/emoji-button@4.6.3/dist/index.js"></script>
+
     <script>
         // Configuration Firebase
         var firebaseConfig = {
@@ -169,17 +168,7 @@ function joinRoom() {
                 sendMessage();
             }
         });
-    // Initialisation de l'emoji-picker
-const picker = new EmojiButton();
-const messageInput = document.getElementById('message-input');
-
-picker.on('emoji', emoji => {
-    messageInput.value += emoji; // Ajoute l'emoji au message
-});
-
-document.getElementById('emoji-btn').addEventListener('click', () => {
-    picker.togglePicker(document.getElementById('emoji-btn'));
-});
+  
     </script>
 </body>
 </html>
