@@ -1,10 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>Chat en temps réel</title>
-    <!-- Ajoutez les SDK Firebase -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- Styles CSS -->
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f3f5f7;
+            font-family: Arial, sans-serif;
+        }
+        #chat-container {
+            width: 400px;
+            max-width: 100%;
+            height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        .user {
+            background-color: #66a2a0;
+            align-self: flex-start;
+            color: white;
+        }
+        .other {
+            background-color: #001d50;
+            align-self: flex-end;
+            color: white;
+        }
+        #input-container {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        #message {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+        button {
+            background-color: #4c7b7b;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-window"></div>
+        <div id="input-container">
+            <input type="text" id="message" placeholder="Votre message..." onkeydown="if (event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>
+
     <script>
         // Configurer Firebase
         var firebaseConfig = {
@@ -18,32 +93,27 @@
             measurementId: "G-94X8VKC465"
         };
         firebase.initializeApp(firebaseConfig);
-    </script>
-</head>
-<body>
-    <!-- Conteneur de chat -->
-    <div id="chat-window"></div>
-    <!-- Champ pour entrer le message -->
-    <input type="text" id="message" placeholder="Votre message">
-    <button onclick="sendMessage()">Envoyer</button>
 
-    <script>
-        // Référence à la base de données
         var db = firebase.database().ref("messages");
 
-        // Fonction pour envoyer un message
         function sendMessage() {
             var message = document.getElementById("message").value;
-            db.push().set({ "message": message });
-            document.getElementById("message").value = '';
+            if (message) {
+                db.push().set({
+                    "message": message,
+                    "timestamp": new Date().toISOString()
+                });
+                document.getElementById("message").value = '';
+            }
         }
 
-        // Fonction pour écouter les messages en temps réel
         db.on("child_added", function(snapshot) {
             var msg = snapshot.val().message;
             var msgDiv = document.createElement("div");
             msgDiv.textContent = msg;
+            msgDiv.classList.add("message", "other");  // Ajoutez 'user' ou 'other' selon les besoins
             document.getElementById("chat-window").appendChild(msgDiv);
+            document.getElementById("chat-window").scrollTop = document.getElementById("chat-window").scrollHeight;
         });
     </script>
 </body>
