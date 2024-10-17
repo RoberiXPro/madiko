@@ -43,8 +43,8 @@
             word-wrap: break-word;
             max-width: 70%;
         }
-        .message.user1 { background-color: #8b9dc3; align-self: flex-start; }
-        .message.user2 { background-color: #f7ca88; align-self: flex-end; }
+        .message.user1 { background-color: #ec7063; align-self: flex-start; }
+        .message.user2 { background-color: #9b59b6; align-self: flex-end; }
         #input-section {
             display: flex;
             align-items: center;
@@ -75,6 +75,7 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
+<div id="room-name-display" style="font-size: 1.2em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Eto ny message">
@@ -100,33 +101,36 @@
         var db;
         var username;
 
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            var roomName = document.getElementById("room-name-input").value;
-            var password = document.getElementById("password-input").value;
+function joinRoom() {
+    username = document.getElementById("username").value;
+    var roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
 
-            // Référence au room spécifique
-            db = firebase.database().ref("rooms/" + roomName);
+    // Référence au room spécifique
+    db = firebase.database().ref("rooms/" + roomName);
 
-            db.child("password").once('value').then(function(snapshot) {
-                var dbPassword = snapshot.val();
-                
-                if (dbPassword === null) {
-                    // Room n'existe pas, alors on la crée
-                    db.set({
-                        password: password,
-                        messages: {}
-                    });
-                    alert("Room créé avec succès !");
-                    switchToChat();
-                } else if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    switchToChat();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
+    db.child("password").once('value').then(function(snapshot) {
+        var dbPassword = snapshot.val();
+        
+        if (dbPassword === null) {
+            // Room n'existe pas, alors on la crée
+            db.set({
+                password: password,
+                messages: {}
             });
+            alert("Room créé avec succès !");
+            document.getElementById("room-name-display").textContent = "Room : " + roomName;
+            switchToChat();
+        } else if (dbPassword === password) {
+            alert("Connexion réussie !");
+            document.getElementById("room-name-display").textContent = "Room : " + roomName;
+            switchToChat();
+        } else {
+            alert("Mot de passe incorrect !");
         }
+    });
+}
+
 
         function switchToChat() {
             document.getElementById("login-container").style.display = "none";
