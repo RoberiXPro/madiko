@@ -78,6 +78,8 @@
             word-wrap: break-word;
             max-width: 70%;
             color: #fff;
+            display: flex;
+            justify-content: space-between;
         }
         .message.user1 {
             background-color: #ec7063;
@@ -89,11 +91,22 @@
             align-self: flex-end;
             border-radius: 10px 10px 0 10px;
         }
+        .icon {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
         h1 {
             font-size: 2.5em;
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        footer {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #bbb;
         }
     </style>
 </head>
@@ -102,8 +115,8 @@
 
     <!-- Section de connexion -->
     <div id="login-container">
-        <input type="text" id="username" placeholder="Eto ny pseudo" required><br>
-        <input type="text" id="room-name-input" placeholder="Nom du villa" required><br>
+        <input type="text" id="username" placeholder="Votre pseudo" required><br>
+        <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
         <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Entrez dans la Villa</button>
     </div>
@@ -113,112 +126,142 @@
         <div id="room-name-display" style="font-size: 1.2em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
         <div id="messages"></div>
         <div id="input-section">
-            <input type="text" id="message-input" placeholder="Eto ny message">
+            <input type="text" id="message-input" placeholder="Ecrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
             <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
     </div>
 
-    <script>
-        // Configuration Firebase
-        var firebaseConfig = {
-            apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-            authDomain: "madiko-rs.firebaseapp.com",
-            databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-            projectId: "madiko-rs",
-            storageBucket: "madiko-rs.appspot.com",
-            messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-            measurementId: "G-EBWFWCMWFT"
-        };
-        firebase.initializeApp(firebaseConfig);
+    <footer>RoberixPro 2024</footer>
 
-        var db;
-        var username;
+<script>
+    // Configuration Firebase
+    var firebaseConfig = {
+        apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+        authDomain: "madiko-rs.firebaseapp.com",
+        databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+        projectId: "madiko-rs",
+        storageBucket: "madiko-rs.appspot.com",
+        messagingSenderId: "746083664475",
+        appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+        measurementId: "G-EBWFWCMWFT"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            var roomName = document.getElementById("room-name-input").value;
-            var password = document.getElementById("password-input").value;
+    var db;
+    var username;
 
-            db = firebase.database().ref("rooms/" + roomName);
-            db.child("password").once('value').then(function(snapshot) {
-                var dbPassword = snapshot.val();
-                if (dbPassword === null) {
-                    db.set({ password: password, messages: {} });
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
-            });
-        }
+    function joinRoom() {
+        username = document.getElementById("username").value;
+        var roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
-        function switchToChat() {
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            loadMessages();
-        }
+        db = firebase.database().ref("rooms/" + roomName);
 
-        function sendMessage() {
-            var messageInput = document.getElementById("message-input");
-            var message = messageInput.value;
-            db.child("messages").push().set({ "user": username, "message": message });
-            messageInput.value = '';
-        }
-
-        function loadMessages() {
-            db.child("messages").on("child_added", function(snapshot) {
-                var data = snapshot.val();
-                var msgDiv = document.createElement("div");
-                msgDiv.className = (data.user === username ? "message user1" : "message user2");
-                msgDiv.textContent = data.user + ": " + data.message;
-
-                // Boutons Modifier et Supprimer
-                var editBtn = document.createElement("button");
-                editBtn.textContent = "Modifier";
-                editBtn.onclick = function() {
-                    var newMessage = prompt("Modifie ton message:", data.message);
-                    if (newMessage) {
-                        snapshot.ref.update({ "message": newMessage });
-                        msgDiv.textContent = data.user + ": " + newMessage;
-                    }
-                };
-
-                var deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "Supprimer";
-                deleteBtn.onclick = function() {
-                    if (confirm("Es-tu sûr de vouloir supprimer ce message ?")) {
-                        snapshot.ref.remove();
-                        msgDiv.remove();
-                    }
-                };
-
-                editBtn.style.marginLeft = "10px";
-                deleteBtn.style.marginLeft = "5px";
-                msgDiv.appendChild(editBtn);
-                msgDiv.appendChild(deleteBtn);
-                document.getElementById("messages").appendChild(msgDiv);
-            });
-        }
-
-        function clearChat() {
-            db.child("messages").remove();
-            document.getElementById("messages").innerHTML = '';
-        }
-
-        document.getElementById("message-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                sendMessage();
+        db.child("password").once('value').then(function(snapshot) {
+            var dbPassword = snapshot.val();
+            
+            if (dbPassword === null) {
+                db.set({
+                    password: password,
+                    messages: {}
+                });
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            } else if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            } else {
+                alert("Mot de passe incorrect !");
             }
         });
-    </script>
+    }
+
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
+    }
+
+    function sendMessage() {
+        var messageInput = document.getElementById("message-input");
+        var message = messageInput.value;
+        db.child("messages").push().set({ "user": username, "message": message });
+        messageInput.value = '';
+    }
+
+    function loadMessages() {
+        db.child("messages").on("child_added", function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        });
+
+        db.child("messages").on("child_changed", function(snapshot) {
+            var msgDiv = document.getElementById(snapshot.key);
+            if (msgDiv) {
+                msgDiv.querySelector(".msg-text").textContent = username + ": " + snapshot.val().message;
+            }
+        });
+
+        db.child("messages").on("child_removed", function(snapshot) {
+            var msgDiv = document.getElementById(snapshot.key);
+            if (msgDiv) {
+                msgDiv.remove();
+            }
+        });
+    }
+
+    function displayMessage(key, data) {
+        var msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+        var textSpan = document.createElement("span");
+        textSpan.className = "msg-text";
+        textSpan.textContent = data.user + ": " + data.message;
+
+        msgDiv.appendChild(textSpan);
+
+        if (data.user === username) {
+            var editBtn = document.createElement("img");
+            editBtn.src = "https://i.postimg.cc/5Hxy8Vjw/modifier.png";
+            editBtn.className = "icon";
+            editBtn.style.cursor = "pointer";
+            editBtn.onclick = function() {
+                var newMessage = prompt("Modifier le message :", data.message);
+                if (newMessage) {
+                    db.child("messages/" + key).update({ "message": newMessage });
+                }
+            };
+
+            var deleteBtn = document.createElement("img");
+            deleteBtn.src = "https://i.postimg.cc/NK8LyMGs/supprimer.png";
+            deleteBtn.className = "icon";
+            deleteBtn.style.cursor = "pointer";
+            deleteBtn.onclick = function() {
+                db.child("messages/" + key).remove();
+            };
+
+            msgDiv.appendChild(editBtn);
+            msgDiv.appendChild(deleteBtn);
+        }
+
+        document.getElementById("messages").appendChild(msgDiv);
+    }
+
+    function clearChat() {
+        db.child("messages").remove();
+        document.getElementById("messages").innerHTML = '';
+    }
+
+    document.getElementById("message-input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
     &copy; RoberixPro 2024
 </footer>
