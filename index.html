@@ -74,29 +74,32 @@
             color: #fff;
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Aligne le bouton avec le message */
+            position: relative;
         }
         .message.user1 {
-            background: linear-gradient(to right, #6a5acd, #1e90ff); /* Dégradé violet et bleu */
+            background: linear-gradient(to right, #8e44ad, #3498db);
             align-self: flex-start;
+            border-radius: 10px 10px 10px 0;
         }
         .message.user2 {
-            background-color: #444; /* Messages de l'autre utilisateur en gris */
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
             align-self: flex-end;
+            border-radius: 10px 10px 0 10px;
         }
-        .hidden-message {
-            filter: blur(4px); /* Flou sur le message */
+        .flou {
+            filter: blur(4px);
+        }
+        .icon {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            margin-left: 5px;
         }
         h1 {
             font-size: 2.5em;
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-        }
-        footer {
-            margin-top: 10px;
-            font-size: 0.8em;
-            color: #bbb;
         }
     </style>
 </head>
@@ -119,7 +122,6 @@
             <input type="text" id="message-input" placeholder="Ecrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
         </div>
-        <div id="unread-count" style="color: #ffd700; margin-top: 10px;">Messages non lus : <span id="count">0</span></div>
     </div>
 
 <script>
@@ -138,7 +140,6 @@
 
     var db;
     var username;
-    var unreadCount = 0; // Compteur de messages non lus
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -177,25 +178,27 @@
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
         var message = messageInput.value;
-
-        // Vérifier si le message est vide
+        
         if (message.trim() === "") {
-            return; // Ne pas envoyer de message vide
+            return; // Ne rien faire si le message est vide
         }
+        
+        var msgRef = db.child("messages").push();
+        msgRef.set({ "user": username, "message": message, "seen": false });
 
-        db.child("messages").push().set({ "user": username, "message": message, "seen": false });
         messageInput.value = '';
-
-        // Flouter le message après 15 secondes
-        setTimeout(() => {
-            loadMessages(); // Recharge les messages pour appliquer le flou
-        }, 15000);
     }
 
     function loadMessages() {
         db.child("messages").on("child_added", function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
-            updateUnreadCount(); // Met à jour le compteur à chaque nouveau message
+        });
+
+        db.child("messages").on("child_removed", function(snapshot) {
+            var msgDiv = document.getElementById(snapshot.key);
+            if (msgDiv) {
+                msgDiv.remove();
+            }
         });
     }
 
@@ -203,64 +206,40 @@
         var msgDiv = document.createElement("div");
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
+        
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text hidden-message"; // Appliquer la classe floue
+        textSpan.className = "msg-text flou";
         textSpan.textContent = data.message;
 
+        msgDiv.appendChild(textSpan);
+
+        // Ajouter le bouton Afficher/Masquer
         var toggleBtn = document.createElement("button");
         toggleBtn.textContent = "Afficher";
         toggleBtn.onclick = function() {
-            if (textSpan.classList.contains("hidden-message")) {
-                textSpan.classList.remove("hidden-message"); // Enlever le flou
-                toggleBtn.textContent = "Masquer"; // Changer le texte du bouton
-                db.child("messages/" + key).update({ seen: true }); // Marquer comme vu
-                updateUnreadCount(); // Met à jour le compteur
+            if (textSpan.classList.contains("flou")) {
+                textSpan.classList.remove("flou");
+                toggleBtn.textContent = "Masquer";
+                setTimeout(function() {
+                    textSpan.classList.add("flou"); // Flouter après 15 secondes
+                    toggleBtn.textContent = "Afficher"; // Remettre le texte du bouton à "Afficher"
+                }, 15000);
             } else {
-                textSpan.classList.add("hidden-message"); // Remettre le flou
-                toggleBtn.textContent = "Afficher"; // Réinitialiser le texte du bouton
+                textSpan.classList.add("flou");
+                toggleBtn.textContent = "Afficher";
             }
         };
-
-        var editBtn = document.createElement("button");
-        editBtn.textContent = "Modifier";
-        editBtn.onclick = function() {
-            var newMessage = prompt("Modifier le message :", data.message);
-            if (newMessage !== null && newMessage.trim() !== "") {
-                db.child("messages/" + key).update({ message: newMessage });
-            }
-        };
-
+        
+        // Ajouter le bouton Supprimer
         var deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Supprimer";
         deleteBtn.onclick = function() {
-            db.child("messages").child(key).remove();
+            db.child("messages/" + key).remove();
         };
 
-        msgDiv.appendChild(textSpan);
         msgDiv.appendChild(toggleBtn);
-        msgDiv.appendChild(editBtn);
         msgDiv.appendChild(deleteBtn);
-
         document.getElementById("messages").appendChild(msgDiv);
-    }
-
-    function updateUnreadCount() {
-        db.child("messages").once("value", function(snapshot) {
-            unreadCount = 0; // Réinitialiser le compteur
-            snapshot.forEach(function(childSnapshot) {
-                if (!childSnapshot.val().seen) {
-                    unreadCount++; // Compter les messages non lus
-                }
-            });
-            document.getElementById("count").textContent = unreadCount; // Mettre à jour l'affichage
-            document.title = unreadCount > 0 ? `(${unreadCount}) RS-Villa` : "RS-Villa"; // Mettre à jour le titre de l'onglet
-        });
-    }
-
-    function clearChat() {
-        db.child("messages").remove();
-        document.getElementById("messages").innerHTML = '';
     }
 
     document.getElementById("message-input").addEventListener("keypress", function(event) {
@@ -270,8 +249,9 @@
         }
     });
 </script>
+
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-    &copy; RoberixPro 2024
-</footer>
+        &copy; RoberixPro 2024
+    </footer>
 </body>
 </html>
