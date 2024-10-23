@@ -74,22 +74,18 @@
             color: #fff;
             display: flex;
             justify-content: space-between;
-            flex-direction: column; /* Ajout pour empiler le texte et le statut "Vu" */
+            align-items: center; /* Aligne le bouton avec le message */
         }
         .message.user1 {
-            background-color: #ec7063;
+            background: linear-gradient(to right, #6a5acd, #1e90ff); /* Dégradé violet et bleu */
             align-self: flex-start;
-            border-radius: 10px 10px 10px 0;
         }
         .message.user2 {
-            background-color: #9b59b6;
+            background-color: #444; /* Messages de l'autre utilisateur en gris */
             align-self: flex-end;
-            border-radius: 10px 10px 0 10px;
         }
-        .seen {
-            font-size: 0.8rem; /* Taille de police plus petite pour le statut "Vu" */
-            color: #bbb; /* Couleur plus claire pour le statut "Vu" */
-            margin-top: 5px; /* Espace entre le message et le statut "Vu" */
+        .hidden-message {
+            filter: blur(4px; /* Flou sur le message */
         }
         h1 {
             font-size: 2.5em;
@@ -141,18 +137,6 @@
 
     var db;
     var username;
-    var unreadCount = 0;
-
-    // Demander la permission de notifications
-    Notification.requestPermission().then(function(result) {
-        if (result === 'granted') {
-            console.log('Notification permission granted.');
-        }
-    });
-
-    function showNotification(title, body) {
-        new Notification(title, { body: body });
-    }
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -195,8 +179,7 @@
 
         var messageData = {
             user: username,
-            message: message,
-            seen: false // Ajout du statut "vu"
+            message: message
         };
         db.child("messages").push().set(messageData);
         messageInput.value = '';
@@ -214,22 +197,23 @@
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
+        textSpan.className = "msg-text hidden-message"; // Message flou au départ
         textSpan.textContent = data.user + ": " + data.message;
 
+        var toggleButton = document.createElement("button");
+        toggleButton.textContent = "Afficher";
+        toggleButton.onclick = function() {
+            if (textSpan.classList.contains("hidden-message")) {
+                textSpan.classList.remove("hidden-message"); // Afficher le message
+                toggleButton.textContent = "Masquer"; // Changer le texte du bouton
+            } else {
+                textSpan.classList.add("hidden-message"); // Masquer le message
+                toggleButton.textContent = "Afficher"; // Changer le texte du bouton
+            }
+        };
+
         msgDiv.appendChild(textSpan);
-
-        // Indicateur "Vu"
-        if (data.user !== username) { // Si le message n'est pas de l'utilisateur actuel
-            // Marquer le message comme vu
-            db.child("messages/" + key).update({ seen: true });
-            var seenIndicator = document.createElement("span");
-            seenIndicator.className = "seen";
-            seenIndicator.textContent = "Vu"; // Ajout du texte "Vu"
-            msgDiv.appendChild(seenIndicator);
-            showNotification("Nouveau message", data.user + ": " + data.message); // Afficher la notification
-        }
-
+        msgDiv.appendChild(toggleButton);
         document.getElementById("messages").appendChild(msgDiv);
     }
 
@@ -240,7 +224,8 @@
         }
     });
 </script>
-    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+
+<footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
     &copy; RoberixPro 2024
 </footer>
 </body>
