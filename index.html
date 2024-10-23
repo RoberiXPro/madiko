@@ -5,6 +5,7 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com.firebasejs/8.6.8/firebase-storage.js"></script>
     <style>
         body {
             display: flex;
@@ -127,9 +128,11 @@
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Ecrivez un message">
+            <input type="file" id="file-input" accept="image/*">
             <button onclick="sendMessage()">Envoyer</button>
             <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
+        <button id="toggle-btn" onclick="toggleChat()">Fermer le rideau</button>
     </div>
 
 <script>
@@ -148,6 +151,15 @@
 
     var db;
     var username;
+    let unreadCount = 0;
+    let chatVisible = true;
+
+    // Demander la permission pour les notifications
+    Notification.requestPermission().then(function(result) {
+        if (result === 'granted') {
+            console.log('Permission de notification accordée.');
+        }
+    });
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -181,45 +193,86 @@
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
+        resetUnreadCount();
     }
 
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
         var message = messageInput.value;
-        db.child("messages").push().set({ "user": username, "message": message });
+        var fileInput = document.getElementById("file-input");
+
+        if (fileInput.files.length > 0) {
+            // Logic to handle image upload (upload to Firebase Storage)
+            var file = fileInput.files[0];
+            var storageRef = firebase.storage().ref('images/' + file.name);
+            storageRef.put(file).then(function(snapshot) {
+                snapshot.ref.getDownloadURL().then(function(downloadURL) {
+                    // Envoie le message avec l'URL de l'image
+                    db.child("messages").push().set({ user: username, message: message, image: downloadURL, seen: false });
+                });
+            });
+        } else {
+            db.child("messages").push().set({ user: username, message: message, seen: false });
+        }
+
         messageInput.value = '';
+        fileInput.value = ''; // Reset file input
     }
 
     function loadMessages() {
         db.child("messages").on("child_added", function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
+            showNotification("Nouveau message", snapshot.val().message); // Affiche la notification
+            unreadCount++;
+            updateTabTitle(unreadCount); // Met à jour le titre de l'onglet
         });
+    }
 
-        db.child("messages").on("child_changed", function(snapshot) {
-            var msgDiv = document.getElementById(snapshot.key);
-            if (msgDiv) {
-                msgDiv.querySelector(".msg-text").textContent = username + ": " + snapshot.val().message;
-            }
-        });
+    function showNotification(title, body) {
+        if (Notification.permission === 'granted') {
+            new Notification(title, {
+                body: body,
+                icon: 'https://example.com/icon.png' // Remplacez par l'URL de votre icône
+            });
+        }
+    }
 
-        db.child("messages").on("child_removed", function(snapshot) {
-            var msgDiv = document.getElementById(snapshot.key);
-            if (msgDiv) {
-                msgDiv.remove();
-            }
-        });
+    function updateTabTitle(count) {
+        document.title = count > 0 ? `(${count}) RS-Villa` : 'RS-Villa';
+    }
+
+    function resetUnreadCount() {
+        unreadCount = 0;
+        updateTabTitle(0); // Réinitialise le titre de l'onglet
     }
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
+        
+        // Marquer le message comme vu
+        if (!data.seen && data.user !== username) {
+            db.child("messages/" + key).update({ seen: true }); // Met à jour le message pour indiquer qu'il a été vu
+        }
+
+        if (data.seen) {
+            msgDiv.style.backgroundColor = "#8e44ad"; // Couleur différente pour les messages vus
+        }
 
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text";
         textSpan.textContent = data.user + ": " + data.message;
 
         msgDiv.appendChild(textSpan);
+
+        // Gérer les images
+        if (data.image) {
+            var img = document.createElement("img");
+            img.src = data.image;
+            img.style.maxWidth = "100%"; // Limiter la taille de l'image
+            msgDiv.appendChild(img);
+        }
 
         if (data.user === username) {
             var editBtn = document.createElement("img");
@@ -253,6 +306,12 @@
         document.getElementById("messages").innerHTML = '';
     }
 
+    function toggleChat() {
+        chatVisible = !chatVisible;
+        document.getElementById("messages").style.display = chatVisible ? "block" : "none";
+        document.getElementById("toggle-btn").textContent = chatVisible ? "Fermer le rideau" : "Ouvrir le rideau";
+    }
+
     document.getElementById("message-input").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -260,8 +319,9 @@
         }
     });
 </script>
-    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-    &copy; RoberiX 2024
+
+<footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+    &copy; RoberixPro 2024
 </footer>
 </body>
 </html>
