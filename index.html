@@ -85,7 +85,7 @@
             align-self: flex-end;
         }
         .hidden-message {
-            filter: blur(4px; /* Flou sur le message */
+            filter: blur(4px); /* Flou sur le message */
         }
         h1 {
             font-size: 2.5em;
@@ -174,14 +174,14 @@
 
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
-        var message = messageInput.value.trim(); // Vérification que le message n'est pas vide
-        if (message === '') return; // Ne pas envoyer de message vide
+        var message = messageInput.value;
 
-        var messageData = {
-            user: username,
-            message: message
-        };
-        db.child("messages").push().set(messageData);
+        // Vérifier si le message est vide
+        if (message.trim() === "") {
+            return; // Ne pas envoyer de message vide
+        }
+
+        db.child("messages").push().set({ "user": username, "message": message, "seen": false });
         messageInput.value = '';
     }
 
@@ -197,35 +197,30 @@
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text hidden-message"; // Message flou au départ
-        textSpan.textContent = data.user + ": " + data.message;
+        textSpan.className = "msg-text hidden-message"; // Appliquer la classe floue
+        textSpan.textContent = data.message;
 
-        var toggleButton = document.createElement("button");
-        toggleButton.textContent = "Afficher";
-        toggleButton.onclick = function() {
+        var toggleBtn = document.createElement("button");
+        toggleBtn.textContent = "Afficher";
+        toggleBtn.onclick = function() {
             if (textSpan.classList.contains("hidden-message")) {
-                textSpan.classList.remove("hidden-message"); // Afficher le message
-                toggleButton.textContent = "Masquer"; // Changer le texte du bouton
+                textSpan.classList.remove("hidden-message"); // Enlever le flou
+                toggleBtn.textContent = "Masquer"; // Changer le texte du bouton
+                db.child("messages/" + key).update({ seen: true }); // Marquer comme vu
             } else {
-                textSpan.classList.add("hidden-message"); // Masquer le message
-                toggleButton.textContent = "Afficher"; // Changer le texte du bouton
+                textSpan.classList.add("hidden-message"); // Remettre le flou
+                toggleBtn.textContent = "Afficher"; // Remettre le texte du bouton
             }
         };
 
         msgDiv.appendChild(textSpan);
-        msgDiv.appendChild(toggleButton);
+        msgDiv.appendChild(toggleBtn);
+
         document.getElementById("messages").appendChild(msgDiv);
     }
 
-    document.getElementById("message-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
 </script>
-
-<footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
     &copy; RoberixPro 2024
 </footer>
 </body>
