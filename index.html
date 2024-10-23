@@ -5,7 +5,6 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <script src="https://www.gstatic.com.firebasejs/8.6.8/firebase-storage.js"></script>
     <style>
         body {
             display: flex;
@@ -58,12 +57,6 @@
         button:hover {
             background-color: #4c4c4c;
         }
-        #clear-btn {
-            background-color: #ff5c5c;
-        }
-        #clear-btn:hover {
-            background-color: #ff3636;
-        }
         #messages {
             max-height: 300px;
             overflow-y: auto;
@@ -91,12 +84,6 @@
             background-color: #9b59b6;
             align-self: flex-end;
             border-radius: 10px 10px 0 10px;
-        }
-        .icon {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            margin-left: 5px;
         }
         h1 {
             font-size: 2.5em;
@@ -128,11 +115,8 @@
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Ecrivez un message">
-            <input type="file" id="file-input" accept="image/*">
             <button onclick="sendMessage()">Envoyer</button>
-            <button id="clear-btn" onclick="clearChat()">Effacer</button>
         </div>
-        <button id="toggle-btn" onclick="toggleChat()">Fermer le rideau</button>
     </div>
 
 <script>
@@ -151,15 +135,18 @@
 
     var db;
     var username;
-    let unreadCount = 0;
-    let chatVisible = true;
+    var unreadCount = 0;
 
-    // Demander la permission pour les notifications
+    // Demander la permission de notifications
     Notification.requestPermission().then(function(result) {
         if (result === 'granted') {
-            console.log('Permission de notification accordée.');
+            console.log('Notification permission granted.');
         }
     });
+
+    function showNotification(title, body) {
+        new Notification(title, { body: body });
+    }
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -193,72 +180,32 @@
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
-        resetUnreadCount();
     }
 
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
-        var message = messageInput.value;
-        var fileInput = document.getElementById("file-input");
+        var message = messageInput.value.trim(); // Vérification que le message n'est pas vide
+        if (message === '') return; // Ne pas envoyer de message vide
 
-        if (fileInput.files.length > 0) {
-            // Logic to handle image upload (upload to Firebase Storage)
-            var file = fileInput.files[0];
-            var storageRef = firebase.storage().ref('images/' + file.name);
-            storageRef.put(file).then(function(snapshot) {
-                snapshot.ref.getDownloadURL().then(function(downloadURL) {
-                    // Envoie le message avec l'URL de l'image
-                    db.child("messages").push().set({ user: username, message: message, image: downloadURL, seen: false });
-                });
-            });
-        } else {
-            db.child("messages").push().set({ user: username, message: message, seen: false });
-        }
-
+        var messageData = {
+            user: username,
+            message: message,
+            seen: false // Ajout du statut "vu"
+        };
+        db.child("messages").push().set(messageData);
         messageInput.value = '';
-        fileInput.value = ''; // Reset file input
     }
 
     function loadMessages() {
         db.child("messages").on("child_added", function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
-            showNotification("Nouveau message", snapshot.val().message); // Affiche la notification
-            unreadCount++;
-            updateTabTitle(unreadCount); // Met à jour le titre de l'onglet
         });
-    }
-
-    function showNotification(title, body) {
-        if (Notification.permission === 'granted') {
-            new Notification(title, {
-                body: body,
-                icon: 'https://example.com/icon.png' // Remplacez par l'URL de votre icône
-            });
-        }
-    }
-
-    function updateTabTitle(count) {
-        document.title = count > 0 ? `(${count}) RS-Villa` : 'RS-Villa';
-    }
-
-    function resetUnreadCount() {
-        unreadCount = 0;
-        updateTabTitle(0); // Réinitialise le titre de l'onglet
     }
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
-        
-        // Marquer le message comme vu
-        if (!data.seen && data.user !== username) {
-            db.child("messages/" + key).update({ seen: true }); // Met à jour le message pour indiquer qu'il a été vu
-        }
-
-        if (data.seen) {
-            msgDiv.style.backgroundColor = "#8e44ad"; // Couleur différente pour les messages vus
-        }
 
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text";
@@ -266,50 +213,23 @@
 
         msgDiv.appendChild(textSpan);
 
-        // Gérer les images
-        if (data.image) {
-            var img = document.createElement("img");
-            img.src = data.image;
-            img.style.maxWidth = "100%"; // Limiter la taille de l'image
-            msgDiv.appendChild(img);
-        }
-
-        if (data.user === username) {
-            var editBtn = document.createElement("img");
-            editBtn.src = "https://i.postimg.cc/5Hxy8Vjw/modifier.png";
-            editBtn.className = "icon";
-            editBtn.style.cursor = "pointer";
-            editBtn.onclick = function() {
-                var newMessage = prompt("Modifier le message :", data.message);
-                if (newMessage) {
-                    db.child("messages/" + key).update({ "message": newMessage });
-                }
-            };
-
-            var deleteBtn = document.createElement("img");
-            deleteBtn.src = "https://i.postimg.cc/NK8LyMGs/supprimer.png";
-            deleteBtn.className = "icon";
-            deleteBtn.style.cursor = "pointer";
-            deleteBtn.onclick = function() {
-                db.child("messages/" + key).remove();
-            };
-
-            msgDiv.appendChild(editBtn);
-            msgDiv.appendChild(deleteBtn);
+        if (data.user !== username) { // Si le message n'est pas de l'utilisateur courant
+            unreadCount++;
+            document.title = `(${unreadCount}) Nouveau message`; // Mise à jour de l'onglet avec le compteur
+            showNotification("Nouveau message", `${data.user}: ${data.message}`); // Affichage de la notification
         }
 
         document.getElementById("messages").appendChild(msgDiv);
-    }
 
-    function clearChat() {
-        db.child("messages").remove();
-        document.getElementById("messages").innerHTML = '';
-    }
+        // Marquer le message comme vu
+        if (data.user !== username) {
+            db.child("messages/" + key).update({ seen: true }); // Mettre à jour le statut vu
+        }
 
-    function toggleChat() {
-        chatVisible = !chatVisible;
-        document.getElementById("messages").style.display = chatVisible ? "block" : "none";
-        document.getElementById("toggle-btn").textContent = chatVisible ? "Fermer le rideau" : "Ouvrir le rideau";
+        // Afficher le statut vu
+        if (data.seen) {
+            msgDiv.style.backgroundColor = "#2ecc71"; // Changer la couleur pour indiquer que le message a été vu
+        }
     }
 
     document.getElementById("message-input").addEventListener("keypress", function(event) {
@@ -318,9 +238,9 @@
             sendMessage();
         }
     });
-</script>
 
-<footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+</script>
+    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
     &copy; RoberixPro 2024
 </footer>
 </body>
