@@ -74,6 +74,7 @@
             color: #fff;
             display: flex;
             justify-content: space-between;
+            flex-direction: column; /* Ajout pour empiler le texte et le statut "Vu" */
         }
         .message.user1 {
             background-color: #ec7063;
@@ -84,6 +85,11 @@
             background-color: #9b59b6;
             align-self: flex-end;
             border-radius: 10px 10px 0 10px;
+        }
+        .seen {
+            font-size: 0.8rem; /* Taille de police plus petite pour le statut "Vu" */
+            color: #bbb; /* Couleur plus claire pour le statut "Vu" */
+            margin-top: 5px; /* Espace entre le message et le statut "Vu" */
         }
         h1 {
             font-size: 2.5em;
@@ -213,23 +219,18 @@
 
         msgDiv.appendChild(textSpan);
 
-        if (data.user !== username) { // Si le message n'est pas de l'utilisateur courant
-            unreadCount++;
-            document.title = `(${unreadCount}) Nouveau message`; // Mise à jour de l'onglet avec le compteur
-            showNotification("Nouveau message", `${data.user}: ${data.message}`); // Affichage de la notification
+        // Indicateur "Vu"
+        if (data.user !== username) { // Si le message n'est pas de l'utilisateur actuel
+            // Marquer le message comme vu
+            db.child("messages/" + key).update({ seen: true });
+            var seenIndicator = document.createElement("span");
+            seenIndicator.className = "seen";
+            seenIndicator.textContent = "Vu"; // Ajout du texte "Vu"
+            msgDiv.appendChild(seenIndicator);
+            showNotification("Nouveau message", data.user + ": " + data.message); // Afficher la notification
         }
 
         document.getElementById("messages").appendChild(msgDiv);
-
-        // Marquer le message comme vu
-        if (data.user !== username) {
-            db.child("messages/" + key).update({ seen: true }); // Mettre à jour le statut vu
-        }
-
-        // Afficher le statut vu
-        if (data.seen) {
-            msgDiv.style.backgroundColor = "#2ecc71"; // Changer la couleur pour indiquer que le message a été vu
-        }
     }
 
     document.getElementById("message-input").addEventListener("keypress", function(event) {
@@ -238,7 +239,6 @@
             sendMessage();
         }
     });
-
 </script>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
     &copy; RoberixPro 2024
