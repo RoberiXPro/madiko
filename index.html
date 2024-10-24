@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
@@ -18,9 +17,7 @@
             color: #ffffff;
             margin: 0;
         }
-
-        #login-container,
-        #chat-container {
+        #login-container, #chat-container {
             width: 70%;
             max-width: 800px;
             background: rgba(60, 60, 60, 0.9);
@@ -29,26 +26,15 @@
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
             display: none;
         }
-
         #login-container {
             display: block;
             animation: fadeIn 0.5s ease;
         }
-
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
-
-        input,
-        button {
+        input, button {
             padding: 10px;
             border-radius: 5px;
             border: none;
@@ -56,25 +42,21 @@
             font-size: 1rem;
             box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
         }
-
         input {
             width: 100%;
             margin-bottom: 10px;
             background-color: #444;
             color: #fff;
         }
-
         button {
             background-color: #5a5a5a;
             color: white;
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         button:hover {
             background-color: #4c4c4c;
         }
-
         #messages {
             max-height: 300px;
             overflow-y: auto;
@@ -83,7 +65,6 @@
             border-radius: 5px;
             margin-bottom: 10px;
         }
-
         .message {
             padding: 10px;
             margin-bottom: 8px;
@@ -96,24 +77,20 @@
             justify-content: space-between;
             position: relative;
         }
-
         .message.user1 {
             background: linear-gradient(to right, #8e44ad, #3498db);
             align-self: flex-end;
             border-radius: 10px 10px 0 10px;
         }
-
         .message.user2 {
             background: linear-gradient(to right, #95a5a6, #7f8c8d);
             align-self: flex-start;
             border-radius: 10px 10px 10px 0;
         }
-
         .msg-text {
             margin-bottom: 5px;
         }
-
-        .username {
+         .username {
             font-size: 0.9rem;
             font-weight: bold;
             color: #ffd700;
@@ -121,79 +98,39 @@
             -webkit-background-clip: text;
             color: transparent;
         }
-
         .flou {
             filter: blur(4px);
         }
-
-        .button-group {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 5px;
-        }
-
-        .button-group button {
-            margin-left: 5px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-        }
-
-        .reply-btn {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .delete-btn {
-            background-color: #e74c3c;
-            color: white;
-        }
-
         h1 {
             font-size: 2.5em;
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ffd700;
             padding: 10px;
-            border: 2px solid #ffd700;
-            background-color: rgba(255, 215, 0, 0.2);
             border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
         }
-
         @media (max-width: 600px) {
             body {
                 padding: 10px;
             }
-
-            #login-container,
-            #chat-container {
+            #login-container, #chat-container {
                 width: 100%;
                 padding: 15px;
             }
-
-            input,
-            button {
+            input, button {
                 font-size: 0.9rem;
                 padding: 8px;
             }
-
             #messages {
                 max-height: 50vh;
             }
         }
-
-        .quoted-message {
-            background-color: #333;
-            color: #fff;
-            padding: 5px;
-            border-left: 3px solid #ffd700;
-            margin-bottom: 10px;
-            font-style: italic;
-        }
     </style>
 </head>
-
 <body>
-    <h1 id="main-title">RS-Villa</h1>
+    <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
     <div id="login-container">
@@ -206,7 +143,6 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="quoted-message-container"></div>
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Écrivez un message">
@@ -216,189 +152,188 @@
         </div>
     </div>
 
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-            authDomain: "madiko-rs.firebaseapp.com",
-            databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-            projectId: "madiko-rs",
-            storageBucket: "madiko-rs.appspot.com",
-            messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-            measurementId: "G-EBWFWCMWFT"
-        };
-        firebase.initializeApp(firebaseConfig);
+<script>
+    var firebaseConfig = {
+        apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+        authDomain: "madiko-rs.firebaseapp.com",
+        databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+        projectId: "madiko-rs",
+        storageBucket: "madiko-rs.appspot.com",
+        messagingSenderId: "746083664475",
+        appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+        measurementId: "G-EBWFWCMWFT"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-        var db;
-        var username;
-        var roomName;
-        var quotedMessage = null;
-        var allMessagesVisible = false;
+    var db;
+    var username;
+    var roomName;
+    var allMessagesVisible = false;
 
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            roomName = document.getElementById("room-name-input").value;
-            var password = document.getElementById("password-input").value;
+    function joinRoom() {
+        username = document.getElementById("username").value;
+        roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
-            db = firebase.database().ref("rooms/" + roomName);
+        db = firebase.database().ref("rooms/" + roomName);
 
-            db.child("password").once('value').then(function(snapshot) {
-                var dbPassword = snapshot.val();
-                if (dbPassword === null) {
-                    db.set({
-                        password: password,
-                        messages: {}
-                    });
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
-            });
-        }
-
-        function switchToChat() {
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            loadMessages();
-        }
-
-        function sendMessage() {
-            var messageInput = document.getElementById("message-input");
-            var message = messageInput.value;
-
-            if (message.trim() === "") {
-                return;
-            }
-
-            var msgRef = db.child("messages").push();
-            msgRef.set({
-                "user": username,
-                "message": message,
-                "seen": false,
-                "replyTo": quotedMessage ? quotedMessage.message : null
-            });
-
-            messageInput.value = '';
-            quotedMessage = null;
-            document.getElementById("quoted-message-container").innerHTML = '';
-        }
-
-        function loadMessages() {
-            db.child('messages').on('child_added', function(snapshot) {
-                displayMessage(snapshot.key, snapshot.val());
-            });
-        }
-
-        function quitRoom() {
-            document.getElementById("chat-container").style.display = "none";
-            document.getElementById("login-container").style.display = "block";
-        }
-
-        function displayMessage(key, data) {
-            var msgDiv = document.createElement("div");
-            msgDiv.id = key;
-            msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
-            var usernameDiv = document.createElement("div");
-            usernameDiv.className = "username";
-            usernameDiv.textContent = data.user;
-
-            var textSpan = document.createElement("span");
-            textSpan.className = "msg-text flou";
-            textSpan.textContent = data.message;
-
-            msgDiv.appendChild(usernameDiv);
-            if (data.replyTo) {
-                var replyToDiv = document.createElement("div");
-                replyToDiv.className = "quoted-message";
-                replyToDiv.textContent = "Réponse à : " + data.replyTo;
-                msgDiv.appendChild(replyToDiv);
-            }
-            msgDiv.appendChild(textSpan);
-
-            var replyBtn = document.createElement("button");
-            replyBtn.textContent = "Répondre";
-            replyBtn.className = "reply-btn";
-            replyBtn.onclick = function() {
-                quotedMessage = data;
-                displayQuotedMessage(data);
-            };
-
-            var deleteBtn = document.createElement("button");
-            deleteBtn.textContent = "Supprimer";
-            deleteBtn.className = "delete-btn";
-            deleteBtn.onclick = function() {
-                db.child("messages/" + key).remove();
-            };
-
-            var buttonGroup = document.createElement("div");
-            buttonGroup.className = "button-group";
-            buttonGroup.appendChild(replyBtn);
-            buttonGroup.appendChild(deleteBtn);
-
-            msgDiv.appendChild(buttonGroup);
-
-            document.getElementById("messages").appendChild(msgDiv);
-
-            setTimeout(function() {
-                textSpan.classList.add("flou");
-            }, 15000);
-
-            scrollToBottom();
-        }
-
-        function displayQuotedMessage(data) {
-            var quotedDiv = document.getElementById("quoted-message-container");
-            quotedDiv.innerHTML = '';
-            var quotedMessageDiv = document.createElement("div");
-            quotedMessageDiv.className = "quoted-message";
-            quotedMessageDiv.textContent = "Répondre à : " + data.message;
-            quotedDiv.appendChild(quotedMessageDiv);
-
-            var cancelBtn = document.createElement("button");
-            cancelBtn.textContent = "Annuler";
-            cancelBtn.onclick = function() {
-                quotedMessage = null;
-                quotedDiv.innerHTML = '';
-            };
-            quotedDiv.appendChild(cancelBtn);
-        }
-
-        function toggleAllMessages() {
-            var allMessages = document.querySelectorAll(".msg-text");
-            allMessages.forEach(function(message) {
-                if (allMessagesVisible) {
-                    message.classList.add("flou");
-                } else {
-                    message.classList.remove("flou");
-                }
-            });
-            allMessagesVisible = !allMessagesVisible;
-            document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
-        }
-
-        function scrollToBottom() {
-            var messagesDiv = document.getElementById("messages");
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
+        db.child("password").once('value').then(function(snapshot) {
+            var dbPassword = snapshot.val();
+            if (dbPassword === null) {
+                db.set({
+                    password: password,
+                    messages: {}
+                });
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            } else if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            } else {
+                alert("Mot de passe incorrect !");
             }
         });
-    </script>
+    }
+
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
+    }
+
+    function sendMessage() {
+        var messageInput = document.getElementById("message-input");
+        var message = messageInput.value;
+
+        if (message.trim() === "") {
+            return;
+        }
+
+        var msgRef = db.child("messages").push();
+        msgRef.set({ "user": username, "message": message, "seen": false });
+
+        messageInput.value = '';
+    }
+
+    function loadMessages() {
+        db.child('messages').on('child_added', function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        });
+    }
+
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
+    }
+
+    function displayMessage(key, data) {
+        var msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+        var usernameDiv = document.createElement("div");
+        usernameDiv.className = "username";
+        usernameDiv.textContent = data.user;
+
+        var textSpan = document.createElement("span");
+        textSpan.className = "msg-text";
+        textSpan.textContent = data.message;
+
+        msgDiv.appendChild(usernameDiv);
+        msgDiv.appendChild(textSpan);
+
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.style.marginLeft = "10px";
+        deleteBtn.style.backgroundColor = "#e74c3c"; 
+        deleteBtn.style.color = "white";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        var replyBtn = document.createElement("button");
+        replyBtn.textContent = "Répondre";
+        replyBtn.style.backgroundColor = "#3498db"; 
+        replyBtn.style.color = "white";
+        replyBtn.onclick = function() {
+            var replyBox = document.getElementById("reply-box");
+            replyBox.textContent = `Réponse à : "${data.message}"`;
+            replyBox.style.display = "block";
+            replyBox.setAttribute("data-reply-to", key); // Stocke l'ID du message auquel on répond
+        };
+
+        msgDiv.appendChild(deleteBtn);
+        msgDiv.appendChild(replyBtn);
+
+        document.getElementById("messages").appendChild(msgDiv);
+
+        // Rendre flou après 15 secondes
+        setTimeout(function() {
+            textSpan.classList.add("flou");
+        }, 15000);
+    }
+
+    function toggleAllMessages() {
+        var allMessages = document.querySelectorAll(".msg-text");
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
+        allMessagesVisible = !allMessagesVisible;
+        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+    }
+
+    // Envoi de message en appuyant sur Entrée
+    document.getElementById("message-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Ajouter une zone pour afficher le message auquel on répond
+    var replyBox = document.createElement("div");
+    replyBox.id = "reply-box";
+    replyBox.style.display = "none";
+    replyBox.style.backgroundColor = "#2e2e2e";
+    replyBox.style.color = "#fff";
+    replyBox.style.padding = "10px";
+    replyBox.style.marginBottom = "10px";
+    replyBox.style.borderRadius = "5px";
+    document.getElementById("input-section").insertBefore(replyBox, document.getElementById("message-input"));
+
+    // Réinitialiser la zone de réponse après envoi du message
+    function sendMessage() {
+        var messageInput = document.getElementById("message-input");
+        var message = messageInput.value;
+
+        if (message.trim() === "") {
+            return;
+        }
+
+        var msgRef = db.child("messages").push();
+        var replyTo = replyBox.getAttribute("data-reply-to");
+
+        // Inclure la citation si l'utilisateur répond à un message
+        if (replyTo) {
+            msgRef.set({ "user": username, "message": message, "replyTo": replyTo });
+            replyBox.style.display = "none";
+            replyBox.removeAttribute("data-reply-to");
+        } else {
+            msgRef.set({ "user": username, "message": message });
+        }
+
+        messageInput.value = '';
+    }
+</script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberixPro 2024
+        &copy; RoberiXX 2024
     </footer>
 </body>
-
 </html>
