@@ -58,7 +58,7 @@
             background-color: #4c4c4c;
         }
         #messages {
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 10px;
             background-color: #2e2e2e;
@@ -73,7 +73,6 @@
             max-width: 70%;
             color: #fff;
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
             position: relative;
         }
@@ -87,37 +86,50 @@
             align-self: flex-start;
             border-radius: 10px 10px 10px 0;
         }
-        .msg-text {
-            margin-bottom: 5px;
-        }
         .username {
-            font-size: 0.8rem;
-            color: #ccc;
-        }
-        .flou {
-            filter: blur(4px);
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6f61, #d76d77, #3a1c71);
+            -webkit-background-clip: text;
+            color: transparent;
         }
         h1 {
-            font-size: 2.5em;
+            font-size: 3em;
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            border: 2px solid #ff6f61;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #3a1c71;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            #login-container, #chat-container {
-                width: 100%;
-                padding: 15px;
-            }
-            input, button {
-                font-size: 0.9rem;
-                padding: 8px;
-            }
-            #messages {
-                max-height: 50vh;
-            }
+        #input-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        textarea {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #444;
+            color: #fff;
+            resize: none;
+            height: 50px;
+        }
+        button.delete-btn {
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9rem;
+            padding: 5px;
+        }
+        button.delete-btn:hover {
+            background-color: #c0392b;
         }
     </style>
 </head>
@@ -135,9 +147,9 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="messages"></div>
+        <div id="messages" aria-live="polite" aria-atomic="true"></div>
         <div id="input-section">
-            <input type="text" id="message-input" placeholder="Écrivez un message">
+            <textarea id="message-input" placeholder="Écrivez un message"></textarea>
             <button onclick="sendMessage()">Envoyer</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
@@ -160,7 +172,9 @@
     var db;
     var username;
     var roomName;
+    var lastMessageKey = null;
     var allMessagesVisible = false;
+    const MESSAGES_PER_PAGE = 50;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -207,17 +221,30 @@
         msgRef.set({ "user": username, "message": message, "seen": false });
 
         messageInput.value = '';
+
+        // Défilement automatique vers le dernier message
+        document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
     }
 
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
+            // Défilement automatique vers le dernier message lors du chargement
+            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         });
-    }
 
-    function quitRoom() {
-        document.getElementById("chat-container").style.display = "none";
-        document.getElementById("login-container").style.display = "block";
+        // Supprimer les anciens messages si le nombre dépasse 50
+        db.child('messages').on('value', function(snapshot) {
+            if (snapshot.numChildren() > 50) {
+                var messagesToRemove = snapshot.numChildren() - 30; // On garde les 30 plus récents
+                snapshot.forEach(function(childSnapshot) {
+                    if (messagesToRemove > 0) {
+                        db.child('messages/' + childSnapshot.key).remove();
+                        messagesToRemove--;
+                    }
+                });
+            }
+        });
     }
 
     function displayMessage(key, data) {
@@ -225,44 +252,41 @@
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+        var usernameSpan = document.createElement("span");
+        usernameSpan.className = "username";
+        usernameSpan.textContent = data.user;
 
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
         textSpan.textContent = data.message;
-
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
 
         var deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Supprimer";
+        deleteBtn.className = "delete-btn";
         deleteBtn.onclick = function() {
             db.child("messages/" + key).remove();
         };
 
+        msgDiv.appendChild(usernameSpan);
+        msgDiv.appendChild(textSpan);
         msgDiv.appendChild(deleteBtn);
-
         document.getElementById("messages").appendChild(msgDiv);
-
-        // Rendre flou après 15 secondes
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
     }
 
     function toggleAllMessages() {
-        var allMessages = document.querySelectorAll(".msg-text");
-        allMessages.forEach(function(message) {
+        allMessagesVisible = !allMessagesVisible;
+        var messages = document.querySelectorAll('.message');
+        messages.forEach(function(msg) {
             if (allMessagesVisible) {
-                message.classList.add("flou");
+                msg.classList.remove('flou');
             } else {
-                message.classList.remove("flou");
+                msg.classList.add('flou');
             }
         });
-        allMessagesVisible = !allMessagesVisible;
-        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+    }
+
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
     }
 
     // Envoi de message en appuyant sur Entrée
