@@ -126,11 +126,37 @@
             filter: blur(4px);
         }
 
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 5px;
+        }
+
+        .button-group button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .reply-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
         h1 {
             font-size: 2.5em;
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border: 2px solid #ffd700;
+            background-color: rgba(255, 215, 0, 0.2);
+            border-radius: 10px;
         }
 
         @media (max-width: 600px) {
@@ -251,11 +277,12 @@
             }
 
             var msgRef = db.child("messages").push();
-            var messageObject = { "user": username, "message": message, "seen": false };
-            if (quotedMessage) {
-                messageObject.replyTo = quotedMessage;
-            }
-            msgRef.set(messageObject);
+            msgRef.set({
+                "user": username,
+                "message": message,
+                "seen": false,
+                "replyTo": quotedMessage ? quotedMessage.message : null
+            });
 
             messageInput.value = '';
             quotedMessage = null;
@@ -290,13 +317,14 @@
             if (data.replyTo) {
                 var replyToDiv = document.createElement("div");
                 replyToDiv.className = "quoted-message";
-                replyToDiv.textContent = "Réponse à : " + data.replyTo.message;
+                replyToDiv.textContent = "Réponse à : " + data.replyTo;
                 msgDiv.appendChild(replyToDiv);
             }
             msgDiv.appendChild(textSpan);
 
             var replyBtn = document.createElement("button");
             replyBtn.textContent = "Répondre";
+            replyBtn.className = "reply-btn";
             replyBtn.onclick = function() {
                 quotedMessage = data;
                 displayQuotedMessage(data);
@@ -304,12 +332,17 @@
 
             var deleteBtn = document.createElement("button");
             deleteBtn.textContent = "Supprimer";
+            deleteBtn.className = "delete-btn";
             deleteBtn.onclick = function() {
                 db.child("messages/" + key).remove();
             };
 
-            msgDiv.appendChild(replyBtn);
-            msgDiv.appendChild(deleteBtn);
+            var buttonGroup = document.createElement("div");
+            buttonGroup.className = "button-group";
+            buttonGroup.appendChild(replyBtn);
+            buttonGroup.appendChild(deleteBtn);
+
+            msgDiv.appendChild(buttonGroup);
 
             document.getElementById("messages").appendChild(msgDiv);
 
@@ -364,7 +397,7 @@
     </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiX 2024
+        &copy; RoberixPro 2024
     </footer>
 </body>
 
