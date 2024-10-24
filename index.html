@@ -150,6 +150,7 @@
         <div id="input-section">
             <textarea id="message-input" placeholder="Écrivez un message"></textarea>
             <button onclick="sendMessage()">Envoyer</button>
+            <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
     </div>
@@ -172,7 +173,7 @@
     var roomName;
     var roomUsersRef;
     var lastMessageKey = null;
-    const MESSAGES_PER_PAGE = 50;
+    var allMessagesVisible = false;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -215,12 +216,14 @@
                 var user = childSnapshot.key;
                 var status = childSnapshot.val().state;
 
-                var userItem = document.createElement('div');
-                var statusIcon = document.createElement('span');
-                statusIcon.classList.add('online-status', 'online');
-                userItem.appendChild(statusIcon);
-                userItem.appendChild(document.createTextNode(user));
-                userList.appendChild(userItem);
+                if (user !== username) {
+                    var userItem = document.createElement('div');
+                    var statusIcon = document.createElement('span');
+                    statusIcon.classList.add('online-status', status === 'online' ? 'online' : 'offline');
+                    userItem.appendChild(statusIcon);
+                    userItem.appendChild(document.createTextNode(user));
+                    userList.appendChild(userItem);
+                }
             });
         });
     }
@@ -263,10 +266,46 @@
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
         var textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
         textSpan.textContent = data.message;
 
         msgDiv.appendChild(textSpan);
+
+        var toggleBtn = document.createElement("button");
+        toggleBtn.textContent = "Afficher";
+        toggleBtn.onclick = function() {
+            if (textSpan.classList.contains("flou")) {
+                textSpan.classList.remove("flou");
+                toggleBtn.textContent = "Masquer";
+            } else {
+                textSpan.classList.add("flou");
+                toggleBtn.textContent = "Afficher";
+            }
+        };
+
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        msgDiv.appendChild(toggleBtn);
+        msgDiv.appendChild(deleteBtn);
+
         document.getElementById("messages").appendChild(msgDiv);
+    }
+
+    function toggleAllMessages() {
+        var allMessages = document.querySelectorAll(".msg-text");
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
+        allMessagesVisible = !allMessagesVisible;
+        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
     // Envoi de message en appuyant sur Entrée
