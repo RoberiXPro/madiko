@@ -292,60 +292,73 @@
         document.getElementById("login-container").style.display = "block";
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
 
-        // Ajouter la citation si elle existe
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-        }
-
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
-        replyBtn.onclick = function() {
-            prepareReply(key, data.message);
-        };
-
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.className = "btn-delete";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        msgDiv.appendChild(replyBtn);
-        msgDiv.appendChild(deleteBtn);
-
-        document.getElementById("messages").appendChild(msgDiv);
-
-        // Effet flou après 15 secondes
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
-
-        // Défilement automatique vers le bas
-        scrollToBottom();
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
     }
+
+    // Créer un conteneur pour les boutons d'action
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
+
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    // Ajouter les deux boutons dans le conteneur d'actions
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+
+    // Ajouter le conteneur des boutons en dessous du message
+    msgDiv.appendChild(actionButtons);
+
+    // Ajouter le message complet dans le conteneur des messages
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Appliquer l'effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Scroll automatique vers le bas
+    scrollToBottom();
+}
 
     function prepareReply(key, message) {
         replyMessageId = key;
