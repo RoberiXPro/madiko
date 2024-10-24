@@ -93,14 +93,14 @@
         .username {
             font-size: 0.8rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #030b7d, #6f0202);
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
             -webkit-background-clip: text;
             color: transparent;
         }
         .flou {
             filter: blur(4px);
         }
-h1 {
+        h1 {
     font-size: 2.5em;
     color: #8800ff;
     margin-bottom: 20px;
@@ -345,37 +345,11 @@ h1 {
             event.preventDefault();
             sendMessage();
         }
-
-           // Fonction pour vérifier et supprimer les anciens messages si le total dépasse 50
-    function checkAndDeleteOldMessages() {
-        db.child("messages").once('value', function(snapshot) {
-            var totalMessages = snapshot.numChildren();
-            if (totalMessages > 35) {
-                var oldestMessages = [];
-                snapshot.forEach(function(childSnapshot) {
-                    oldestMessages.push(childSnapshot.key);
-                    if (oldestMessages.length > totalMessages - 20) {
-                        return true; // Stopper la collecte des messages une fois qu'on a les plus anciens
-                    }
-                });
-                // Supprimer les messages les plus anciens
-                oldestMessages.forEach(function(messageKey) {
-                    db.child("messages/" + messageKey).remove();
-                });
-            }
-        });
-    }
-
-    document.getElementById("message-input").addEventListener("keydown", function(event) {
-        if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
     });
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiXXX 2024
+        &copy; RoberiX 2024
     </footer>
 </body>
 </html>
