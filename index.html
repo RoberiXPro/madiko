@@ -101,13 +101,30 @@
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            #login-container, #chat-container {
+                width: 100%;
+                padding: 15px;
+            }
+            input, button {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+            #messages {
+                max-height: 50vh;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>RS-Villa</h1>
 
-    <!-- Bouton pour charger plus de messages -->
-    <button onclick="loadOlderMessages()">Charger plus de messages</button>
+    <!-- Section pour afficher les utilisateurs avec leur statut -->
+    <div id="user-list"></div>
 
     <!-- Section de connexion -->
     <div id="login-container">
@@ -120,7 +137,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.2em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="messages"></div>
+        <div id="messages" aria-live="polite" aria-atomic="true"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Ecrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
@@ -143,15 +160,18 @@
 
     var db;
     var username;
-    var lastMessageKey = null;  // Clé pour la pagination
-    const MESSAGES_PER_PAGE = 50;  // Limite du nombre de messages
+    var roomName;
+    var roomUsersRef;
+    var lastMessageKey = null;
+    const MESSAGES_PER_PAGE = 50;
 
     function joinRoom() {
         username = document.getElementById("username").value;
-        var roomName = document.getElementById("room-name-input").value;
+        roomName = document.getElementById("room-name-input").value;
         var password = document.getElementById("password-input").value;
 
         db = firebase.database().ref("rooms/" + roomName);
+        roomUsersRef = db.child("users");
 
         db.child("password").once('value').then(function(snapshot) {
             var dbPassword = snapshot.val();
@@ -171,6 +191,31 @@
             } else {
                 alert("Mot de passe incorrect !");
             }
+        });
+
+        // Ajouter l'utilisateur au salon avec le statut en ligne
+        roomUsersRef.child(username).set({
+            state: 'online'
+        });
+
+        // Marquer comme hors ligne à la déconnexion
+        roomUsersRef.child(username).onDisconnect().set({
+            state: 'offline'
+        });
+
+        // Suivre les utilisateurs dans le salon et afficher leur statut
+        roomUsersRef.on('value', function(snapshot) {
+            var userList = document.getElementById('user-list');
+            userList.innerHTML = '';  // Vider la liste des utilisateurs
+
+            snapshot.forEach(function(childSnapshot) {
+                var user = childSnapshot.key;
+                var status = childSnapshot.val().state;
+
+                var userItem = document.createElement('div');
+                userItem.textContent = user + ' (' + status + ')';  // Affiche Nom (en ligne) ou Nom (hors ligne)
+                userList.appendChild(userItem);
+            });
         });
     }
 
@@ -194,31 +239,28 @@
         messageInput.value = '';
     }
 
-    // Charger les messages avec la pagination
-    function loadMessages() {
-        let query = db.child('messages').limitToLast(MESSAGES_PER_PAGE);
+    function loadMessages(isInitialLoad = true) {
+        let query = db.child('messages').orderByKey().limitToLast(MESSAGES_PER_PAGE);
 
-        if (lastMessageKey) {
-            query = query.endBefore(lastMessageKey);
+        if (!isInitialLoad && lastMessageKey) {
+            query = db.child('messages').orderByKey().endBefore(lastMessageKey).limitToLast(MESSAGES_PER_PAGE);
         }
-
-        query.on("child_added", function(snapshot) {
-            displayMessage(snapshot.key, snapshot.val());
-        });
 
         query.once('value', function(snapshot) {
             const messages = snapshot.val();
             if (messages) {
                 const messageKeys = Object.keys(messages);
-                lastMessageKey = messageKeys[0];  // Récupère la première clé pour la pagination future
+                lastMessageKey = messageKeys[0];
+                messageKeys.forEach(key => {
+                    displayMessage(key, messages[key]);
+                });
             }
         });
     }
 
-    // Charger plus de messages (pour la pagination)
     function loadOlderMessages() {
         if (lastMessageKey) {
-            loadMessages();
+            loadMessages(false);
         }
     }
 
@@ -226,14 +268,13 @@
         var msgDiv = document.createElement("div");
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
-        
+
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text flou";
         textSpan.textContent = data.message;
 
         msgDiv.appendChild(textSpan);
 
-        // Ajouter le bouton Afficher/Masquer
         var toggleBtn = document.createElement("button");
         toggleBtn.textContent = "Afficher";
         toggleBtn.onclick = function() {
@@ -241,16 +282,15 @@
                 textSpan.classList.remove("flou");
                 toggleBtn.textContent = "Masquer";
                 setTimeout(function() {
-                    textSpan.classList.add("flou"); // Flouter après 15 secondes
-                    toggleBtn.textContent = "Afficher"; // Remettre le texte du bouton à "Afficher"
+                    textSpan.classList.add("flou");
+                    toggleBtn.textContent = "Afficher";
                 }, 15000);
             } else {
                 textSpan.classList.add("flou");
                 toggleBtn.textContent = "Afficher";
             }
         };
-        
-        // Ajouter le bouton Supprimer
+
         var deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Supprimer";
         deleteBtn.onclick = function() {
@@ -260,23 +300,7 @@
         msgDiv.appendChild(toggleBtn);
         msgDiv.appendChild(deleteBtn);
         document.getElementById("messages").appendChild(msgDiv);
-
-        // Marquer le message comme "lu"
-        markMessageAsRead(key);
     }
-
-    // Fonction pour marquer un message comme lu
-    function markMessageAsRead(messageKey) {
-        var messageRef = db.child('messages').child(messageKey);
-        messageRef.update({ seen: true });
-    }
-
-    document.getElementById("message-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
