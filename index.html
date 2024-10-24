@@ -73,9 +73,8 @@
             max-width: 70%;
             color: #fff;
             display: flex;
-            justify-content: space-between;
-            position: relative;
             flex-direction: column;
+            position: relative;
         }
         .message.user1 {
             background: linear-gradient(to right, #8e44ad, #3498db);
@@ -91,44 +90,39 @@
             margin-bottom: 5px;
         }
         .username {
-            font-size: 0.9rem;
-            font-weight: bold;
-            background: linear-gradient(to right, #f7ff00, #db36a4);
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: #ccc;
         }
         .flou {
             filter: blur(4px);
         }
-h1 {
-    font-size: 2.5em;
-    color: #ffd700;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    padding: 10px; /* Ajouter de l'espace à l'intérieur du titre */
-    border: 3px solid #fff; /* Bordure blanche */
-    border-radius: 10px; /* Coins arrondis */
-    background: linear-gradient(135deg, #6b0f1a, #b91372); /* Dégradé de couleur de fond */
-}
-        #input-section {
-            position: relative;
+        .message-buttons {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            gap: 5px;
+            position: absolute;
+            right: 10px;
+            top: 5px;
         }
-        .reply-box {
-            background-color: #444;
-            color: #fff;
-            padding: 8px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .reply-close {
-            cursor: pointer;
+        .message-buttons button {
+            padding: 3px 8px;
+            border: none;
+            border-radius: 4px;
             font-size: 0.8rem;
-            color: #ddd;
-            float: right;
+            cursor: pointer;
+        }
+        button.reply {
+            background-color: #3498db;
+            color: white;
+        }
+        button.delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         }
         @media (max-width: 600px) {
             body {
@@ -164,10 +158,6 @@ h1 {
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
         <div id="messages"></div>
         <div id="input-section">
-            <div id="reply-box" class="reply-box" style="display: none;">
-                <span id="reply-message"></span>
-                <span class="reply-close" onclick="cancelReply()">x</span>
-            </div>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
@@ -192,7 +182,6 @@ h1 {
     var username;
     var roomName;
     var allMessagesVisible = false;
-    var replyTo = null;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -230,22 +219,17 @@ h1 {
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
         var message = messageInput.value;
-        var replyMessage = replyTo ? document.getElementById("reply-message").textContent : null;
 
         if (message.trim() === "") {
             return;
         }
 
         var msgRef = db.child("messages").push();
-        msgRef.set({
-            "user": username,
-            "message": message,
-            "replyTo": replyMessage || null,
-            "seen": false
-        });
+        msgRef.set({ "user": username, "message": message, "seen": false });
 
         messageInput.value = '';
-        cancelReply();
+
+        scrollToBottom();
     }
 
     function loadMessages() {
@@ -275,33 +259,26 @@ h1 {
         msgDiv.appendChild(usernameDiv);
         msgDiv.appendChild(textSpan);
 
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            replyDiv.style.fontSize = "0.8rem";
-            replyDiv.style.color = "#ccc";
-            msgDiv.insertBefore(replyDiv, textSpan);
-        }
+        var buttonsDiv = document.createElement("div");
+        buttonsDiv.classList.add("message-buttons");
 
         var replyBtn = document.createElement("button");
+        replyBtn.classList.add("reply");
         replyBtn.textContent = "Répondre";
         replyBtn.onclick = function() {
-            setReply(data.message);
+            replyToMessage(key, data.message);
         };
 
         var deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("delete");
         deleteBtn.textContent = "Supprimer";
         deleteBtn.onclick = function() {
             db.child("messages/" + key).remove();
         };
 
-        var buttonContainer = document.createElement("div");
-        buttonContainer.style.display = "flex";
-        buttonContainer.style.gap = "10px";
-        buttonContainer.appendChild(replyBtn);
-        buttonContainer.appendChild(deleteBtn);
-
-        msgDiv.appendChild(buttonContainer);
+        buttonsDiv.appendChild(replyBtn);
+        buttonsDiv.appendChild(deleteBtn);
+        msgDiv.appendChild(buttonsDiv);
 
         document.getElementById("messages").appendChild(msgDiv);
 
@@ -309,18 +286,12 @@ h1 {
         setTimeout(function() {
             textSpan.classList.add("flou");
         }, 15000);
+
+        scrollToBottom();
     }
 
-    function setReply(message) {
-        document.getElementById("reply-box").style.display = "block";
-        document.getElementById("reply-message").textContent = message;
-        replyTo = message;
-    }
-
-    function cancelReply() {
-        document.getElementById("reply-box").style.display = "none";
-        document.getElementById("reply-message").textContent = "";
-        replyTo = null;
+    function scrollToBottom() {
+        document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
     }
 
     function toggleAllMessages() {
@@ -336,6 +307,12 @@ h1 {
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
+    function replyToMessage(key, originalMessage) {
+        var messageInput = document.getElementById("message-input");
+        messageInput.value = "Répondre à: " + originalMessage + "\n";
+        messageInput.focus();
+    }
+
     // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
@@ -346,7 +323,7 @@ h1 {
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; Roberix - 2024
+        &copy; Roberix 2024
     </footer>
 </body>
 </html>
