@@ -58,7 +58,7 @@
             background-color: #4c4c4c;
         }
         #messages {
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
             padding: 10px;
             background-color: #2e2e2e;
@@ -73,6 +73,8 @@
             max-width: 70%;
             color: #fff;
             display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             position: relative;
         }
         .message.user1 {
@@ -85,6 +87,13 @@
             align-self: flex-start;
             border-radius: 10px 10px 10px 0;
         }
+        .msg-text {
+            margin-bottom: 5px;
+        }
+        .username {
+            font-size: 0.8rem;
+            color: #ccc;
+        }
         .flou {
             filter: blur(4px);
         }
@@ -93,23 +102,6 @@
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-        }
-        #user-list div {
-            margin-bottom: 5px;
-            font-size: 1.1em;
-        }
-        .online-status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        .online {
-            background-color: green;
-        }
-        .offline {
-            background-color: red;
         }
         @media (max-width: 600px) {
             body {
@@ -132,9 +124,6 @@
 <body>
     <h1>RS-Villa</h1>
 
-    <!-- Section pour afficher les utilisateurs avec leur statut -->
-    <div id="user-list"></div>
-
     <!-- Section de connexion -->
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
@@ -146,9 +135,9 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="messages" aria-live="polite" aria-atomic="true"></div>
+        <div id="messages"></div>
         <div id="input-section">
-            <textarea id="message-input" placeholder="Écrivez un message"></textarea>
+            <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
@@ -171,8 +160,6 @@
     var db;
     var username;
     var roomName;
-    var roomUsersRef;
-    var lastMessageKey = null;
     var allMessagesVisible = false;
 
     function joinRoom() {
@@ -181,7 +168,6 @@
         var password = document.getElementById("password-input").value;
 
         db = firebase.database().ref("rooms/" + roomName);
-        roomUsersRef = db.child("users");
 
         db.child("password").once('value').then(function(snapshot) {
             var dbPassword = snapshot.val();
@@ -200,31 +186,6 @@
             } else {
                 alert("Mot de passe incorrect !");
             }
-        });
-
-        roomUsersRef.child(username).set({
-            state: 'online'
-        });
-
-        roomUsersRef.child(username).onDisconnect().remove();
-
-        roomUsersRef.on('value', function(snapshot) {
-            var userList = document.getElementById('user-list');
-            userList.innerHTML = '';
-
-            snapshot.forEach(function(childSnapshot) {
-                var user = childSnapshot.key;
-                var status = childSnapshot.val().state;
-
-                if (user !== username) {
-                    var userItem = document.createElement('div');
-                    var statusIcon = document.createElement('span');
-                    statusIcon.classList.add('online-status', status === 'online' ? 'online' : 'offline');
-                    userItem.appendChild(statusIcon);
-                    userItem.appendChild(document.createTextNode(user));
-                    userList.appendChild(userItem);
-                }
-            });
         });
     }
 
@@ -257,7 +218,6 @@
     function quitRoom() {
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
-        db.child("users").child(username).remove(); // Supprimer l'utilisateur de la liste
     }
 
     function displayMessage(key, data) {
@@ -265,23 +225,16 @@
         msgDiv.id = key;
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
+        var usernameDiv = document.createElement("div");
+        usernameDiv.className = "username";
+        usernameDiv.textContent = data.user;
+
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text flou";
         textSpan.textContent = data.message;
 
+        msgDiv.appendChild(usernameDiv);
         msgDiv.appendChild(textSpan);
-
-        var toggleBtn = document.createElement("button");
-        toggleBtn.textContent = "Afficher";
-        toggleBtn.onclick = function() {
-            if (textSpan.classList.contains("flou")) {
-                textSpan.classList.remove("flou");
-                toggleBtn.textContent = "Masquer";
-            } else {
-                textSpan.classList.add("flou");
-                toggleBtn.textContent = "Afficher";
-            }
-        };
 
         var deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Supprimer";
@@ -289,10 +242,14 @@
             db.child("messages/" + key).remove();
         };
 
-        msgDiv.appendChild(toggleBtn);
         msgDiv.appendChild(deleteBtn);
 
         document.getElementById("messages").appendChild(msgDiv);
+
+        // Rendre flou après 15 secondes
+        setTimeout(function() {
+            textSpan.classList.add("flou");
+        }, 15000);
     }
 
     function toggleAllMessages() {
