@@ -90,11 +90,10 @@
         .msg-text {
             margin-bottom: 5px;
         }
-         .username {
-            font-size: 0.9rem;
+        .username {
+            font-size: 0.8rem;
             font-weight: bold;
-            color: #ffd700;
-            background: linear-gradient(to right, #e67e22, #f39c12);
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
             -webkit-background-clip: text;
             color: transparent;
         }
@@ -104,12 +103,39 @@
         h1 {
             font-size: 2.5em;
             color: #ffd700;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-            border: 3px solid #ffd700;
+            border: 2px solid #ffd700;
             padding: 10px;
             border-radius: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .action-buttons button {
+            background-color: #5a5a5a;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .action-buttons button:hover {
+            background-color: #4c4c4c;
+        }
+        .action-buttons .btn-reply {
+            background-color: #3498db;
+        }
+        .action-buttons .btn-delete {
+            background-color: #e74c3c;
+        }
+        .reply-box {
+            background-color: #444;
+            padding: 5px;
+            border-left: 2px solid #3498db;
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #ccc;
         }
         @media (max-width: 600px) {
             body {
@@ -143,6 +169,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <div id="reply-box"></div>
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Écrivez un message">
@@ -168,6 +195,7 @@
     var db;
     var username;
     var roomName;
+    var replyToMessage = null;
     var allMessagesVisible = false;
 
     function joinRoom() {
@@ -211,10 +239,20 @@
             return;
         }
 
+        var msgData = { "user": username, "message": message, "seen": false };
+        
+        // Inclure une citation si nécessaire
+        if (replyToMessage) {
+            msgData.replyTo = replyToMessage.message;
+            msgData.replyFrom = replyToMessage.user;
+        }
+
         var msgRef = db.child("messages").push();
-        msgRef.set({ "user": username, "message": message, "seen": false });
+        msgRef.set(msgData);
 
         messageInput.value = '';
+        replyToMessage = null;
+        document.getElementById("reply-box").innerHTML = ''; // Retirer la citation après envoi
     }
 
     function loadMessages() {
@@ -244,32 +282,41 @@
         msgDiv.appendChild(usernameDiv);
         msgDiv.appendChild(textSpan);
 
+        // Ajouter la citation si elle existe
+        if (data.replyTo) {
+            var replyDiv = document.createElement("div");
+            replyDiv.className = "reply-box";
+            replyDiv.textContent = `Réponse à ${data.replyFrom}: "${data.replyTo}"`;
+            msgDiv.appendChild(replyDiv);
+        }
+
+        var actionDiv = document.createElement("div");
+        actionDiv.className = "action-buttons";
+
+        // Bouton Répondre
+        var replyBtn = document.createElement("button");
+        replyBtn.className = "btn-reply";
+        replyBtn.textContent = "Répondre";
+        replyBtn.onclick = function() {
+            replyToMessage = data;
+            document.getElementById("reply-box").textContent = `Réponse à ${data.user}: "${data.message}"`;
+        };
+
+        // Bouton Supprimer
         var deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-delete";
         deleteBtn.textContent = "Supprimer";
-        deleteBtn.style.marginLeft = "10px";
-        deleteBtn.style.backgroundColor = "#e74c3c"; 
-        deleteBtn.style.color = "white";
         deleteBtn.onclick = function() {
             db.child("messages/" + key).remove();
         };
 
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.style.backgroundColor = "#3498db"; 
-        replyBtn.style.color = "white";
-        replyBtn.onclick = function() {
-            var replyBox = document.getElementById("reply-box");
-            replyBox.textContent = `Réponse à : "${data.message}"`;
-            replyBox.style.display = "block";
-            replyBox.setAttribute("data-reply-to", key); // Stocke l'ID du message auquel on répond
-        };
-
-        msgDiv.appendChild(deleteBtn);
-        msgDiv.appendChild(replyBtn);
+        actionDiv.appendChild(replyBtn);
+        actionDiv.appendChild(deleteBtn);
+        msgDiv.appendChild(actionDiv);
 
         document.getElementById("messages").appendChild(msgDiv);
 
-        // Rendre flou après 15 secondes
+        // Effet flou après 15 secondes
         setTimeout(function() {
             textSpan.classList.add("flou");
         }, 15000);
@@ -295,45 +342,10 @@
             sendMessage();
         }
     });
-
-    // Ajouter une zone pour afficher le message auquel on répond
-    var replyBox = document.createElement("div");
-    replyBox.id = "reply-box";
-    replyBox.style.display = "none";
-    replyBox.style.backgroundColor = "#2e2e2e";
-    replyBox.style.color = "#fff";
-    replyBox.style.padding = "10px";
-    replyBox.style.marginBottom = "10px";
-    replyBox.style.borderRadius = "5px";
-    document.getElementById("input-section").insertBefore(replyBox, document.getElementById("message-input"));
-
-    // Réinitialiser la zone de réponse après envoi du message
-    function sendMessage() {
-        var messageInput = document.getElementById("message-input");
-        var message = messageInput.value;
-
-        if (message.trim() === "") {
-            return;
-        }
-
-        var msgRef = db.child("messages").push();
-        var replyTo = replyBox.getAttribute("data-reply-to");
-
-        // Inclure la citation si l'utilisateur répond à un message
-        if (replyTo) {
-            msgRef.set({ "user": username, "message": message, "replyTo": replyTo });
-            replyBox.style.display = "none";
-            replyBox.removeAttribute("data-reply-to");
-        } else {
-            msgRef.set({ "user": username, "message": message });
-        }
-
-        messageInput.value = '';
-    }
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiXX 2024
+        &copy; RoberiXXX 2024
     </footer>
 </body>
 </html>
