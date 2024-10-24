@@ -3,8 +3,10 @@
 <head>
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
     <style>
         body {
             display: flex;
@@ -106,6 +108,19 @@
 <body>
     <h1>RS-Villa</h1>
 
+    <!-- Bouton pour charger plus de messages -->
+    <button onclick="loadOlderMessages()">Charger plus de messages</button>
+
+    <!-- reCAPTCHA Container -->
+    <div id="recaptcha-container"></div>
+
+    <!-- Formulaire de connexion par téléphone -->
+    <input type="text" id="phone-number" placeholder="Numéro de téléphone">
+    <button onclick="sendVerificationCode()">Envoyer le code</button>
+
+    <input type="text" id="verification-code" placeholder="Code de vérification">
+    <button onclick="verifyCode()">Vérifier le code</button>
+
     <!-- Section de connexion -->
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
@@ -125,8 +140,8 @@
     </div>
 
 <script>
-    // Configuration Firebase
-    var firebaseConfig = {
+    // Configuration Firebase (mis à jour avec ta configuration)
+    const firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
         databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
@@ -136,118 +151,138 @@
         appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
         measurementId: "G-EBWFWCMWFT"
     };
+
+    // Initialiser Firebase
     firebase.initializeApp(firebaseConfig);
 
-    var db;
-    var username;
+    const auth = firebase.auth();
+    const db = firebase.database();
 
+    let lastMessageKey = null;
+    const MESSAGES_PER_PAGE = 50;
+
+    // Fonction pour envoyer le code de vérification
+    function sendVerificationCode() {
+        const phoneNumber = document.getElementById('phone-number').value;
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible',
+            'callback': function(response) {
+                console.log("reCAPTCHA vérifié");
+            }
+        });
+
+        auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+            .then(function(confirmationResult) {
+                window.confirmationResult = confirmationResult;
+                alert("Le code de vérification a été envoyé !");
+            })
+            .catch(function(error) {
+                alert("Erreur lors de l'envoi du code : " + error.message);
+            });
+    }
+
+    // Fonction pour vérifier le code de vérification
+    function verifyCode() {
+        const code = document.getElementById('verification-code').value;
+        window.confirmationResult.confirm(code)
+            .then(function(result) {
+                const user = result.user;
+                alert("Connexion réussie !");
+            })
+            .catch(function(error) {
+                alert("Erreur lors de la vérification du code : " + error.message);
+            });
+    }
+
+    // Rejoindre la Villa
     function joinRoom() {
-        username = document.getElementById("username").value;
-        var roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
+        const username = document.getElementById("username").value;
+        const roomName = document.getElementById("room-name-input").value;
+        const password = document.getElementById("password-input").value;
 
-        db = firebase.database().ref("rooms/" + roomName);
-
-        db.child("password").once('value').then(function(snapshot) {
-            var dbPassword = snapshot.val();
-            
-            if (dbPassword === null) {
-                db.set({
+        const roomRef = db.ref("rooms/" + roomName);
+        
+        roomRef.child("password").get().then((snapshot) => {
+            if (snapshot.exists()) {
+                const dbPassword = snapshot.val();
+                if (dbPassword === password) {
+                    alert("Connexion réussie !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    switchToChat(roomRef);
+                } else {
+                    alert("Mot de passe incorrect !");
+                }
+            } else {
+                roomRef.set({
                     password: password,
                     messages: {}
                 });
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-            } else if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-            } else {
-                alert("Mot de passe incorrect !");
+                switchToChat(roomRef);
             }
         });
     }
 
-    function switchToChat() {
+    function switchToChat(roomRef) {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
-        loadMessages();
+        loadMessages(roomRef);
     }
 
-    function sendMessage() {
-        var messageInput = document.getElementById("message-input");
-        var message = messageInput.value;
-        
-        if (message.trim() === "") {
-            return; // Ne rien faire si le message est vide
+    // Fonction pour charger les derniers messages
+    function loadMessages(roomRef) {
+        let query = roomRef.child('messages').limitToLast(MESSAGES_PER_PAGE);
+
+        if (lastMessageKey) {
+            query = query.endBefore(lastMessageKey);
         }
-        
-        var msgRef = db.child("messages").push();
-        msgRef.set({ "user": username, "message": message, "seen": false });
 
-        messageInput.value = '';
-    }
-
-    function loadMessages() {
-        db.child("messages").on("child_added", function(snapshot) {
+        query.on("child_added", function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         });
 
-        db.child("messages").on("child_removed", function(snapshot) {
-            var msgDiv = document.getElementById(snapshot.key);
-            if (msgDiv) {
-                msgDiv.remove();
+        query.once('value', function(snapshot) {
+            const messages = snapshot.val();
+            if (messages) {
+                const messageKeys = Object.keys(messages);
+                lastMessageKey = messageKeys[0];
             }
         });
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
-        
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
-        textSpan.textContent = data.message;
-
-        msgDiv.appendChild(textSpan);
-
-        // Ajouter le bouton Afficher/Masquer
-        var toggleBtn = document.createElement("button");
-        toggleBtn.textContent = "Afficher";
-        toggleBtn.onclick = function() {
-            if (textSpan.classList.contains("flou")) {
-                textSpan.classList.remove("flou");
-                toggleBtn.textContent = "Masquer";
-                setTimeout(function() {
-                    textSpan.classList.add("flou"); // Flouter après 15 secondes
-                    toggleBtn.textContent = "Afficher"; // Remettre le texte du bouton à "Afficher"
-                }, 15000);
-            } else {
-                textSpan.classList.add("flou");
-                toggleBtn.textContent = "Afficher";
-            }
-        };
-        
-        // Ajouter le bouton Supprimer
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        msgDiv.appendChild(toggleBtn);
-        msgDiv.appendChild(deleteBtn);
-        document.getElementById("messages").appendChild(msgDiv);
+    // Charger plus de messages (lorsque l'utilisateur clique sur le bouton "Charger plus")
+    function loadOlderMessages() {
+        if (lastMessageKey) {
+            loadMessages(roomRef);
+        }
     }
 
-    document.getElementById("message-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
+    // Fonction pour afficher un message et marquer comme "lu"
+    function displayMessage(key, data) {
+        const msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = data.message;
+        msgDiv.appendChild(textSpan);
+
+        document.getElementById("messages").appendChild(msgDiv);
+
+        // Marquer le message comme "lu"
+        markMessageAsRead(key);
+    }
+
+    // Fonction pour marquer un message comme "lu"
+    function markMessageAsRead(messageKey) {
+        const messageRef = roomRef.child('messages').child(messageKey);
+
+        // Mettre à jour le champ "seen" du message
+        messageRef.update({
+            seen: true
+        });
+    }
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
