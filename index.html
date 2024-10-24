@@ -142,6 +142,7 @@
             <input type="text" id="message-input" placeholder="Ecrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
         </div>
+        <button onclick="loadOlderMessages()">Charger plus de messages</button>
     </div>
 
 <script>
@@ -175,7 +176,6 @@
 
         db.child("password").once('value').then(function(snapshot) {
             var dbPassword = snapshot.val();
-            
             if (dbPassword === null) {
                 db.set({
                     password: password,
