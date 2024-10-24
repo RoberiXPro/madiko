@@ -270,61 +270,64 @@
         document.getElementById("login-container").style.display = "block";
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
 
-        // Ajouter la citation si elle existe
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.className = "reply-box";
-            replyDiv.textContent = `Réponse à ${data.replyFrom}: "${data.replyTo}"`;
-            msgDiv.appendChild(replyDiv);
-        }
-
-        var actionDiv = document.createElement("div");
-        actionDiv.className = "action-buttons";
-
-        // Bouton Répondre
-        var replyBtn = document.createElement("button");
-        replyBtn.className = "btn-reply";
-        replyBtn.textContent = "Répondre";
-        replyBtn.onclick = function() {
-            replyToMessage = data;
-            document.getElementById("reply-box").textContent = `Réponse à ${data.user}: "${data.message}"`;
-        };
-
-        // Bouton Supprimer
-        var deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn-delete";
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        actionDiv.appendChild(replyBtn);
-        actionDiv.appendChild(deleteBtn);
-        msgDiv.appendChild(actionDiv);
-
-        document.getElementById("messages").appendChild(msgDiv);
-
-        // Effet flou après 15 secondes
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.className = "reply-box";
+        replyDiv.textContent = `Réponse à ${data.replyFrom}: "${data.replyTo}"`;
+        msgDiv.appendChild(replyDiv);
     }
+
+    var actionDiv = document.createElement("div");
+    actionDiv.className = "action-buttons";
+
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.className = "btn-reply";
+    replyBtn.textContent = "Répondre";
+    replyBtn.onclick = function() {
+        replyToMessage = data;
+        document.getElementById("reply-box").textContent = `Réponse à ${data.user}: "${data.message}"`;
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn-delete";
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    actionDiv.appendChild(replyBtn);
+    actionDiv.appendChild(deleteBtn);
+    msgDiv.appendChild(actionDiv);
+
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Défilement automatique vers le bas
+    scrollToBottom();
+}
 
     function toggleAllMessages() {
         var allMessages = document.querySelectorAll(".msg-text");
