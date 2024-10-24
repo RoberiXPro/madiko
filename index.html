@@ -91,45 +91,30 @@
             margin-bottom: 5px;
         }
         .username {
-            font-weight: bold;
-            background: linear-gradient(to right, #3498db, #8e44ad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: #ccc;
         }
         .flou {
             filter: blur(4px);
         }
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+        .action-buttons button {
+            padding: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-radius: 3px;
+            background-color: #444;
+            color: #fff;
+        }
         h1 {
             font-size: 2.5em;
             color: #ffd700;
-            background-color: #1f1f1f;
-            border-radius: 15px;
-            padding: 10px 20px;
             margin-bottom: 20px;
-            box-shadow: 0 0 10px #ffd700;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-        }
-        #reply-container {
-            display: none;
-            background-color: #444;
-            padding: 5px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        .reply-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 0.9rem;
-            padding: 5px;
-        }
-        .reply-btn:hover {
-            background-color: #2980b9;
         }
         @media (max-width: 600px) {
             body {
@@ -163,15 +148,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-
-        <!-- Section pour répondre à un message -->
-        <div id="reply-container">
-            <span id="reply-message"></span>
-            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
-        </div>
-
         <div id="messages"></div>
-
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
@@ -197,8 +174,6 @@
     var username;
     var roomName;
     var allMessagesVisible = false;
-    var replyMessageId = null;
-    var replyMessageText = "";
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -241,28 +216,15 @@
             return;
         }
 
-        var msgData = { 
-            "user": username, 
-            "message": message, 
-            "seen": false 
-        };
-
-        if (replyMessageId) {
-            msgData.replyTo = replyMessageText;
-            cancelReply();
-        }
-
         var msgRef = db.child("messages").push();
-        msgRef.set(msgData);
+        msgRef.set({ "user": username, "message": message, "seen": false });
 
         messageInput.value = '';
-        document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
     }
 
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         });
     }
 
@@ -281,24 +243,20 @@
         usernameDiv.textContent = data.user;
 
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
+        textSpan.className = "msg-text";
         textSpan.textContent = data.message;
 
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-        }
+        msgDiv.appendChild(usernameDiv);
+        msgDiv.appendChild(textSpan);
+
+        // Ajouter les boutons Répondre et Supprimer
+        var actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
 
         var replyBtn = document.createElement("button");
         replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
         replyBtn.onclick = function() {
-            prepareReply(key, data.message);
+            replyMessage(data.message);
         };
 
         var deleteBtn = document.createElement("button");
@@ -307,30 +265,24 @@
             db.child("messages/" + key).remove();
         };
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
-        msgDiv.appendChild(replyBtn);
-        msgDiv.appendChild(deleteBtn);
+        actionButtons.appendChild(replyBtn);
+        actionButtons.appendChild(deleteBtn);
+
+        msgDiv.appendChild(actionButtons);
 
         document.getElementById("messages").appendChild(msgDiv);
 
+        // Rendre flou après 15 secondes
         setTimeout(function() {
             textSpan.classList.add("flou");
         }, 15000);
+
+        scrollToBottom(); // Scroll automatique
     }
 
-    function prepareReply(key, message) {
-        replyMessageId = key;
-        replyMessageText = message;
-        document.getElementById("reply-message").textContent = "Réponse à : " + message;
-        document.getElementById("reply-container").style.display = "block";
-    }
-
-    function cancelReply() {
-        replyMessageId = null;
-        replyMessageText = "";
-        document.getElementById("reply-message").textContent = "";
-        document.getElementById("reply-container").style.display = "none";
+    function replyMessage(originalMessage) {
+        var messageInput = document.getElementById("message-input");
+        messageInput.value = `Réponse à: "${originalMessage}"\n` + messageInput.value;
     }
 
     function toggleAllMessages() {
@@ -346,6 +298,13 @@
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
+    // Fonction de défilement automatique
+    function scrollToBottom() {
+        var messagesDiv = document.getElementById("messages");
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -355,7 +314,7 @@
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberixPro 2024
+        &copy; Roberix 2024
     </footer>
 </body>
 </html>
