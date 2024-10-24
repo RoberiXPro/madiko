@@ -92,6 +92,10 @@
         .username {
             font-size: 0.8rem;
             color: #ccc;
+            font-weight: bold;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            color: transparent;
         }
         .flou {
             filter: blur(4px);
@@ -123,6 +127,18 @@
             color: #ffd700;
             margin-bottom: 20px;
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ffd700;
+            padding: 10px;
+            border-radius: 10px;
+            background: linear-gradient(to right, #e67e22, #f39c12);
+        }
+        #quoted-message {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
         }
         @media (max-width: 600px) {
             body {
@@ -156,6 +172,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <div id="quoted-message" style="display: none;"></div>
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Écrivez un message">
@@ -182,6 +199,7 @@
     var username;
     var roomName;
     var allMessagesVisible = false;
+    var quotedMessage = null;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -225,11 +243,16 @@
         }
 
         var msgRef = db.child("messages").push();
-        msgRef.set({ "user": username, "message": message, "seen": false });
+        msgRef.set({ 
+            "user": username, 
+            "message": message, 
+            "quotedMessage": quotedMessage ? quotedMessage : null, 
+            "seen": false 
+        });
 
         messageInput.value = '';
-
-        scrollToBottom();
+        document.getElementById('quoted-message').style.display = 'none';
+        quotedMessage = null;
     }
 
     function loadMessages() {
@@ -257,41 +280,50 @@
         textSpan.textContent = data.message;
 
         msgDiv.appendChild(usernameDiv);
+        if (data.quotedMessage) {
+            var quotedDiv = document.createElement("div");
+            quotedDiv.textContent = 'Réponse à : ' + data.quotedMessage.message;
+            quotedDiv.style.background = '#333';
+            quotedDiv.style.padding = '5px';
+            quotedDiv.style.marginBottom = '5px';
+            quotedDiv.style.borderRadius = '5px';
+            msgDiv.appendChild(quotedDiv);
+        }
+
         msgDiv.appendChild(textSpan);
 
         var buttonsDiv = document.createElement("div");
-        buttonsDiv.classList.add("message-buttons");
+        buttonsDiv.className = "message-buttons";
 
         var replyBtn = document.createElement("button");
-        replyBtn.classList.add("reply");
         replyBtn.textContent = "Répondre";
+        replyBtn.classList.add("reply");
         replyBtn.onclick = function() {
-            replyToMessage(key, data.message);
+            quotedMessage = data;
+            document.getElementById('quoted-message').textContent = 'Répondre à : ' + data.message;
+            document.getElementById('quoted-message').style.display = 'block';
         };
 
         var deleteBtn = document.createElement("button");
-        deleteBtn.classList.add("delete");
         deleteBtn.textContent = "Supprimer";
+        deleteBtn.classList.add("delete");
         deleteBtn.onclick = function() {
             db.child("messages/" + key).remove();
         };
 
         buttonsDiv.appendChild(replyBtn);
         buttonsDiv.appendChild(deleteBtn);
-        msgDiv.appendChild(buttonsDiv);
 
+        msgDiv.appendChild(buttonsDiv);
         document.getElementById("messages").appendChild(msgDiv);
 
-        // Rendre flou après 15 secondes
+        // Effet flou après 15 secondes
         setTimeout(function() {
             textSpan.classList.add("flou");
         }, 15000);
 
-        scrollToBottom();
-    }
-
-    function scrollToBottom() {
-        document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+        // Scroll automatique vers le bas
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     }
 
     function toggleAllMessages() {
@@ -307,12 +339,6 @@
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
-    function replyToMessage(key, originalMessage) {
-        var messageInput = document.getElementById("message-input");
-        messageInput.value = "Répondre à: " + originalMessage + "\n";
-        messageInput.focus();
-    }
-
     // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
@@ -323,7 +349,7 @@
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; Roberix 2024
+        &copy; Roberix-Pro 2024
     </footer>
 </body>
 </html>
