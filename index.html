@@ -173,8 +173,10 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="reply-box"></div>
-        <button id="cancel-reply" style="display:none;" onclick="cancelReply()">Annuler</button>
+        <div id="reply-box">
+                    <button id="cancel-reply" style="display:none;" onclick="cancelReply()">Annuler</button>
+
+        </div>
         <div id="messages"></div>
         <div id="input-section">
             <input type="text" id="message-input" placeholder="Écrivez un message">
@@ -305,7 +307,7 @@
         replyBtn.onclick = function() {
             replyToMessage = data;
             document.getElementById("reply-box").textContent = `Réponse à ${data.user}: "${data.message}"`;
-            document.getElementById("cancel-reply").style.display = 'inline';  // Afficher le bouton Annuler
+            document.getElementById("cancel-reply").style.display = 'inline-block';  // Afficher le bouton Annuler
         };
 
         // Bouton Supprimer
