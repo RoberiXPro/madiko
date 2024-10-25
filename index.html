@@ -354,18 +354,19 @@
             }
         }
     });
-    function loadMessages() {
-        db.child('messages').on('child_added', function(snapshot) {
-            displayMessage(snapshot.key, snapshot.val());
-        });
-            // Écoute les suppressions de messages et retire l'élément du DOM
+    
+function loadMessages() {
+    db.child('messages').on('child_added', function(snapshot) {
+        displayMessage(snapshot.key, snapshot.val());
+    });
+    // Écoute les suppressions de messages et retire l'élément du DOM
     db.child('messages').on('child_removed', function(snapshot) {
         const removedMessage = document.getElementById(snapshot.key);
         if (removedMessage) {
             removedMessage.remove();
         }
     });
-    }
+}
 // Liste d'émojis de base
 const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
