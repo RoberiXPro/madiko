@@ -74,6 +74,31 @@
         button:hover {
             background-color: #4c4c4c;
         }
+    #emoji-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 200px;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        bottom: 60px; /* Position relative au champ de saisie de message */
+        left: 20px;
+    }
+
+    /* Style pour chaque emoji */
+    .emoji {
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.1s ease;
+    }
+
+    .emoji:hover {
+        transform: scale(1.2);
+    }
         #messages {
             max-height: 300px;
             overflow-y: auto;
@@ -199,11 +224,15 @@
 
         <div id="messages"></div>
         <div id="input-section">
+            <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
+        <div id="emoji-picker" style="display: none;">
+    <!-- Emoji Picker Content -->
+</div>
     </div>
 
 <script>
@@ -286,8 +315,37 @@
             displayMessage(snapshot.key, snapshot.val());
         });
     }
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    function quitRoom() {
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
+        };
+        picker.appendChild(emojiSpan);
+    });
+}
+
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
+
+// Charger les émojis au chargement de la page
+document.addEventListener("DOMContentLoaded", loadEmojis);
+
+    function quitRoom() 
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
