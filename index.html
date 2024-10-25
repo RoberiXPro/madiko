@@ -336,37 +336,19 @@
 
         messageInput.value = '';
     }
-    // Limiter à 10 messages en supprimant les plus anciens
-    db.child("messages").once("value", function(snapshot) {
-        if (snapshot.numChildren() > 10) {  // Si le nombre de messages dépasse 10
-            // Obtenez les messages les plus anciens
-            let messages = [];
-            snapshot.forEach(childSnapshot => {
-                messages.push({ key: childSnapshot.key, timestamp: childSnapshot.val().timestamp || childSnapshot.key });
-            });
-            // Trier les messages par timestamp ou par ordre d'ajout
-            messages.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
 
-            // Supprimer les messages en excès
-            while (messages.length > 10) {
-                let oldestMessage = messages.shift();  // Supprimer le plus ancien message
-                db.child("messages/" + oldestMessage.key).remove();
-            }
-        }
-    });
-    
-function loadMessages() {
-    db.child('messages').on('child_added', function(snapshot) {
-        displayMessage(snapshot.key, snapshot.val());
-    });
-    // Écoute les suppressions de messages et retire l'élément du DOM
+    function loadMessages() {
+        db.child('messages').on('child_added', function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        });
+            // Écoute les suppressions de messages et retire l'élément du DOM
     db.child('messages').on('child_removed', function(snapshot) {
         const removedMessage = document.getElementById(snapshot.key);
         if (removedMessage) {
             removedMessage.remove();
         }
     });
-}
+    }
 // Liste d'émojis de base
 const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
