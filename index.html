@@ -87,7 +87,34 @@
         bottom: 60px; /* Position relative au champ de saisie de message */
         left: 20px;
     }
-
+        .emoji-picker-message {
+    display: none;
+    position: absolute;
+    bottom: 25px; /* Positionné au-dessus du bouton d'émoji */
+    right: 5px;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    max-width: 200px;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.emoji-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: #ffd700;
+    transition: transform 0.2s ease;
+}
+        .emoji-btn:hover {
+    transform: scale(1.2);
+}
     /* Style pour chaque emoji */
     .emoji {
         font-size: 1.5rem;
@@ -376,7 +403,32 @@ function displayMessage(key, data) {
         replyDiv.textContent = "Réponse à : " + data.replyTo;
         msgDiv.appendChild(replyDiv);
     }
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
 
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+    
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
+
+    msgDiv.appendChild(emojiPickerMessage);
     // Créer un conteneur pour les boutons d'action
     var actionButtons = document.createElement("div");
     actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
@@ -417,7 +469,11 @@ function displayMessage(key, data) {
     // Scroll automatique vers le bas
     scrollToBottom();
 }
-
+// Fonction pour afficher/masquer le sélecteur d'émoji par message
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
     function prepareReply(key, message) {
         replyMessageId = key;
         replyMessageText = message;
