@@ -3,9 +3,8 @@
 <head>
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
-     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script> <!-- Ajout du SDK d'authentification -->
     <style>
         body {
             display: flex;
@@ -232,18 +231,11 @@
 <body>
     <h1>RS-Villa</h1>
 
-  <!-- Section de connexion -->
+    <!-- Section de connexion -->
     <div id="login-container">
-        <input type="text" id="email-input" placeholder="Votre e-mail" required><br>
-        <input type="password" id="password-input" placeholder="Mot de passe" required><br>
-        <button onclick="signUp()">S'inscrire</button>
-        <button onclick="login()">Se connecter</button>
-    </div>
-
-    <!-- Section de configuration après connexion -->
-    <div id="setup-container" style="display:none;">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
+        <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Entrez dans la Villa</button>
     </div>
 
@@ -283,60 +275,6 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    // Initialiser l'authentification
-    const auth = firebase.auth();
-
-    // Écoute des changements d'état de l'utilisateur
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            console.log('Utilisateur connecté : ', user);
-            // Montrez le chat ici
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-        } else {
-            console.log('Aucun utilisateur connecté');
-        }
-    });
-
-    // Fonction d'inscription
-    function signUp() {
-        const email = document.getElementById("email-input").value;
-        const password = document.getElementById("password-input").value;
-
-        console.log("Tentative d'inscription avec :", email, password);
-
-        auth.createUserWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log('Utilisateur inscrit : ', user);
-                alert("Inscription réussie !");
-            })
-            .catch((error) => {
-                console.error('Erreur lors de l’inscription : ', error);
-                alert("Erreur lors de l’inscription : " + error.message);
-            });
-    }
-
-    // Fonction de connexion
-    function login() {
-        const email = document.getElementById("email-input").value;
-        const password = document.getElementById("password-input").value;
-
-        console.log("Tentative de connexion avec :", email, password);
-
-        auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log('Utilisateur connecté : ', user);
-                alert("Connexion réussie !");
-                switchToChat(); // Appel pour passer au chat
-            })
-            .catch((error) => {
-                console.error('Erreur lors de la connexion : ', error);
-                alert("Erreur lors de la connexion : " + error.message);
-            });
-    }
-
     var db;
     var username;
     var roomName;
@@ -344,38 +282,30 @@
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-    // Fonction pour rejoindre une salle
     function joinRoom() {
-        const username = document.getElementById("username").value; // Utilisation de 'const' pour une portée correcte
-        const roomName = document.getElementById("room-name-input").value;
-
-        // Logique pour rejoindre la villa
-        console.log("Nom de la villa : ", roomName, "Pseudo : ", username);
+        username = document.getElementById("username").value;
+        roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
         db = firebase.database().ref("rooms/" + roomName);
 
-        // Vérification de l'existence de la salle
-        db.once('value').then((snapshot) => {
-            if (snapshot.exists()) {
-                console.log("La villa existe déjà !");
-                // Ajoutez l'utilisateur à la liste des utilisateurs de la salle
-                db.child("users").child(username).set({
-                    state: "online" // Ou une autre logique pour suivre l'état
+        db.child("password").once('value').then(function(snapshot) {
+            var dbPassword = snapshot.val();
+            if (dbPassword === null) {
+                db.set({
+                    password: password,
+                    messages: {}
                 });
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            } else if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
             } else {
-                // Créer une nouvelle salle si elle n'existe pas
-                db.set({
-                    messages: {},
-                    users: {
-                        [username]: { state: "online" } // Ajouter l'utilisateur à la salle
-                    }
-                });
-                console.log("Nouvelle villa créée !");
-                switchToChat();
+                alert("Mot de passe incorrect !");
             }
-        }).catch((error) => {
-            console.error("Erreur lors de la vérification de la villa : ", error);
         });
     }
 
@@ -394,7 +324,7 @@
         }
 
         var msgData = { "user": username, "message": message, "seen": false };
-
+        
         // Inclure une citation si nécessaire
         if (replyMessageId) {
             msgData.replyTo = replyMessageText;
@@ -411,151 +341,146 @@
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         });
-
-        db.child('messages').on('child_removed', function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-            }
-        });
+            // Écoute les suppressions de messages et retire l'élément du DOM
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
+        }
+    });
     }
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    // Liste d'émojis de base
-    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
 
-    function toggleEmojiPicker() {
-        const picker = document.getElementById("emoji-picker");
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
+        };
+        picker.appendChild(emojiSpan);
+    });
+}
 
-    function loadEmojis() {
-        const picker = document.getElementById("emoji-picker");
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                insertEmoji(emoji);
-            };
-            picker.appendChild(emojiSpan);
-        });
-    }
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
 
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    // Charger les émojis au chargement de la page
-    document.addEventListener("DOMContentLoaded", loadEmojis);
+// Charger les émojis au chargement de la page
+document.addEventListener("DOMContentLoaded", loadEmojis);
 
     function quitRoom() {
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
 
-        // Ajouter la citation si elle existe
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-        }
-
-        // Bouton d'émoji pour chaque message
-        var emojiBtn = document.createElement("button");
-        emojiBtn.className = "emoji-btn";
-        emojiBtn.textContent = "😀";
-        emojiBtn.onclick = function () {
-            toggleEmojiPickerMessage(key);
-        };
-        msgDiv.appendChild(emojiBtn);
-
-        // Conteneur de sélection d'émojis pour chaque message
-        var emojiPickerMessage = document.createElement("div");
-        emojiPickerMessage.className = "emoji-picker-message";
-        emojiPickerMessage.id = `emoji-picker-${key}`;
-
-        emojis.forEach((emoji) => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function () {
-                textSpan.textContent += emoji; // Ajoute l'émoji au message
-                emojiPickerMessage.style.display = "none";
-            };
-            emojiPickerMessage.appendChild(emojiSpan);
-        });
-
-        msgDiv.appendChild(emojiPickerMessage);
-
-        // Créer un conteneur pour les boutons d'action
-        var actionButtons = document.createElement("div");
-        actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
-
-        // Bouton Répondre
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
-        replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
-        replyBtn.onclick = function() {
-            prepareReply(key, data.message);
-        };
-
-        // Bouton Supprimer
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.className = "btn-delete";
-        deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        // Ajouter les deux boutons dans le conteneur d'actions
-        actionButtons.appendChild(replyBtn);
-        actionButtons.appendChild(deleteBtn);
-
-        // Ajouter le conteneur des boutons en dessous du message
-        msgDiv.appendChild(actionButtons);
-
-        // Ajouter le message complet dans le conteneur des messages
-        document.getElementById("messages").appendChild(msgDiv);
-
-        // Appliquer l'effet flou après 15 secondes
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
-
-        // Scroll automatique vers le bas
-        scrollToBottom();
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
     }
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
 
-    // Fonction pour afficher/masquer le sélecteur d'émoji par message
-    function toggleEmojiPickerMessage(key) {
-        const picker = document.getElementById(`emoji-picker-${key}`);
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+    
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
 
+    msgDiv.appendChild(emojiPickerMessage);
+    // Créer un conteneur pour les boutons d'action
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
+
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    // Ajouter les deux boutons dans le conteneur d'actions
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+
+    // Ajouter le conteneur des boutons en dessous du message
+    msgDiv.appendChild(actionButtons);
+
+    // Ajouter le message complet dans le conteneur des messages
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Appliquer l'effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Scroll automatique vers le bas
+    scrollToBottom();
+}
+// Fonction pour afficher/masquer le sélecteur d'émoji par message
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
     function prepareReply(key, message) {
         replyMessageId = key;
         replyMessageText = message;
@@ -597,6 +522,7 @@
         }
     });
 </script>
+
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
     </footer>
