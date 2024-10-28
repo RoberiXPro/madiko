@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>RS-Villa - Room sécurisé</title>
+    <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
@@ -24,6 +25,31 @@
             border-radius: 10px;
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
             display: none;
+        }
+        #login-container {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        #reply-container {
+            display: none;
+            background-color: #444;
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .reply-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9rem;
+            padding: 5px;
+        }
+        .reply-btn:hover {
+            background-color: #2980b9;
         }
         input, button {
             padding: 10px;
@@ -48,6 +74,58 @@
         button:hover {
             background-color: #4c4c4c;
         }
+    #emoji-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 200px;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        bottom: 60px; /* Position relative au champ de saisie de message */
+        left: 20px;
+    }
+        .emoji-picker-message {
+    display: none;
+    position: absolute;
+    bottom: 25px; /* Positionné au-dessus du bouton d'émoji */
+    right: 5px;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    max-width: 200px;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.emoji-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: #ffd700;
+    transition: transform 0.2s ease;
+}
+        .emoji-btn:hover {
+    transform: scale(1.2);
+}
+    /* Style pour chaque emoji */
+    .emoji {
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.1s ease;
+    }
+
+    .emoji:hover {
+        transform: scale(1.2);
+    }
         #messages {
             max-height: 300px;
             overflow-y: auto;
@@ -81,68 +159,79 @@
         .msg-text {
             margin-bottom: 5px;
         }
+        .username {
+            font-size: 0.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #001d50, #feb47b);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
         .flou {
             filter: blur(4px);
-            transition: filter 0.3s ease;
         }
-        .flou:hover {
-            filter: none;
+        h1 {
+            font-size: 2.5em;
+            color: #8800ff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ffcc00, 0 0 40px #ff9900, 0 0 50px #ff6600;
+            padding: 20px;
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 15px #ffd700, 0 0 30px #ffcc00, 0 0 45px #ff9900, 0 0 60px #ff6600;
+            text-align: center;
         }
         .action-buttons {
             display: flex;
             gap: 5px;
-            margin-top: 5px;
         }
-        .reply-btn {
+        .action-buttons button {
+            background-color: #5a5a5a;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .action-buttons button:hover {
+            background-color: #4c4c4c;
+        }
+        .action-buttons .btn-reply {
             background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            padding: 5px;
         }
-        .delete-btn {
+        .action-buttons .btn-delete {
             background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        }
+        .reply-box {
+            background-color: #444;
             padding: 5px;
+            border-left: 2px solid #3498db;
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #ccc;
         }
-        .emoji-btn {
-            font-size: 1rem;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            color: #ffd700;
-        }
-        .emoji-picker-message {
-            display: none;
-            position: absolute;
-            bottom: 30px;
-            right: 5px;
-            background-color: #333;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 200px;
-            flex-wrap: wrap;
-            gap: 5px;
-            z-index: 10;
-        }
-        .emoji {
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-        }
-        .emoji:hover {
-            transform: scale(1.2);
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            #login-container, #chat-container {
+                width: 100%;
+                padding: 15px;
+            }
+            input, button {
+                font-size: 0.9rem;
+                padding: 8px;
+            }
+            #messages {
+                max-height: 50vh;
+            }
         }
     </style>
 </head>
 <body>
     <h1>RS-Villa</h1>
 
+    <!-- Section de connexion -->
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
@@ -150,16 +239,27 @@
         <button onclick="joinRoom()">Entrez dans la Villa</button>
     </div>
 
+    <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+
+        <!-- Section pour répondre à un message -->
+        <div id="reply-container">
+            <span id="reply-message"></span>
+            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
+        </div>
 
         <div id="messages"></div>
         <div id="input-section">
             <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
+            <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
+        <div id="emoji-picker" style="display: none;">
+    <!-- Emoji Picker Content -->
+</div>
     </div>
 
 <script>
@@ -175,8 +275,12 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    var db, username, roomName;
-    var replyMessageId = null, replyMessageText = "";
+    var db;
+    var username;
+    var roomName;
+    var replyMessageId = null;
+    var replyMessageText = "";
+    var allMessagesVisible = false;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -186,14 +290,17 @@
         db = firebase.database().ref("rooms/" + roomName);
 
         db.child("password").once('value').then(function(snapshot) {
-            if (snapshot.val() === null) {
+            var dbPassword = snapshot.val();
+            if (dbPassword === null) {
                 db.set({
                     password: password,
                     messages: {}
                 });
+                alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
-            } else if (snapshot.val() === password) {
+            } else if (dbPassword === password) {
+                alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
             } else {
@@ -211,15 +318,22 @@
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
         var message = messageInput.value;
-        if (message.trim() === "") return;
 
-        var msgData = { "user": username, "message": message };
+        if (message.trim() === "") {
+            return;
+        }
+
+        var msgData = { "user": username, "message": message, "seen": false };
+        
+        // Inclure une citation si nécessaire
         if (replyMessageId) {
             msgData.replyTo = replyMessageText;
             cancelReply();
         }
 
-        db.child("messages").push(msgData);
+        var msgRef = db.child("messages").push();
+        msgRef.set(msgData);
+
         messageInput.value = '';
     }
 
@@ -227,96 +341,146 @@
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         });
-    }
-
-    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
-
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1 flou" : "message user2 flou");
-
-        var userInfoDiv = document.createElement("div");
-        userInfoDiv.className = "user-info";
-
-        var usernameDiv = document.createElement("span");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
-
-        userInfoDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(userInfoDiv);
-
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
-
-        msgDiv.appendChild(textSpan);
-
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
+            // Écoute les suppressions de messages et retire l'élément du DOM
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
         }
+    });
+    }
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-        var emojiBtn = document.createElement("button");
-        emojiBtn.className = "emoji-btn";
-        emojiBtn.textContent = "😀";
-        emojiBtn.onclick = function () {
-            toggleEmojiPickerMessage(key);
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
         };
-        msgDiv.appendChild(emojiBtn);
+        picker.appendChild(emojiSpan);
+    });
+}
 
-        var emojiPickerMessage = document.createElement("div");
-        emojiPickerMessage.className = "emoji-picker-message";
-        emojiPickerMessage.id = `emoji-picker-${key}`;
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
 
-        emojis.forEach((emoji) => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function () {
-                textSpan.textContent += emoji;
-                emojiPickerMessage.style.display = "none";
-            };
-            emojiPickerMessage.appendChild(emojiSpan);
-        });
+// Charger les émojis au chargement de la page
+document.addEventListener("DOMContentLoaded", loadEmojis);
 
-        msgDiv.appendChild(emojiPickerMessage);
-
-        var actionButtons = document.createElement("div");
-        actionButtons.className = "action-buttons";
-
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
-        replyBtn.onclick = function() {
-            prepareReply(key, data.message);
-        };
-        actionButtons.appendChild(replyBtn);
-
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.className = "delete-btn";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-        actionButtons.appendChild(deleteBtn);
-
-        msgDiv.appendChild(actionButtons);
-        document.getElementById("messages").appendChild(msgDiv);
-
-        setTimeout(() => { msgDiv.classList.add("flou"); }, 15000);
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
     }
 
-    function toggleEmojiPickerMessage(key) {
-        const picker = document.getElementById(`emoji-picker-${key}`);
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
+
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
+
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
+
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+    }
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
+
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+    
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
+
+    msgDiv.appendChild(emojiPickerMessage);
+    // Créer un conteneur pour les boutons d'action
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
+
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    // Ajouter les deux boutons dans le conteneur d'actions
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+
+    // Ajouter le conteneur des boutons en dessous du message
+    msgDiv.appendChild(actionButtons);
+
+    // Ajouter le message complet dans le conteneur des messages
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Appliquer l'effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Scroll automatique vers le bas
+    scrollToBottom();
+}
+// Fonction pour afficher/masquer le sélecteur d'émoji par message
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
     function prepareReply(key, message) {
         replyMessageId = key;
         replyMessageText = message;
@@ -327,8 +491,40 @@
     function cancelReply() {
         replyMessageId = null;
         replyMessageText = "";
+        document.getElementById("reply-message").textContent = "";
         document.getElementById("reply-container").style.display = "none";
     }
+
+    function toggleAllMessages() {
+        var allMessages = document.querySelectorAll(".msg-text");
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
+        allMessagesVisible = !allMessagesVisible;
+        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+    }
+
+    // Fonction de défilement automatique
+    function scrollToBottom() {
+        var messagesDiv = document.getElementById("messages");
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Envoi de message en appuyant sur Entrée
+    document.getElementById("message-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
 </script>
+
+    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+        &copy; RoberiX 2024
+    </footer>
 </body>
 </html>
