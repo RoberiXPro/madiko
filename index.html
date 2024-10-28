@@ -74,56 +74,58 @@
         button:hover {
             background-color: #4c4c4c;
         }
-        #emoji-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            max-width: 200px;
-            background-color: #333;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            position: absolute;
-            bottom: 60px; /* Position relative au champ de saisie de message */
-            left: 20px;
-        }
+    #emoji-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 200px;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        bottom: 60px; /* Position relative au champ de saisie de message */
+        left: 20px;
+    }
         .emoji-picker-message {
-            display: none;
-            position: absolute;
-            bottom: 25px; /* Positionné au-dessus du bouton d'émoji */
-            right: 5px;
-            background-color: #333;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-            max-width: 200px;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        .emoji-btn {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            color: #ffd700;
-            transition: transform 0.2s ease;
-        }
+    display: none;
+    position: absolute;
+    bottom: 25px; /* Positionné au-dessus du bouton d'émoji */
+    right: 5px;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    max-width: 200px;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.emoji-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: #ffd700;
+    transition: transform 0.2s ease;
+}
         .emoji-btn:hover {
-            transform: scale(1.2);
-        }
-        .emoji {
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-            transition: transform 0.1s ease;
-        }
-        .emoji:hover {
-            transform: scale(1.2);
-        }
+    transform: scale(1.2);
+}
+    /* Style pour chaque emoji */
+    .emoji {
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.1s ease;
+    }
+
+    .emoji:hover {
+        transform: scale(1.2);
+    }
         #messages {
             max-height: 300px;
             overflow-y: auto;
@@ -166,10 +168,6 @@
         }
         .flou {
             filter: blur(4px);
-            transition: filter 0.3s ease;
-        }
-        .flou:hover {
-            filter: none;
         }
         h1 {
             font-size: 2.5em;
@@ -256,6 +254,7 @@
             <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
+            <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
         <div id="emoji-picker" style="display: none;">
@@ -281,6 +280,7 @@
     var roomName;
     var replyMessageId = null;
     var replyMessageText = "";
+    var allMessagesVisible = false;
 
     function joinRoom() {
         username = document.getElementById("username").value;
@@ -325,6 +325,7 @@
 
         var msgData = { "user": username, "message": message, "seen": false };
         
+        // Inclure une citation si nécessaire
         if (replyMessageId) {
             msgData.replyTo = replyMessageText;
             cancelReply();
@@ -340,87 +341,180 @@
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         });
-        db.child('messages').on('child_removed', function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-            }
-        });
+            // Écoute les suppressions de messages et retire l'élément du DOM
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
+        }
+    });
     }
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
 
-    function toggleEmojiPicker() {
-        const picker = document.getElementById("emoji-picker");
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
+        };
+        picker.appendChild(emojiSpan);
+    });
+}
 
-    function loadEmojis() {
-        const picker = document.getElementById("emoji-picker");
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                insertEmoji(emoji);
-            };
-            picker.appendChild(emojiSpan);
-        });
-    }
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
 
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", loadEmojis);
+// Charger les émojis au chargement de la page
+document.addEventListener("DOMContentLoaded", loadEmojis);
 
     function quitRoom() {
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
 
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-        }
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+    }
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
 
-        document.getElementById("messages").appendChild(msgDiv);
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+    
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
 
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
+    msgDiv.appendChild(emojiPickerMessage);
+    // Créer un conteneur pour les boutons d'action
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
 
-        scrollToBottom();
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    // Ajouter les deux boutons dans le conteneur d'actions
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+
+    // Ajouter le conteneur des boutons en dessous du message
+    msgDiv.appendChild(actionButtons);
+
+    // Ajouter le message complet dans le conteneur des messages
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Appliquer l'effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Scroll automatique vers le bas
+    scrollToBottom();
+}
+// Fonction pour afficher/masquer le sélecteur d'émoji par message
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+    function prepareReply(key, message) {
+        replyMessageId = key;
+        replyMessageText = message;
+        document.getElementById("reply-message").textContent = "Réponse à : " + message;
+        document.getElementById("reply-container").style.display = "block";
     }
 
+    function cancelReply() {
+        replyMessageId = null;
+        replyMessageText = "";
+        document.getElementById("reply-message").textContent = "";
+        document.getElementById("reply-container").style.display = "none";
+    }
+
+    function toggleAllMessages() {
+        var allMessages = document.querySelectorAll(".msg-text");
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
+        allMessagesVisible = !allMessagesVisible;
+        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+    }
+
+    // Fonction de défilement automatique
     function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
