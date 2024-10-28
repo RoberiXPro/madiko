@@ -4,7 +4,6 @@
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
         body {
@@ -160,25 +159,6 @@
         .msg-text {
             margin-bottom: 5px;
         }
-        .typing-indicator {
-    font-size: 0.9rem;
-    color: gray;
-    margin-top: 5px;
-    font-style: italic;
-}
-
-.status {
-    font-size: 0.8rem;
-    color: gray;
-    margin-left: 8px;
-}
-.status.online {
-    color: green;
-}
-.status.offline {
-    color: red;
-}
-
         .username {
             font-size: 0.8rem;
             font-weight: bold;
@@ -230,43 +210,6 @@
             font-style: italic;
             color: #ccc;
         }
-        #login-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
-    background-color: #f2f2f2;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-}
-
-#verify-code-container {
-    margin-top: 15px;
-}
-
-input[type="tel"], input[type="text"] {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #45a049;
-}
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -290,24 +233,12 @@ button:hover {
 
     <!-- Section de connexion -->
     <div id="login-container">
-        <!-- Connexion par pseudo et mot de passe -->
-        <h2>Connexion à la Villa</h2>
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
         <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Entrez dans la Villa</button>
+    </div>
 
-        <!-- Connexion par téléphone -->
-        <h2>Ou connectez-vous avec votre numéro de téléphone</h2>
-        <input type="tel" id="phone-number" placeholder="Numéro de téléphone" required><br>
-        <button onclick="sendVerificationCode()">Envoyer le code</button>
-
-        <!-- Zone pour entrer le code reçu par SMS -->
-        <div id="verify-code-container" style="display: none;">
-            <input type="text" id="verification-code" placeholder="Code de vérification" required><br>
-            <button onclick="verifyCode()">Vérifier le code</button>
-        </div>
-</div>
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
@@ -326,14 +257,12 @@ button:hover {
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
-        <div id="typing-indicator" class="typing-indicator"></div>
         <div id="emoji-picker" style="display: none;">
     <!-- Emoji Picker Content -->
 </div>
     </div>
 
 <script>
-    window.onload = initRecaptcha;
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -352,9 +281,7 @@ button:hover {
     var replyMessageId = null;
     var replyMessageText = "";
     var allMessagesVisible = false;
-    let typingTimeout;
 
-    // 1. Fonction de connexion
     function joinRoom() {
         username = document.getElementById("username").value;
         roomName = document.getElementById("room-name-input").value;
@@ -371,60 +298,23 @@ button:hover {
                 });
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                setUserStatus(true); // Set user as online
                 switchToChat();
             } else if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                setUserStatus(true); // Set user as online
                 switchToChat();
             } else {
                 alert("Mot de passe incorrect !");
             }
         });
     }
-var recaptchaVerifier;
 
-function initRecaptcha() {
-    recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendVerificationCode', {
-        size: 'invisible',
-        callback: function(response) {
-            // reCAPTCHA solved, allow sending of the code.
-            sendVerificationCode();
-        }
-    });
-}
-//Utilisez sendVerificationCode et verifyCode avec reCAPTCHA :
-    function sendVerificationCode() {
-    var phoneNumber = document.getElementById("phone-number").value;
-    firebase.auth().signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
-        .then(function(confirmationResult) {
-            window.confirmationResult = confirmationResult;
-            document.getElementById("verify-code-container").style.display = "block";
-        }).catch(function(error) {
-            console.error("Erreur lors de l'envoi du code de vérification :", error);
-        });
-}
-
-function verifyCode() {
-    var code = document.getElementById("verification-code").value;
-    confirmationResult.confirm(code).then(function(result) {
-        console.log("Utilisateur connecté :", result.user);
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-    }).catch(function(error) {
-        console.error("Erreur de vérification du code :", error);
-    });
-}
-
-    // 2. Passage à l'interface de chat
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
     }
 
-    // 3. Envoi de message
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
         var message = messageInput.value;
@@ -445,138 +335,186 @@ function verifyCode() {
         msgRef.set(msgData);
 
         messageInput.value = '';
-        setTypingStatus(false); // Reset typing status after message sent
     }
 
-    // 4. Chargement des messages
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         });
-
-        db.child('messages').on('child_removed', function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-            }
-        });
-    }
-
-    // 5. Fonction pour afficher chaque message avec statut en ligne
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
-        var userInfoDiv = document.createElement("div");
-        userInfoDiv.className = "user-info";
-
-        var usernameDiv = document.createElement("span");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
-
-        var statusDiv = document.createElement("span");
-        statusDiv.className = "status offline"; // Par défaut : hors ligne
-        statusDiv.id = "status-" + data.user; 
-
-        userInfoDiv.appendChild(usernameDiv);
-        userInfoDiv.appendChild(statusDiv);
-        msgDiv.appendChild(userInfoDiv);
-
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text";
-        textSpan.textContent = data.message;
-
-        msgDiv.appendChild(textSpan);
-
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-        }
-
-        document.getElementById("messages").appendChild(msgDiv);
-        scrollToBottom();
-    }
-
-    // 6. Fonctions de notifications, statut en ligne, et indicateur de saisie
-
-    // Notifications en temps réel
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
-    db.child("messages").on("child_added", (snapshot) => {
-        const message = snapshot.val();
-        if (Notification.permission === "granted" && document.hidden) {
-            new Notification("Nouveau message de " + message.user, { body: message.message });
+            // Écoute les suppressions de messages et retire l'élément du DOM
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
         }
     });
+    }
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    // Statut en ligne/hors ligne
-    function setUserStatus(isOnline) {
-        const onlineRef = firebase.database().ref("rooms/" + roomName + "/onlineStatus/" + username);
-        onlineRef.set(isOnline);
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
+        };
+        picker.appendChild(emojiSpan);
+    });
+}
+
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
+
+// Charger les émojis au chargement de la page
+document.addEventListener("DOMContentLoaded", loadEmojis);
+
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
     }
 
-    window.addEventListener("beforeunload", () => {
-        setUserStatus(false);
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
+
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
+    textSpan.textContent = data.message;
+
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(textSpan);
+
+    // Ajouter la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+    }
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
+
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+    
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
     });
 
-    const onlineStatusRef = firebase.database().ref("rooms/" + roomName + "/onlineStatus");
-    onlineStatusRef.on("value", (snapshot) => {
-        snapshot.forEach((userSnap) => {
-            const userId = userSnap.key;
-            const isOnline = userSnap.val();
-            const statusElement = document.getElementById("status-" + userId);
-            if (statusElement) {
-                statusElement.textContent = isOnline ? "En ligne" : "Hors ligne";
-                statusElement.className = "status " + (isOnline ? "online" : "offline");
-            }
-        });
-    });
+    msgDiv.appendChild(emojiPickerMessage);
+    // Créer un conteneur pour les boutons d'action
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
 
-    // Indicateur de saisie
-    function setTypingStatus(isTyping) {
-        const typingRef = firebase.database().ref("rooms/" + roomName + "/typingStatus/" + username);
-        typingRef.set(isTyping);
+    // Bouton Répondre
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    // Bouton Supprimer
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    // Ajouter les deux boutons dans le conteneur d'actions
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+
+    // Ajouter le conteneur des boutons en dessous du message
+    msgDiv.appendChild(actionButtons);
+
+    // Ajouter le message complet dans le conteneur des messages
+    document.getElementById("messages").appendChild(msgDiv);
+
+    // Appliquer l'effet flou après 15 secondes
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    // Scroll automatique vers le bas
+    scrollToBottom();
+}
+// Fonction pour afficher/masquer le sélecteur d'émoji par message
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+    function prepareReply(key, message) {
+        replyMessageId = key;
+        replyMessageText = message;
+        document.getElementById("reply-message").textContent = "Réponse à : " + message;
+        document.getElementById("reply-container").style.display = "block";
     }
 
-    document.getElementById("message-input").addEventListener("input", function() {
-        setTypingStatus(true);
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => setTypingStatus(false), 1000);
-    });
+    function cancelReply() {
+        replyMessageId = null;
+        replyMessageText = "";
+        document.getElementById("reply-message").textContent = "";
+        document.getElementById("reply-container").style.display = "none";
+    }
 
-    const typingStatusRef = firebase.database().ref("rooms/" + roomName + "/typingStatus");
-    typingStatusRef.on("value", (snapshot) => {
-        let typingUsers = [];
-        snapshot.forEach((userSnap) => {
-            if (userSnap.val()) {
-                typingUsers.push(userSnap.key);
-            }
-        });
-        document.getElementById("typing-indicator").textContent = typingUsers.length > 0
-            ? typingUsers.join(", ") + " est en train de taper..."
-            : "";
-    });
-
-    // 7. Fonctionnalités supplémentaires et assistants
     function toggleAllMessages() {
         var allMessages = document.querySelectorAll(".msg-text");
-        allMessages.forEach(message => message.classList.toggle("flou", allMessagesVisible));
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
         allMessagesVisible = !allMessagesVisible;
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
+    // Fonction de défilement automatique
     function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -584,6 +522,7 @@ function verifyCode() {
         }
     });
 </script>
+
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
     </footer>
