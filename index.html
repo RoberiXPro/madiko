@@ -187,13 +187,38 @@
     display: inline-block;
 }
 
-        .username {
-            font-size: 0.8rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #001d50, #feb47b);
-            -webkit-background-clip: text;
-            color: transparent;
-        }
+.username {
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #001d50, #feb47b, #ff6600);
+    -webkit-background-clip: text;
+    color: transparent;
+    
+    /* Animation légère de changement de couleur */
+    background-size: 200% 200%;
+    animation: usernameGradientShift 6s ease infinite;
+    
+    /* Espacement autour du nom et style d'encadrement */
+    padding: 3px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 8px rgba(255, 99, 71, 0.5), 0 0 12px rgba(255, 165, 0, 0.3);
+
+    /* Transition pour l’effet de survol */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@keyframes usernameGradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.username:hover {
+    transform: scale(1.1); /* Légère expansion au survol */
+    box-shadow: 0 0 10px rgba(255, 99, 71, 0.7), 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
         .flou {
     filter: blur(4px);
     transition: filter 0.3s ease;
@@ -202,18 +227,45 @@
 .message:hover .flou {
     filter: none;
 }
-        h1 {
-            font-size: 2.5em;
-            color: #8800ff;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 30px #ffcc00, 0 0 40px #ff9900, 0 0 50px #ff6600;
-            padding: 20px;
-            border: 2px solid #ffd700;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 0 0 15px #ffd700, 0 0 30px #ffcc00, 0 0 45px #ff9900, 0 0 60px #ff6600;
-            text-align: center;
-        }
+h1 {
+    font-size: 3em;
+    color: #ffd700;
+    margin-bottom: 20px;
+    padding: 20px 40px;
+    border-radius: 15px;
+    text-align: center;
+    
+    /* Fond avec un dégradé animé */
+    background: linear-gradient(135deg, #8800ff, #ff6600, #ffcc00, #ffd700);
+    background-size: 200% 200%;
+    animation: gradientBackground 4s ease infinite;
+
+    /* Effet de texte lumineux */
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ff9900, 0 0 30px #ff6600, 0 0 40px #ff3300, 0 0 50px #ff0000;
+    
+    /* Bordure lumineuse animée */
+    border: 2px solid transparent;
+    border-image: linear-gradient(45deg, #ffd700, #ff6600, #ff3300, #8800ff);
+    border-image-slice: 1;
+
+    /* Ombre extérieure pour profondeur */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 165, 0, 0.5), 0 0 45px rgba(255, 99, 71, 0.4);
+
+    /* Transition de toutes les animations */
+    transition: transform 0.3s ease;
+}
+
+@keyframes gradientBackground {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+h1:hover {
+    transform: scale(1.05); /* Légère expansion au survol */
+    text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
+}
+
         .action-buttons {
             display: flex;
             gap: 5px;
