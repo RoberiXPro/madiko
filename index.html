@@ -235,7 +235,11 @@
             font-style: italic;
             color: #ccc;
         }
-        
+        .reaction-container {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: #ffd700;
+}
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -396,6 +400,24 @@ function loadEmojis() {
     });
 }
 
+// Fermer le picker avec la touche Échap
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+            picker.style.display = "none";
+        });
+    }
+});
+
+// Fermer le picker si clic en dehors
+document.addEventListener("click", function(event) {
+    if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
+        document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+            picker.style.display = "none";
+        });
+    }
+});
+
 function insertEmoji(emoji) {
     const messageInput = document.getElementById("message-input");
     messageInput.value += emoji;
@@ -426,13 +448,13 @@ function displayMessage(key, data) {
     usernameDiv.textContent = data.user;
 
     var textSpan = document.createElement("span");
-    textSpan.className = "msg-text";
+    textSpan.className = "msg-text flou"; // Ajout de l'effet flou initial
     textSpan.textContent = data.message;
 
     msgDiv.appendChild(usernameDiv);
     msgDiv.appendChild(textSpan);
 
-    // Ajouter la citation si elle existe
+    // Affiche la citation si elle existe
     if (data.replyTo) {
         var replyDiv = document.createElement("div");
         replyDiv.style.backgroundColor = "#444";
@@ -447,10 +469,11 @@ function displayMessage(key, data) {
     var reactionContainer = document.createElement("div");
     reactionContainer.className = "reaction-container";
 
+    // Étiquette "Réaction :" (affichée uniquement après ajout d'une réaction)
     var reactionLabel = document.createElement("span");
     reactionLabel.className = "reaction-label";
     reactionLabel.textContent = "Réaction :";
-
+    reactionLabel.style.display = "none"; // Cachée par défaut
     reactionContainer.appendChild(reactionLabel);
     msgDiv.appendChild(reactionContainer);
 
@@ -467,13 +490,14 @@ function displayMessage(key, data) {
     var emojiPickerMessage = document.createElement("div");
     emojiPickerMessage.className = "emoji-picker-message";
     emojiPickerMessage.id = `emoji-picker-${key}`;
-    
+
     emojis.forEach((emoji) => {
         const emojiSpan = document.createElement("span");
         emojiSpan.textContent = emoji;
         emojiSpan.className = "emoji";
         emojiSpan.onclick = function () {
             addReactionEmoji(reactionContainer, emoji); // Ajoute l'émoji à la réaction
+            reactionLabel.style.display = "inline"; // Montre "Réaction :" après ajout d'un emoji
             emojiPickerMessage.style.display = "none";
         };
         emojiPickerMessage.appendChild(emojiSpan);
@@ -517,7 +541,16 @@ function displayMessage(key, data) {
 
     // Scroll automatique vers le bas
     scrollToBottom();
+
+    // Supprime l'effet flou au survol de chaque message
+    msgDiv.onmouseover = function() {
+        textSpan.classList.remove("flou");
+    };
+    msgDiv.onmouseleave = function() {
+        textSpan.classList.add("flou");
+    };
 }
+
 
 // Fonction pour afficher/masquer le sélecteur d'émoji par message
 function toggleEmojiPickerMessage(key) {
