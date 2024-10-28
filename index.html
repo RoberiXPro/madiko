@@ -159,6 +159,26 @@
         .msg-text {
             margin-bottom: 5px;
         }
+        .reaction-container {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.reaction-label {
+    font-size: 0.8rem;
+    color: #ddd;
+    margin-right: 5px;
+    font-style: italic;
+}
+
+.reaction-emoji {
+    font-size: 1.2rem;
+    margin-right: 5px;
+    cursor: default;
+    display: inline-block;
+}
+
         .username {
             font-size: 0.8rem;
             font-weight: bold;
@@ -383,6 +403,12 @@ document.addEventListener("DOMContentLoaded", loadEmojis);
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
+function addReactionEmoji(container, emoji) {
+    const emojiSpan = document.createElement("span");
+    emojiSpan.className = "reaction-emoji";
+    emojiSpan.textContent = emoji;
+    container.appendChild(emojiSpan);
+}
 
 function displayMessage(key, data) {
     var msgDiv = document.createElement("div");
@@ -410,6 +436,18 @@ function displayMessage(key, data) {
         replyDiv.textContent = "Réponse à : " + data.replyTo;
         msgDiv.appendChild(replyDiv);
     }
+
+    // Conteneur pour afficher les réactions d'émojis
+    var reactionContainer = document.createElement("div");
+    reactionContainer.className = "reaction-container";
+
+    var reactionLabel = document.createElement("span");
+    reactionLabel.className = "reaction-label";
+    reactionLabel.textContent = "Réaction :";
+
+    reactionContainer.appendChild(reactionLabel);
+    msgDiv.appendChild(reactionContainer);
+
     // Bouton d'émoji pour chaque message
     var emojiBtn = document.createElement("button");
     emojiBtn.className = "emoji-btn";
@@ -429,22 +467,22 @@ function displayMessage(key, data) {
         emojiSpan.textContent = emoji;
         emojiSpan.className = "emoji";
         emojiSpan.onclick = function () {
-            textSpan.textContent += emoji; // Ajoute l'émoji au message
+            addReactionEmoji(reactionContainer, emoji); // Ajoute l'émoji à la réaction
             emojiPickerMessage.style.display = "none";
         };
         emojiPickerMessage.appendChild(emojiSpan);
     });
 
     msgDiv.appendChild(emojiPickerMessage);
+
     // Créer un conteneur pour les boutons d'action
     var actionButtons = document.createElement("div");
-    actionButtons.className = "action-buttons"; // Cette classe assure l'espacement et la mise en page
+    actionButtons.className = "action-buttons";
 
     // Bouton Répondre
     var replyBtn = document.createElement("button");
     replyBtn.textContent = "Répondre";
     replyBtn.className = "reply-btn";
-    replyBtn.style.backgroundColor = "#3498db"; // Couleur bleu pour "Répondre"
     replyBtn.onclick = function() {
         prepareReply(key, data.message);
     };
@@ -453,19 +491,17 @@ function displayMessage(key, data) {
     var deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Supprimer";
     deleteBtn.className = "btn-delete";
-    deleteBtn.style.backgroundColor = "#e74c3c"; // Couleur rouge pour "Supprimer"
     deleteBtn.onclick = function() {
         db.child("messages/" + key).remove();
     };
 
-    // Ajouter les deux boutons dans le conteneur d'actions
+    // Ajouter les boutons dans le conteneur d'actions
     actionButtons.appendChild(replyBtn);
     actionButtons.appendChild(deleteBtn);
 
     // Ajouter le conteneur des boutons en dessous du message
     msgDiv.appendChild(actionButtons);
 
-    // Ajouter le message complet dans le conteneur des messages
     document.getElementById("messages").appendChild(msgDiv);
 
     // Appliquer l'effet flou après 15 secondes
@@ -476,10 +512,15 @@ function displayMessage(key, data) {
     // Scroll automatique vers le bas
     scrollToBottom();
 }
+
 // Fonction pour afficher/masquer le sélecteur d'émoji par message
 function toggleEmojiPickerMessage(key) {
     const picker = document.getElementById(`emoji-picker-${key}`);
-    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+    if (picker.style.display === "flex") {
+        picker.style.display = "none";
+    } else {
+        picker.style.display = "flex";
+    }
 }
     function prepareReply(key, message) {
         replyMessageId = key;
