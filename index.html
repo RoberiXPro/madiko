@@ -282,46 +282,54 @@
     // Initialiser l'authentification
     const auth = firebase.auth();
 
-    // Étape 2 : Créer des Fonctions pour l'Inscription et la Connexion
+    // Fonction d'inscription
     function signUp() {
         const email = document.getElementById("email-input").value;
         const password = document.getElementById("password-input").value;
         
+        console.log("Tentative d'inscription avec :", email, password);
+
         auth.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 console.log('Utilisateur inscrit : ', user);
+                alert("Inscription réussie !");
             })
             .catch((error) => {
                 console.error('Erreur lors de l’inscription : ', error);
+                alert("Erreur lors de l’inscription : " + error.message);
             });
     }
 
+    // Fonction de connexion
     function login() {
         const email = document.getElementById("email-input").value;
         const password = document.getElementById("password-input").value;
+
+        console.log("Tentative de connexion avec :", email, password);
 
         auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 console.log('Utilisateur connecté : ', user);
-                // Redirigez ou montrez le chat
+                alert("Connexion réussie !");
+                switchToChat(); // Appel pour passer au chat
             })
             .catch((error) => {
                 console.error('Erreur lors de la connexion : ', error);
+                alert("Erreur lors de la connexion : " + error.message);
             });
     }
 
-    // Étape 3 : Surveiller l'État de l'Utilisateur
+    // Écoute des changements d'état de l'utilisateur
     auth.onAuthStateChanged((user) => {
         if (user) {
             console.log('Utilisateur connecté : ', user);
-            // Redirigez ou montrez le chat
+            // Montrez le chat
         } else {
             console.log('Aucun utilisateur connecté');
         }
     });
-
     // Étape 4 : Mettre à Jour les Règles de Sécurité de la Base de Données
     // Assurez-vous que vos règles de sécurité sont correctement configurées dans la console Firebase
     // (Ajoutez les règles appropriées comme décrit dans les réponses précédentes)
