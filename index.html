@@ -3,8 +3,9 @@
 <head>
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script> <!-- Ajout du SDK d'authentification -->
     <style>
         body {
             display: flex;
@@ -233,9 +234,12 @@
 
     <!-- Section de connexion -->
     <div id="login-container">
+        <input type="text" id="email-input" placeholder="Votre e-mail" required><br> <!-- Ajout d'un champ pour l'email -->
+        <input type="password" id="password-input" placeholder="Mot de passe" required><br>
+        <button onclick="signUp()">S'inscrire</button> <!-- Bouton pour l'inscription -->
+        <button onclick="login()">Se connecter</button> <!-- Bouton pour la connexion -->
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
-        <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Entrez dans la Villa</button>
     </div>
 
@@ -275,6 +279,53 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    // Initialiser l'authentification
+    const auth = firebase.auth();
+
+    // Étape 2 : Créer des Fonctions pour l'Inscription et la Connexion
+    function signUp() {
+        const email = document.getElementById("email-input").value;
+        const password = document.getElementById("password-input").value;
+        
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log('Utilisateur inscrit : ', user);
+            })
+            .catch((error) => {
+                console.error('Erreur lors de l’inscription : ', error);
+            });
+    }
+
+    function login() {
+        const email = document.getElementById("email-input").value;
+        const password = document.getElementById("password-input").value;
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log('Utilisateur connecté : ', user);
+                // Redirigez ou montrez le chat
+            })
+            .catch((error) => {
+                console.error('Erreur lors de la connexion : ', error);
+            });
+    }
+
+    // Étape 3 : Surveiller l'État de l'Utilisateur
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log('Utilisateur connecté : ', user);
+            // Redirigez ou montrez le chat
+        } else {
+            console.log('Aucun utilisateur connecté');
+        }
+    });
+
+    // Étape 4 : Mettre à Jour les Règles de Sécurité de la Base de Données
+    // Assurez-vous que vos règles de sécurité sont correctement configurées dans la console Firebase
+    // (Ajoutez les règles appropriées comme décrit dans les réponses précédentes)
+    
     var db;
     var username;
     var roomName;
