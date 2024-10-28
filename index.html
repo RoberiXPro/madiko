@@ -187,8 +187,13 @@
             color: transparent;
         }
         .flou {
-            filter: blur(4px);
+    filter: blur(4px);
+    transition: filter 0.3s ease;
         }
+        /* Supprime le flou au survol */
+.message:hover .flou {
+    filter: none;
+}
         h1 {
             font-size: 2.5em;
             color: #8800ff;
@@ -230,6 +235,7 @@
             font-style: italic;
             color: #ccc;
         }
+        
         @media (max-width: 600px) {
             body {
                 padding: 10px;
