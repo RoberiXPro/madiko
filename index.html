@@ -159,6 +159,14 @@
         .msg-text {
             margin-bottom: 5px;
         }
+        .citation {
+    background-color: #444;
+    padding: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    font-style: italic;
+    color: #ccc;
+}
         .reaction-container {
     margin-top: 5px;
     display: flex;
@@ -457,6 +465,7 @@ function displayMessage(key, data) {
     // Affiche la citation si elle existe
     if (data.replyTo) {
         var replyDiv = document.createElement("div");
+        replyDiv.className = "citation";  // Assurez-vous que la citation ait la classe msg-text
         replyDiv.style.backgroundColor = "#444";
         replyDiv.style.padding = "5px";
         replyDiv.style.marginBottom = "5px";
@@ -464,7 +473,11 @@ function displayMessage(key, data) {
         replyDiv.textContent = "Réponse à : " + data.replyTo;
         msgDiv.appendChild(replyDiv);
     }
-
+        // Appliquer l'effet flou à la citation après 15 secondes
+        setTimeout(function() {
+            replyDiv.classList.add("flou");
+        }, 15000);
+    }
     // Conteneur pour afficher les réactions d'émojis
     var reactionContainer = document.createElement("div");
     reactionContainer.className = "reaction-container";
