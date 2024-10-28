@@ -229,6 +229,43 @@
             font-style: italic;
             color: #ccc;
         }
+        #login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+#verify-code-container {
+    margin-top: 15px;
+}
+
+input[type="tel"], input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -252,12 +289,24 @@
 
     <!-- Section de connexion -->
     <div id="login-container">
+        <!-- Connexion par pseudo et mot de passe -->
+        <h2>Connexion à la Villa</h2>
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
         <input type="password" id="password-input" placeholder="Mot de passe" required><br>
         <button onclick="joinRoom()">Entrez dans la Villa</button>
-    </div>
 
+        <!-- Connexion par téléphone -->
+        <h2>Ou connectez-vous avec votre numéro de téléphone</h2>
+        <input type="tel" id="phone-number" placeholder="Numéro de téléphone" required><br>
+        <button onclick="sendVerificationCode()">Envoyer le code</button>
+
+        <!-- Zone pour entrer le code reçu par SMS -->
+        <div id="verify-code-container" style="display: none;">
+            <input type="text" id="verification-code" placeholder="Code de vérification" required><br>
+            <button onclick="verifyCode()">Vérifier le code</button>
+        </div>
+</div>
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
