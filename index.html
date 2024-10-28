@@ -4,6 +4,7 @@
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
         body {
@@ -332,6 +333,7 @@ button:hover {
     </div>
 
 <script>
+    window.onload = initRecaptcha;
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -381,6 +383,39 @@ button:hover {
             }
         });
     }
+var recaptchaVerifier;
+
+function initRecaptcha() {
+    recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendVerificationCode', {
+        size: 'invisible',
+        callback: function(response) {
+            // reCAPTCHA solved, allow sending of the code.
+            sendVerificationCode();
+        }
+    });
+}
+//Utilisez sendVerificationCode et verifyCode avec reCAPTCHA :
+    function sendVerificationCode() {
+    var phoneNumber = document.getElementById("phone-number").value;
+    firebase.auth().signInWithPhoneNumber(phoneNumber, recaptchaVerifier)
+        .then(function(confirmationResult) {
+            window.confirmationResult = confirmationResult;
+            document.getElementById("verify-code-container").style.display = "block";
+        }).catch(function(error) {
+            console.error("Erreur lors de l'envoi du code de vérification :", error);
+        });
+}
+
+function verifyCode() {
+    var code = document.getElementById("verification-code").value;
+    confirmationResult.confirm(code).then(function(result) {
+        console.log("Utilisateur connecté :", result.user);
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+    }).catch(function(error) {
+        console.error("Erreur de vérification du code :", error);
+    });
+}
 
     // 2. Passage à l'interface de chat
     function switchToChat() {
