@@ -372,32 +372,39 @@ h1:hover {
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-    function joinRoom() {
-        username = document.getElementById("username").value;
-        roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
+   function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
 
-        db = firebase.database().ref("rooms/" + roomName);
+    // Référence au room dans Firebase
+    db = firebase.database().ref("rooms/" + roomName);
 
-        db.child("password").once('value').then(function(snapshot) {
-            var dbPassword = snapshot.val();
-            if (dbPassword === null) {
-                db.set({
-                    password: password,
-                    messages: {}
-                });
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-            } else if (dbPassword === password) {
+    // Vérifie l'existence et le mot de passe du room
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
             } else {
                 alert("Mot de passe incorrect !");
             }
-        });
-    }
+        } else {
+            // Créer le room si inexistant
+            db.set({
+                password: password,
+                messages: {}
+            }).then(() => {
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            });
+        }
+    });
+}
+
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
@@ -427,18 +434,18 @@ h1:hover {
         messageInput.value = '';
     }
 
-    function loadMessages() {
-        db.child('messages').on('child_added', function(snapshot) {
-            displayMessage(snapshot.key, snapshot.val());
-        });
-        // Écoute les suppressions de messages et retire l'élément du DOM
-        db.child('messages').on('child_removed', function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-            }
-        });
-    }
+function loadMessages() {
+    db.child('messages').on('child_added', function(snapshot) {
+        displayMessage(snapshot.key, snapshot.val());
+    });
+
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
+        }
+    });
+}
 
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
