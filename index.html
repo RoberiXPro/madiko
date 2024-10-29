@@ -372,38 +372,47 @@ h1:hover {
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-    function joinRoom() {
-        username = document.getElementById("username").value;
-        roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
+   function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
 
-        // Référence au room dans Firebase
-        db = firebase.database().ref("rooms/" + roomName);
+    console.log("Tentative de connexion avec room:", roomName, ", username:", username, ", password:", password);
 
-        // Vérifie l'existence et le mot de passe du room
-        db.once('value').then(function(snapshot) {
-            if (snapshot.exists()) {
-                var dbPassword = snapshot.child("password").val();
-                if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
+    // Référence à la room dans Firebase
+    db = firebase.database().ref("rooms/" + roomName);
+
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            console.log("Room trouvée dans Firebase. Mot de passe enregistré:", dbPassword);
+
+            if (dbPassword === password) {
+                console.log("Mot de passe correct. Connexion à la room.");
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
             } else {
-                // Créer le room si inexistant
-                db.set({
-                    password: password,
-                    messages: {}
-                }).then(() => {
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                });
+                console.log("Mot de passe incorrect.");
+                alert("Mot de passe incorrect !");
             }
-        });
-    }
+        } else {
+            console.log("Room non trouvée. Création d'une nouvelle room avec le mot de passe fourni.");
+            db.set({
+                password: password,
+                messages: {}
+            }).then(() => {
+                alert("Room créée avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+            }).catch(function(error) {
+                console.error("Erreur lors de la création de la room:", error);
+            });
+        }
+    }).catch(function(error) {
+        console.error("Erreur lors de la connexion à Firebase:", error);
+    });
+}
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
