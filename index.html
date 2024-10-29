@@ -377,42 +377,34 @@ h1:hover {
     roomName = document.getElementById("room-name-input").value;
     var password = document.getElementById("password-input").value;
 
-    console.log("Tentative de connexion avec room:", roomName, ", username:", username, ", password:", password);
-
-    // Référence à la room dans Firebase
+    // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
 
+    // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
             var dbPassword = snapshot.child("password").val();
-            console.log("Room trouvée dans Firebase. Mot de passe enregistré:", dbPassword);
-
             if (dbPassword === password) {
-                console.log("Mot de passe correct. Connexion à la room.");
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
             } else {
-                console.log("Mot de passe incorrect.");
                 alert("Mot de passe incorrect !");
             }
         } else {
-            console.log("Room non trouvée. Création d'une nouvelle room avec le mot de passe fourni.");
+            // Créer le room si inexistant
             db.set({
                 password: password,
                 messages: {}
             }).then(() => {
-                alert("Room créée avec succès !");
+                alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
-            }).catch(function(error) {
-                console.error("Erreur lors de la création de la room:", error);
             });
         }
-    }).catch(function(error) {
-        console.error("Erreur lors de la connexion à Firebase:", error);
     });
 }
+
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
@@ -442,80 +434,79 @@ h1:hover {
         messageInput.value = '';
     }
 
-    function loadMessages() {
-        db.child('messages').on('child_added', function(snapshot) {
-            displayMessage(snapshot.key, snapshot.val());
-        });
+function loadMessages() {
+    db.child('messages').on('child_added', function(snapshot) {
+        displayMessage(snapshot.key, snapshot.val());
+    });
 
-        db.child('messages').on('child_changed', function(snapshot) {
-            const messageKey = snapshot.key;
-            const messageData = snapshot.val();
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
+        }
+    });
+}
 
-            // Mise à jour des réactions affichées en temps réel
-            updateReactionsUI(messageKey, messageData.reactions || {});
-        });
+    // Liste d'émojis de base
+    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-        db.child('messages').on('child_removed', function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-            }
+    function toggleEmojiPicker() {
+        const picker = document.getElementById("emoji-picker");
+        picker.style.display = picker.style.display === "none" ? "flex" : "none";
+    }
+
+    function loadEmojis() {
+        const picker = document.getElementById("emoji-picker");
+        emojis.forEach(emoji => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function() {
+                insertEmoji(emoji);
+            };
+            picker.appendChild(emojiSpan);
         });
     }
 
-    // Mise à jour des réactions dans l'interface utilisateur
-    function updateReactionsUI(messageId, reactions) {
-        const messageDiv = document.getElementById(messageId);
-        if (!messageDiv) return;
-
-        const reactionContainer = messageDiv.querySelector(".reaction-container");
-        reactionContainer.innerHTML = ""; // Réinitialiser les réactions actuelles
-
-        if (reactions) {
-            Object.values(reactions).forEach(reaction => {
-                const emojiSpan = document.createElement("span");
-                emojiSpan.className = "reaction-emoji";
-                emojiSpan.textContent = reaction.emoji;
-                reactionContainer.appendChild(emojiSpan);
+    // Fermer le picker avec la touche Échap
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+                picker.style.display = "none";
             });
         }
+    });
+
+    // Fermer le picker si clic en dehors
+    document.addEventListener("click", function(event) {
+        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
+            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+                picker.style.display = "none";
+            });
+        }
+    });
+
+    function insertEmoji(emoji) {
+        const messageInput = document.getElementById("message-input");
+        messageInput.value += emoji;
+        document.getElementById("emoji-picker").style.display = "none";
     }
 
-    // Fonction de sauvegarde et d'affichage des réactions
-    function addReactionEmoji(container, emoji, messageId) {
-        // Enregistrer l'emoji dans Firebase sous le message correspondant
-        db.child("messages/" + messageId + "/reactions").push({
-            user: username,
-            emoji: emoji
-        });
+    // Charger les émojis au chargement de la page
+    document.addEventListener("DOMContentLoaded", loadEmojis);
 
-        // Affichage immédiat de l'emoji pour l'utilisateur
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
+    }
+
+    function addReactionEmoji(container, emoji) {
         const emojiSpan = document.createElement("span");
         emojiSpan.className = "reaction-emoji";
         emojiSpan.textContent = emoji;
         container.appendChild(emojiSpan);
     }
 
-    // Liste d'émojis
-    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
-
-    function loadEmojisForMessage(messageId, reactionContainer) {
-        const emojiPicker = document.getElementById(`emoji-picker-${messageId}`);
-        emojiPicker.innerHTML = ""; // Vider les emojis existants
-
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                addReactionEmoji(reactionContainer, emoji, messageId); // Enregistrer dans Firebase et afficher
-                emojiPicker.style.display = "none"; // Masquer le picker après la sélection
-            };
-            emojiPicker.appendChild(emojiSpan);
-        });
-    }
-
-    // Fonction d'affichage du message
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
         msgDiv.id = key;
@@ -526,7 +517,7 @@ h1:hover {
         usernameDiv.textContent = data.user;
 
         var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
+        textSpan.className = "msg-text flou"; // Ajout de l'effet flou initial
         textSpan.textContent = data.message;
 
         msgDiv.appendChild(usernameDiv);
@@ -535,26 +526,33 @@ h1:hover {
         // Affiche la citation si elle existe
         if (data.replyTo) {
             var replyDiv = document.createElement("div");
-            replyDiv.className = "citation flou";
+            replyDiv.className = "citation flou";  // Assurez-vous que la citation ait la classe flou
+            replyDiv.style.backgroundColor = "#444";
+            replyDiv.style.padding = "5px";
+            replyDiv.style.marginBottom = "5px";
+            replyDiv.style.borderRadius = "5px";
             replyDiv.textContent = "Réponse à : " + data.replyTo;
             msgDiv.appendChild(replyDiv);
+
+            // Appliquer l'effet flou à la citation après 15 secondes
             setTimeout(function() {
                 replyDiv.classList.add("flou");
             }, 15000);
         }
 
-        // Conteneur pour afficher les réactions
+        // Conteneur pour afficher les réactions d'émojis
         var reactionContainer = document.createElement("div");
         reactionContainer.className = "reaction-container";
 
+        // Étiquette "Réaction :" (affichée uniquement après ajout d'une réaction)
         var reactionLabel = document.createElement("span");
         reactionLabel.className = "reaction-label";
         reactionLabel.textContent = "Réaction :";
-        reactionLabel.style.display = "none";
+        reactionLabel.style.display = "none"; // Cachée par défaut
         reactionContainer.appendChild(reactionLabel);
         msgDiv.appendChild(reactionContainer);
 
-        // Bouton d'émoji
+        // Bouton d'émoji pour chaque message
         var emojiBtn = document.createElement("button");
         emojiBtn.className = "emoji-btn";
         emojiBtn.textContent = "😀";
@@ -567,20 +565,59 @@ h1:hover {
         var emojiPickerMessage = document.createElement("div");
         emojiPickerMessage.className = "emoji-picker-message";
         emojiPickerMessage.id = `emoji-picker-${key}`;
+
+        emojis.forEach((emoji) => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function () {
+                addReactionEmoji(reactionContainer, emoji); // Ajoute l'émoji à la réaction
+                reactionLabel.style.display = "inline"; // Montre "Réaction :" après ajout d'un emoji
+                emojiPickerMessage.style.display = "none";
+            };
+            emojiPickerMessage.appendChild(emojiSpan);
+        });
+
         msgDiv.appendChild(emojiPickerMessage);
 
-        // Charger les émojis pour ce message spécifique
-        loadEmojisForMessage(key, reactionContainer);
+        // Créer un conteneur pour les boutons d'action
+        var actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
 
-        // Ajouter le conteneur au message
+        // Bouton Répondre
+        var replyBtn = document.createElement("button");
+        replyBtn.textContent = "Répondre";
+        replyBtn.className = "reply-btn";
+        replyBtn.onclick = function() {
+            prepareReply(key, data.message);
+        };
+
+        // Bouton Supprimer
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.className = "btn-delete";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        // Ajouter les boutons dans le conteneur d'actions
+        actionButtons.appendChild(replyBtn);
+        actionButtons.appendChild(deleteBtn);
+
+        // Ajouter le conteneur des boutons en dessous du message
+        msgDiv.appendChild(actionButtons);
+
         document.getElementById("messages").appendChild(msgDiv);
 
+        // Appliquer l'effet flou après 15 secondes
         setTimeout(function() {
             textSpan.classList.add("flou");
         }, 15000);
 
+        // Scroll automatique vers le bas
         scrollToBottom();
 
+        // Supprime l'effet flou au survol de chaque message
         msgDiv.onmouseover = function() {
             textSpan.classList.remove("flou");
         };
@@ -592,7 +629,11 @@ h1:hover {
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
         const picker = document.getElementById(`emoji-picker-${key}`);
-        picker.style.display = picker.style.display === "flex" ? "none" : "flex";
+        if (picker.style.display === "flex") {
+            picker.style.display = "none";
+        } else {
+            picker.style.display = "flex";
+        }
     }
 
     function prepareReply(key, message) {
