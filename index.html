@@ -350,6 +350,7 @@ h1:hover {
 
 <script>
     const notificationSound = new Audio('https://www.soundsnap.com/designed_short_delayed_impulse_click_sound_for_user_interface');
+
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -368,16 +369,37 @@ h1:hover {
     var replyMessageId = null;
     var replyMessageText = "";
     var allMessagesVisible = false;
+    var inactivityTimeout; // Timeout for inactivity
+
+    // Contract interface after 1 minute of inactivity
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(contractInterface, 60000); // 1 minute
+    }
+
+    function contractInterface() {
+        document.getElementById("messages").style.display = "none";
+        document.getElementById("reply-container").style.display = "none";
+        document.getElementById("expand-btn").style.display = "block"; // Show "Déplier" button
+    }
+
+    function expandInterface() {
+        document.getElementById("messages").style.display = "block";
+        document.getElementById("reply-container").style.display = "block";
+        document.getElementById("expand-btn").style.display = "none"; // Hide "Déplier" button
+        resetInactivityTimer(); // Restart inactivity timer
+    }
+
+    document.addEventListener("mousemove", resetInactivityTimer);
+    document.addEventListener("keydown", resetInactivityTimer);
 
     function joinRoom() {
         username = document.getElementById("username").value;
         roomName = document.getElementById("room-name-input").value;
         var password = document.getElementById("password-input").value;
 
-        // Référence au room dans Firebase
         db = firebase.database().ref("rooms/" + roomName);
 
-        // Vérifie l'existence et le mot de passe du room
         db.once('value').then(function(snapshot) {
             if (snapshot.exists()) {
                 var dbPassword = snapshot.child("password").val();
@@ -389,7 +411,6 @@ h1:hover {
                     alert("Mot de passe incorrect !");
                 }
             } else {
-                // Créer le room si inexistant
                 db.set({
                     password: password,
                     messages: {}
@@ -406,6 +427,7 @@ h1:hover {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
+        resetInactivityTimer(); // Start inactivity timer when entering chat
     }
 
     function sendMessage() {
@@ -416,17 +438,15 @@ h1:hover {
             return;
         }
 
-        // Crée un horodatage
-        var timestamp = new Date().toLocaleTimeString(); // Affiche l'heure (ou utilise `toLocaleString` pour inclure la date)
+        var timestamp = new Date().toLocaleTimeString();
 
-        var msgData = { 
-            "user": username, 
-            "message": message, 
+        var msgData = {
+            "user": username,
+            "message": message,
             "timestamp": timestamp,
-            "reactions": {} // Initialiser un objet vide pour les réactions
+            "reactions": {}
         };
-        
-        // Inclure une citation si nécessaire
+
         if (replyMessageId) {
             msgData.replyTo = replyMessageText;
             cancelReply();
@@ -436,11 +456,13 @@ h1:hover {
         msgRef.set(msgData);
 
         messageInput.value = '';
+        resetInactivityTimer();
     }
 
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
+            resetInactivityTimer();
         });
 
         db.child('messages').on('child_removed', function(snapshot) {
@@ -452,11 +474,9 @@ h1:hover {
     }
 
     function addReactionEmoji(messageId, emoji) {
-        // Enregistre la réaction dans Firebase sous le message correspondant
         db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
     }
 
-    // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
     function toggleEmojiPicker() {
@@ -477,31 +497,6 @@ h1:hover {
         });
     }
 
-    // Fermer le picker avec la touche Échap
-    document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    // Fermer le picker si clic en dehors
-    document.addEventListener("click", function(event) {
-        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    // Charger les émojis au chargement de la page
     document.addEventListener("DOMContentLoaded", loadEmojis);
 
     function quitRoom() {
@@ -535,16 +530,13 @@ h1:hover {
         msgDiv.appendChild(timeDiv);
         msgDiv.appendChild(textSpan);
 
-        // Conteneur des réactions
         var reactionContainer = document.createElement("div");
         reactionContainer.className = "reaction-container";
         msgDiv.appendChild(reactionContainer);
 
-        // Affiche les réactions en temps réel
         db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-            reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+            reactionContainer.innerHTML = "";
             if (snapshot.exists()) {
-                // Ajoute le texte "Réaction :" s'il y a des réactions
                 var reactionLabel = document.createElement("span");
                 reactionLabel.className = "reaction-label";
                 reactionLabel.textContent = "Réaction : ";
@@ -558,7 +550,6 @@ h1:hover {
             }
         });
 
-        // Affiche la citation si elle existe
         if (data.replyTo) {
             var replyDiv = document.createElement("div");
             replyDiv.className = "citation flou";
@@ -574,7 +565,6 @@ h1:hover {
             }, 15000);
         }
 
-        // Bouton d'émoji pour chaque message
         var emojiBtn = document.createElement("button");
         emojiBtn.className = "emoji-btn";
         emojiBtn.textContent = "😀";
@@ -583,7 +573,6 @@ h1:hover {
         };
         msgDiv.appendChild(emojiBtn);
 
-        // Conteneur de sélection d'émojis pour chaque message
         var emojiPickerMessage = document.createElement("div");
         emojiPickerMessage.className = "emoji-picker-message";
         emojiPickerMessage.id = `emoji-picker-${key}`;
@@ -593,7 +582,7 @@ h1:hover {
             emojiSpan.textContent = emoji;
             emojiSpan.className = "emoji";
             emojiSpan.onclick = function () {
-                addReactionEmoji(key, emoji);  // Enregistre la réaction dans Firebase
+                addReactionEmoji(key, emoji);
                 emojiPickerMessage.style.display = "none";
             };
             emojiPickerMessage.appendChild(emojiSpan);
@@ -636,28 +625,21 @@ h1:hover {
         msgDiv.onmouseleave = function() {
             textSpan.classList.add("flou");
         };
-
-        // Notification visuelle sur l'onglet si nouveau message et utilisateur n'est pas l'expéditeur
-        if (data.user !== username && document.visibilityState === 'hidden') {
-            document.title = '💬 Nouveau message!';
-        }
     }
 
-    // Réinitialise le titre lorsqu’on revient sur l’onglet
+    if (data.user !== username) {
+        document.title = '💬 Nouveau message!';
+    }
+
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') {
             document.title = 'RS-Villa - Room sécurisé';
         }
     });
 
-    // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
         const picker = document.getElementById(`emoji-picker-${key}`);
-        if (picker.style.display === "flex") {
-            picker.style.display = "none";
-        } else {
-            picker.style.display = "flex";
-        }
+        picker.style.display = picker.style.display === "flex" ? "none" : "flex";
     }
 
     function prepareReply(key, message) {
@@ -687,13 +669,11 @@ h1:hover {
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
-    // Fonction de défilement automatique
     function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Envoi de message en appuyant sur Entrée
     document.getElementById("message-input").addEventListener("keydown", function(event) {
         if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -701,7 +681,6 @@ h1:hover {
         }
     });
 </script>
-
 
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
