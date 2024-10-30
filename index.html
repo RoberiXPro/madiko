@@ -420,7 +420,15 @@ h1:hover {
             return;
         }
 
-        var msgData = { "user": username, "message": message, "seen": false };
+       // Crée un horodatage
+    var timestamp = new Date().toLocaleTimeString(); // Affiche l'heure (ou utilise `toLocaleString` pour inclure la date)
+
+    var msgData = { 
+        "user": username, 
+        "message": message, 
+        "timestamp": timestamp,
+        "reactions": {} // Initialiser un objet vide pour les réactions
+    };
         
         // Inclure une citation si nécessaire
         if (replyMessageId) {
@@ -445,6 +453,13 @@ function loadMessages() {
             removedMessage.remove();
         }
     });
+}
+function addReactionEmoji(messageId, emoji) {
+    // Récupère la référence du message dans Firebase
+    const reactionRef = db.child("messages/" + messageId + "/reactions/" + username);
+
+    // Sauvegarde la réaction dans Firebase avec l'utilisateur qui a réagi
+    reactionRef.set(emoji);
 }
 
     // Liste d'émojis de base
@@ -507,125 +522,127 @@ function loadMessages() {
         container.appendChild(emojiSpan);
     }
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username";
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou"; // Ajout de l'effet flou initial
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text flou";
+    textSpan.textContent = data.message;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(textSpan);
+    var timeDiv = document.createElement("div");
+    timeDiv.className = "timestamp";
+    timeDiv.style.fontSize = "0.8rem";
+    timeDiv.style.color = "#ccc";
+    timeDiv.style.position = "absolute";
+    timeDiv.style.top = "5px";
+    timeDiv.style.right = "10px";
+    timeDiv.textContent = data.timestamp;
 
-        // Affiche la citation si elle existe
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.className = "citation flou";  // Assurez-vous que la citation ait la classe flou
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(timeDiv);
+    msgDiv.appendChild(textSpan);
 
-            // Appliquer l'effet flou à la citation après 15 secondes
-            setTimeout(function() {
-                replyDiv.classList.add("flou");
-            }, 15000);
-        }
+    // Conteneur des réactions (non dupliqué)
+    var reactionContainer = document.createElement("div");
+    reactionContainer.className = "reaction-container";
+    msgDiv.appendChild(reactionContainer);
 
-        // Conteneur pour afficher les réactions d'émojis
-        var reactionContainer = document.createElement("div");
-        reactionContainer.className = "reaction-container";
-
-        // Étiquette "Réaction :" (affichée uniquement après ajout d'une réaction)
-        var reactionLabel = document.createElement("span");
-        reactionLabel.className = "reaction-label";
-        reactionLabel.textContent = "Réaction :";
-        reactionLabel.style.display = "none"; // Cachée par défaut
-        reactionContainer.appendChild(reactionLabel);
-        msgDiv.appendChild(reactionContainer);
-
-        // Bouton d'émoji pour chaque message
-        var emojiBtn = document.createElement("button");
-        emojiBtn.className = "emoji-btn";
-        emojiBtn.textContent = "😀";
-        emojiBtn.onclick = function () {
-            toggleEmojiPickerMessage(key);
-        };
-        msgDiv.appendChild(emojiBtn);
-
-        // Conteneur de sélection d'émojis pour chaque message
-        var emojiPickerMessage = document.createElement("div");
-        emojiPickerMessage.className = "emoji-picker-message";
-        emojiPickerMessage.id = `emoji-picker-${key}`;
-
-        emojis.forEach((emoji) => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function () {
-                addReactionEmoji(reactionContainer, emoji); // Ajoute l'émoji à la réaction
-                reactionLabel.style.display = "inline"; // Montre "Réaction :" après ajout d'un emoji
-                emojiPickerMessage.style.display = "none";
-            };
-            emojiPickerMessage.appendChild(emojiSpan);
+    // Récupère et affiche les réactions en temps réel
+    db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+        reactionContainer.innerHTML = "";
+        snapshot.forEach(function(childSnapshot) {
+            const reactionEmoji = document.createElement("span");
+            reactionEmoji.className = "reaction-emoji";
+            reactionEmoji.textContent = childSnapshot.val();
+            reactionContainer.appendChild(reactionEmoji);
         });
+    });
 
-        msgDiv.appendChild(emojiPickerMessage);
+    // Affiche la citation si elle existe
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.className = "citation flou";
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
 
-        // Créer un conteneur pour les boutons d'action
-        var actionButtons = document.createElement("div");
-        actionButtons.className = "action-buttons";
-
-        // Bouton Répondre
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
-        replyBtn.onclick = function() {
-            prepareReply(key, data.message);
-        };
-
-        // Bouton Supprimer
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.className = "btn-delete";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        // Ajouter les boutons dans le conteneur d'actions
-        actionButtons.appendChild(replyBtn);
-        actionButtons.appendChild(deleteBtn);
-
-        // Ajouter le conteneur des boutons en dessous du message
-        msgDiv.appendChild(actionButtons);
-
-        document.getElementById("messages").appendChild(msgDiv);
-
-        // Appliquer l'effet flou après 15 secondes
         setTimeout(function() {
-            textSpan.classList.add("flou");
+            replyDiv.classList.add("flou");
         }, 15000);
-
-        // Scroll automatique vers le bas
-        scrollToBottom();
-
-        // Supprime l'effet flou au survol de chaque message
-        msgDiv.onmouseover = function() {
-            textSpan.classList.remove("flou");
-        };
-        msgDiv.onmouseleave = function() {
-            textSpan.classList.add("flou");
-        };
     }
 
+    // Bouton d'émoji pour chaque message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
+
+    // Conteneur de sélection d'émojis pour chaque message
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            addReactionEmoji(key, emoji); // Enregistre la réaction dans Firebase
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
+
+    msgDiv.appendChild(emojiPickerMessage);
+
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons";
+
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+    msgDiv.appendChild(actionButtons);
+
+    document.getElementById("messages").appendChild(msgDiv);
+
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    scrollToBottom();
+
+    msgDiv.onmouseover = function() {
+        textSpan.classList.remove("flou");
+    };
+    msgDiv.onmouseleave = function() {
+        textSpan.classList.add("flou");
+    };
+}
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
         const picker = document.getElementById(`emoji-picker-${key}`);
