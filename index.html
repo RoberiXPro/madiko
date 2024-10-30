@@ -188,24 +188,22 @@
 }
 
 .username {
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* Réduire légèrement la taille de police */
     font-weight: bold;
     background: linear-gradient(135deg, #001d50, #feb47b, #ff6600);
     -webkit-background-clip: text;
     color: transparent;
-    
-    /* Animation légère de changement de couleur */
-    background-size: 200% 200%;
-    animation: usernameGradientShift 6s ease infinite;
-    
-    /* Espacement autour du nom et style d'encadrement */
-    padding: 3px 8px;
-    border-radius: 8px;
+    padding: 2px 6px; /* Réduire l’espacement autour du texte */
+    border-radius: 5px; /* Réduire le rayon des coins */
     border: 1px solid rgba(255, 215, 0, 0.6);
-    box-shadow: 0 0 8px rgba(255, 99, 71, 0.5), 0 0 12px rgba(255, 165, 0, 0.3);
-
-    /* Transition pour l’effet de survol */
+    box-shadow: 0 0 4px rgba(255, 99, 71, 0.5), 0 0 8px rgba(255, 165, 0, 0.3);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: usernameGradientShift 6s ease infinite;
+}
+
+.username:hover {
+    transform: scale(1.05); /* Réduire l'expansion au survol */
+    box-shadow: 0 0 6px rgba(255, 99, 71, 0.7), 0 0 8px rgba(255, 215, 0, 0.5);
 }
 
 @keyframes usernameGradientShift {
@@ -213,12 +211,6 @@
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-
-.username:hover {
-    transform: scale(1.1); /* Légère expansion au survol */
-    box-shadow: 0 0 10px rgba(255, 99, 71, 0.7), 0 0 15px rgba(255, 215, 0, 0.5);
-}
-
         .flou {
     filter: blur(4px);
     transition: filter 0.3s ease;
