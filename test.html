@@ -359,16 +359,20 @@ h1:hover {
     };
     firebase.initializeApp(firebaseConfig);
 
-    var db, username, roomName;
-    var replyMessageId = null, replyMessageText = "", allMessagesVisible = false;
+    var db, username, roomName, replyMessageId = null, replyMessageText = "", allMessagesVisible = false;
     var newMessageCount = 0, interfacePliee = false;
 
+    // Liste d'émojis de base
+    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+
+    // Fonction pour joindre la room
     function joinRoom() {
         username = document.getElementById("username").value;
         roomName = document.getElementById("room-name-input").value;
         var password = document.getElementById("password-input").value;
 
         db = firebase.database().ref("rooms/" + roomName);
+
         db.once('value').then(function(snapshot) {
             if (snapshot.exists()) {
                 var dbPassword = snapshot.child("password").val();
@@ -380,7 +384,10 @@ h1:hover {
                     alert("Mot de passe incorrect !");
                 }
             } else {
-                db.set({ password: password, messages: {} }).then(() => {
+                db.set({
+                    password: password,
+                    messages: {}
+                }).then(() => {
                     alert("Room créé avec succès !");
                     document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                     switchToChat();
@@ -389,42 +396,59 @@ h1:hover {
         });
     }
 
+    // Affichage de l'interface de chat
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
-        document.getElementById("toggle-button").style.display = "block"; // Afficher le bouton Plier/Déplier
+        document.getElementById("toggle-button").style.display = "block"; // Afficher le bouton de pliage
         loadMessages();
-        resetInactivityTimer();
     }
 
+    // Fonction pour plier et déplier l'interface de chat
+    function toggleInterface() {
+        const chatContainer = document.getElementById("chat-container");
+        const toggleButton = document.getElementById("toggle-button");
+        chatContainer.style.display = interfacePliee ? "block" : "none";
+        toggleButton.textContent = interfacePliee ? "Plier" : `Déplier (${newMessageCount})`;
+        interfacePliee = !interfacePliee;
+    }
+
+    // Envoi d'un message
     function sendMessage() {
         var messageInput = document.getElementById("message-input");
-        var message = messageInput.value.trim();
-        if (message === "") return;
+        var message = messageInput.value;
+
+        if (message.trim() === "") return;
 
         var timestamp = new Date().toLocaleTimeString();
-        var msgData = { user: username, message: message, timestamp: timestamp, reactions: {} };
-        
+        var msgData = { "user": username, "message": message, "timestamp": timestamp, "reactions": {} };
+
         if (replyMessageId) {
             msgData.replyTo = replyMessageText;
             cancelReply();
         }
 
-        db.child("messages").push().set(msgData);
+        var msgRef = db.child("messages").push();
+        msgRef.set(msgData);
+
         messageInput.value = '';
     }
 
+    // Fonction pour quitter la room
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
+        document.getElementById("toggle-button").style.display = "none"; // Masquer le bouton de pliage
+    }
+
+    // Chargement des messages
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
-            if (interfacePliee && snapshot.val().user !== username) {
-                newMessageCount++;
-                updateNotificationCount();
-            }
         });
 
         db.child('messages').on('child_removed', function(snapshot) {
-            var removedMessage = document.getElementById(snapshot.key);
+            const removedMessage = document.getElementById(snapshot.key);
             if (removedMessage) removedMessage.remove();
         });
     }
@@ -455,58 +479,149 @@ h1:hover {
         msgDiv.appendChild(timeDiv);
         msgDiv.appendChild(textSpan);
 
-        document.getElementById("messages").appendChild(msgDiv);
-        setTimeout(function() { textSpan.classList.add("flou"); }, 15000);
+        var reactionContainer = document.createElement("div");
+        reactionContainer.className = "reaction-container";
+        msgDiv.appendChild(reactionContainer);
 
+        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+            reactionContainer.innerHTML = "";
+            if (snapshot.exists()) {
+                var reactionLabel = document.createElement("span");
+                reactionLabel.className = "reaction-label";
+                reactionLabel.textContent = "Réaction : ";
+                reactionContainer.appendChild(reactionLabel);
+                snapshot.forEach(function(childSnapshot) {
+                    const reactionEmoji = document.createElement("span");
+                    reactionEmoji.className = "reaction-emoji";
+                    reactionEmoji.textContent = childSnapshot.val();
+                    reactionContainer.appendChild(reactionEmoji);
+                });
+            }
+        });
+
+        if (data.replyTo) {
+            var replyDiv = document.createElement("div");
+            replyDiv.className = "citation flou";
+            replyDiv.style.backgroundColor = "#444";
+            replyDiv.style.padding = "5px";
+            replyDiv.style.marginBottom = "5px";
+            replyDiv.style.borderRadius = "5px";
+            replyDiv.textContent = "Réponse à : " + data.replyTo;
+            msgDiv.appendChild(replyDiv);
+
+            setTimeout(function() {
+                replyDiv.classList.add("flou");
+            }, 15000);
+        }
+
+        var emojiBtn = document.createElement("button");
+        emojiBtn.className = "emoji-btn";
+        emojiBtn.textContent = "😀";
+        emojiBtn.onclick = function () {
+            toggleEmojiPickerMessage(key);
+        };
+        msgDiv.appendChild(emojiBtn);
+
+        var emojiPickerMessage = document.createElement("div");
+        emojiPickerMessage.className = "emoji-picker-message";
+        emojiPickerMessage.id = `emoji-picker-${key}`;
+
+        emojis.forEach((emoji) => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function () {
+                addReactionEmoji(key, emoji);
+                emojiPickerMessage.style.display = "none";
+            };
+            emojiPickerMessage.appendChild(emojiSpan);
+        });
+
+        msgDiv.appendChild(emojiPickerMessage);
+
+        var actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
+
+        var replyBtn = document.createElement("button");
+        replyBtn.textContent = "Répondre";
+        replyBtn.className = "reply-btn";
+        replyBtn.onclick = function() {
+            prepareReply(key, data.message);
+        };
+
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.className = "btn-delete";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        actionButtons.appendChild(replyBtn);
+        actionButtons.appendChild(deleteBtn);
+        msgDiv.appendChild(actionButtons);
+
+        document.getElementById("messages").appendChild(msgDiv);
         scrollToBottom();
 
-        if (data.user !== username && document.visibilityState === 'hidden') {
-            document.title = `💬 (${newMessageCount}) Nouveau(x) message(s)!`;
-        }
+        setTimeout(function() {
+            textSpan.classList.add("flou");
+        }, 15000);
+
+        msgDiv.onmouseover = function() {
+            textSpan.classList.remove("flou");
+        };
+        msgDiv.onmouseleave = function() {
+            textSpan.classList.add("flou");
+        };
+    }
+
+    function toggleEmojiPickerMessage(key) {
+        const picker = document.getElementById(`emoji-picker-${key}`);
+        picker.style.display = picker.style.display === "flex" ? "none" : "flex";
+    }
+
+    function addReactionEmoji(messageId, emoji) {
+        db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+    }
+
+    function prepareReply(key, message) {
+        replyMessageId = key;
+        replyMessageText = message;
+        document.getElementById("reply-message").textContent = "Réponse à : " + message;
+        document.getElementById("reply-container").style.display = "block";
+    }
+
+    function cancelReply() {
+        replyMessageId = null;
+        replyMessageText = "";
+        document.getElementById("reply-message").textContent = "";
+        document.getElementById("reply-container").style.display = "none";
     }
 
     function toggleAllMessages() {
         var allMessages = document.querySelectorAll(".msg-text");
         allMessages.forEach(function(message) {
-            message.classList.toggle("flou");
+            if (allMessagesVisible) message.classList.add("flou");
+            else message.classList.remove("flou");
         });
         allMessagesVisible = !allMessagesVisible;
         document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
     }
 
-    function quitRoom() {
-        document.getElementById("chat-container").style.display = "none";
-        document.getElementById("login-container").style.display = "block";
-        document.getElementById("toggle-button").style.display = "none";
-    }
-
-    function toggleInterface() {
-        const chatContainer = document.getElementById("chat-container");
-        const toggleButton = document.getElementById("toggle-button");
-        chatContainer.style.display = interfacePliee ? "block" : "none";
-        toggleButton.textContent = interfacePliee ? "Plier" : `Déplier (${newMessageCount})`;
-        interfacePliee = !interfacePliee;
-    }
-
-    function updateNotificationCount() {
-        const toggleButton = document.getElementById("toggle-button");
-        toggleButton.textContent = interfacePliee && newMessageCount > 0 ? `Déplier (${newMessageCount})` : "Déplier";
-    }
-
-    let inactivityTimer;
-    function resetInactivityTimer() {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(toggleInterface, 30000);
-    }
-
-    document.addEventListener("mousemove", resetInactivityTimer);
-    document.addEventListener("keydown", resetInactivityTimer);
-
     function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    document.getElementById("message-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
 </script>
+
 
 <footer>&copy; RoberiX 2024</footer>
 </body>
