@@ -349,7 +349,7 @@ h1:hover {
     </div>
 
 <script>
-    const notificationSound = new Audio('https://www.soundsnap.com/designed_short_delayed_impulse_click_sound_for_user_interface');
+    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -649,6 +649,10 @@ h1:hover {
             document.title = 'RS-Villa - Room sécurisé';
         }
     });
+if (data.user !== username && document.visibilityState === 'hidden') {
+    document.title = '💬 Nouveau message!';
+    notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+}
 
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
