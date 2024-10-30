@@ -539,22 +539,23 @@ h1:hover {
         reactionContainer.className = "reaction-container";
         msgDiv.appendChild(reactionContainer);
 
-        // Affiche les réactions en temps réel
-        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-            reactionContainer.innerHTML = "";  // Efface les réactions précédentes
-            if (snapshot.exists()) {
-            // Ajoute le texte "Réaction :" s'il y a des réactions
-            var reactionLabel = document.createElement("span");
-            reactionLabel.className = "reaction-label";
-            reactionLabel.textContent = "Réaction : ";
-            reactionContainer.appendChild(reactionLabel);
-            snapshot.forEach(function(childSnapshot) {
-                const reactionEmoji = document.createElement("span");
-                reactionEmoji.className = "reaction-emoji";
-                reactionEmoji.textContent = childSnapshot.val();
-                reactionContainer.appendChild(reactionEmoji);
-            });
+      // Affiche les réactions en temps réel
+db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+    reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+    if (snapshot.exists()) {
+        // Ajoute le texte "Réaction :" s'il y a des réactions
+        var reactionLabel = document.createElement("span");
+        reactionLabel.className = "reaction-label";
+        reactionLabel.textContent = "Réaction : ";
+        reactionContainer.appendChild(reactionLabel);
+        snapshot.forEach(function(childSnapshot) {
+            const reactionEmoji = document.createElement("span");
+            reactionEmoji.className = "reaction-emoji";
+            reactionEmoji.textContent = childSnapshot.val();
+            reactionContainer.appendChild(reactionEmoji);
         });
+    }
+});
 
         // Affiche la citation si elle existe
         if (data.replyTo) {
