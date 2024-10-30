@@ -349,7 +349,6 @@ h1:hover {
     </div>
 
 <script>
-    const notificationSound = new Audio('https://www.soundsnap.com/designed_short_delayed_impulse_click_sound_for_user_interface');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -637,23 +636,7 @@ db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
             textSpan.classList.add("flou");
         };
     }
- // Joue le son de notification pour un nouveau message
-    if (data.user !== username) {
-        notificationSound.play();
-    }
 
-    // Change le titre de l'onglet pour la notification visuelle
-    if (document.visibilityState === 'hidden') {
-        document.title = '💬 Nouveau message!';
-    }
-
-    // Réinitialise le titre lorsqu’on revient sur l’onglet
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') {
-            document.title = 'RS-Villa - Room sécurisé';
-        }
-    });
-}
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
         const picker = document.getElementById(`emoji-picker-${key}`);
