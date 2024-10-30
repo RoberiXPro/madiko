@@ -362,39 +362,38 @@ h1:hover {
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-   function joinRoom() {
-    username = document.getElementById("username").value;
-    roomName = document.getElementById("room-name-input").value;
-    var password = document.getElementById("password-input").value;
+    function joinRoom() {
+        username = document.getElementById("username").value;
+        roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
-    // Référence au room dans Firebase
-    db = firebase.database().ref("rooms/" + roomName);
+        // Référence au room dans Firebase
+        db = firebase.database().ref("rooms/" + roomName);
 
-    // Vérifie l'existence et le mot de passe du room
-    db.once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-            var dbPassword = snapshot.child("password").val();
-            if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
+        // Vérifie l'existence et le mot de passe du room
+        db.once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+                var dbPassword = snapshot.child("password").val();
+                if (dbPassword === password) {
+                    alert("Connexion réussie !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    switchToChat();
+                } else {
+                    alert("Mot de passe incorrect !");
+                }
             } else {
-                alert("Mot de passe incorrect !");
+                // Créer le room si inexistant
+                db.set({
+                    password: password,
+                    messages: {}
+                }).then(() => {
+                    alert("Room créé avec succès !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    switchToChat();
+                });
             }
-        } else {
-            // Créer le room si inexistant
-            db.set({
-                password: password,
-                messages: {}
-            }).then(() => {
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-            });
-        }
-    });
-}
-
+        });
+    }
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
@@ -410,15 +409,15 @@ h1:hover {
             return;
         }
 
-       // Crée un horodatage
-    var timestamp = new Date().toLocaleTimeString(); // Affiche l'heure (ou utilise `toLocaleString` pour inclure la date)
+        // Crée un horodatage
+        var timestamp = new Date().toLocaleTimeString(); // Affiche l'heure (ou utilise `toLocaleString` pour inclure la date)
 
-    var msgData = { 
-        "user": username, 
-        "message": message, 
-        "timestamp": timestamp,
-        "reactions": {} // Initialiser un objet vide pour les réactions
-    };
+        var msgData = { 
+            "user": username, 
+            "message": message, 
+            "timestamp": timestamp,
+            "reactions": {} // Initialiser un objet vide pour les réactions
+        };
         
         // Inclure une citation si nécessaire
         if (replyMessageId) {
@@ -432,25 +431,23 @@ h1:hover {
         messageInput.value = '';
     }
 
-function loadMessages() {
-    db.child('messages').on('child_added', function(snapshot) {
-        displayMessage(snapshot.key, snapshot.val());
-    });
+    function loadMessages() {
+        db.child('messages').on('child_added', function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        });
 
-    db.child('messages').on('child_removed', function(snapshot) {
-        const removedMessage = document.getElementById(snapshot.key);
-        if (removedMessage) {
-            removedMessage.remove();
-        }
-    });
-}
-function addReactionEmoji(messageId, emoji) {
-    // Récupère la référence du message dans Firebase
-    const reactionRef = db.child("messages/" + messageId + "/reactions/" + username);
+        db.child('messages').on('child_removed', function(snapshot) {
+            const removedMessage = document.getElementById(snapshot.key);
+            if (removedMessage) {
+                removedMessage.remove();
+            }
+        });
+    }
 
-    // Sauvegarde la réaction dans Firebase avec l'utilisateur qui a réagi
-    reactionRef.set(emoji);
-}
+    function addReactionEmoji(messageId, emoji) {
+        // Enregistre la réaction dans Firebase sous le message correspondant
+        db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+    }
 
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
@@ -505,134 +502,128 @@ function addReactionEmoji(messageId, emoji) {
         document.getElementById("login-container").style.display = "block";
     }
 
-    function addReactionEmoji(container, emoji) {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.className = "reaction-emoji";
-        emojiSpan.textContent = emoji;
-        container.appendChild(emojiSpan);
-    }
+    function displayMessage(key, data) {
+        var msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-function displayMessage(key, data) {
-    var msgDiv = document.createElement("div");
-    msgDiv.id = key;
-    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+        var usernameDiv = document.createElement("div");
+        usernameDiv.className = "username";
+        usernameDiv.textContent = data.user;
 
-    var usernameDiv = document.createElement("div");
-    usernameDiv.className = "username";
-    usernameDiv.textContent = data.user;
+        var textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
+        textSpan.textContent = data.message;
 
-    var textSpan = document.createElement("span");
-    textSpan.className = "msg-text flou";
-    textSpan.textContent = data.message;
+        var timeDiv = document.createElement("div");
+        timeDiv.className = "timestamp";
+        timeDiv.style.fontSize = "0.8rem";
+        timeDiv.style.color = "#ccc";
+        timeDiv.style.position = "absolute";
+        timeDiv.style.top = "5px";
+        timeDiv.style.right = "10px";
+        timeDiv.textContent = data.timestamp;
 
-    var timeDiv = document.createElement("div");
-    timeDiv.className = "timestamp";
-    timeDiv.style.fontSize = "0.8rem";
-    timeDiv.style.color = "#ccc";
-    timeDiv.style.position = "absolute";
-    timeDiv.style.top = "5px";
-    timeDiv.style.right = "10px";
-    timeDiv.textContent = data.timestamp;
+        msgDiv.appendChild(usernameDiv);
+        msgDiv.appendChild(timeDiv);
+        msgDiv.appendChild(textSpan);
 
-    msgDiv.appendChild(usernameDiv);
-    msgDiv.appendChild(timeDiv);
-    msgDiv.appendChild(textSpan);
+        // Conteneur des réactions
+        var reactionContainer = document.createElement("div");
+        reactionContainer.className = "reaction-container";
+        msgDiv.appendChild(reactionContainer);
 
-    // Conteneur des réactions (non dupliqué)
-    var reactionContainer = document.createElement("div");
-    reactionContainer.className = "reaction-container";
-    msgDiv.appendChild(reactionContainer);
-
-    // Récupère et affiche les réactions en temps réel
-    db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-        reactionContainer.innerHTML = "";
-        snapshot.forEach(function(childSnapshot) {
-            const reactionEmoji = document.createElement("span");
-            reactionEmoji.className = "reaction-emoji";
-            reactionEmoji.textContent = childSnapshot.val();
-            reactionContainer.appendChild(reactionEmoji);
+        // Affiche les réactions en temps réel
+        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+            reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+            snapshot.forEach(function(childSnapshot) {
+                const reactionEmoji = document.createElement("span");
+                reactionEmoji.className = "reaction-emoji";
+                reactionEmoji.textContent = childSnapshot.val();
+                reactionContainer.appendChild(reactionEmoji);
+            });
         });
-    });
 
-    // Affiche la citation si elle existe
-    if (data.replyTo) {
-        var replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.style.backgroundColor = "#444";
-        replyDiv.style.padding = "5px";
-        replyDiv.style.marginBottom = "5px";
-        replyDiv.style.borderRadius = "5px";
-        replyDiv.textContent = "Réponse à : " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
+        // Affiche la citation si elle existe
+        if (data.replyTo) {
+            var replyDiv = document.createElement("div");
+            replyDiv.className = "citation flou";
+            replyDiv.style.backgroundColor = "#444";
+            replyDiv.style.padding = "5px";
+            replyDiv.style.marginBottom = "5px";
+            replyDiv.style.borderRadius = "5px";
+            replyDiv.textContent = "Réponse à : " + data.replyTo;
+            msgDiv.appendChild(replyDiv);
+
+            setTimeout(function() {
+                replyDiv.classList.add("flou");
+            }, 15000);
+        }
+
+        // Bouton d'émoji pour chaque message
+        var emojiBtn = document.createElement("button");
+        emojiBtn.className = "emoji-btn";
+        emojiBtn.textContent = "😀";
+        emojiBtn.onclick = function () {
+            toggleEmojiPickerMessage(key);
+        };
+        msgDiv.appendChild(emojiBtn);
+
+        // Conteneur de sélection d'émojis pour chaque message
+        var emojiPickerMessage = document.createElement("div");
+        emojiPickerMessage.className = "emoji-picker-message";
+        emojiPickerMessage.id = `emoji-picker-${key}`;
+
+        emojis.forEach((emoji) => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function () {
+                addReactionEmoji(key, emoji);  // Enregistre la réaction dans Firebase
+                emojiPickerMessage.style.display = "none";
+            };
+            emojiPickerMessage.appendChild(emojiSpan);
+        });
+
+        msgDiv.appendChild(emojiPickerMessage);
+
+        var actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
+
+        var replyBtn = document.createElement("button");
+        replyBtn.textContent = "Répondre";
+        replyBtn.className = "reply-btn";
+        replyBtn.onclick = function() {
+            prepareReply(key, data.message);
+        };
+
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.className = "btn-delete";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        actionButtons.appendChild(replyBtn);
+        actionButtons.appendChild(deleteBtn);
+        msgDiv.appendChild(actionButtons);
+
+        document.getElementById("messages").appendChild(msgDiv);
 
         setTimeout(function() {
-            replyDiv.classList.add("flou");
+            textSpan.classList.add("flou");
         }, 15000);
+
+        scrollToBottom();
+
+        msgDiv.onmouseover = function() {
+            textSpan.classList.remove("flou");
+        };
+        msgDiv.onmouseleave = function() {
+            textSpan.classList.add("flou");
+        };
     }
 
-    // Bouton d'émoji pour chaque message
-    var emojiBtn = document.createElement("button");
-    emojiBtn.className = "emoji-btn";
-    emojiBtn.textContent = "😀";
-    emojiBtn.onclick = function () {
-        toggleEmojiPickerMessage(key);
-    };
-    msgDiv.appendChild(emojiBtn);
-
-    // Conteneur de sélection d'émojis pour chaque message
-    var emojiPickerMessage = document.createElement("div");
-    emojiPickerMessage.className = "emoji-picker-message";
-    emojiPickerMessage.id = `emoji-picker-${key}`;
-
-    emojis.forEach((emoji) => {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.textContent = emoji;
-        emojiSpan.className = "emoji";
-        emojiSpan.onclick = function () {
-            addReactionEmoji(key, emoji); // Enregistre la réaction dans Firebase
-            emojiPickerMessage.style.display = "none";
-        };
-        emojiPickerMessage.appendChild(emojiSpan);
-    });
-
-    msgDiv.appendChild(emojiPickerMessage);
-
-    var actionButtons = document.createElement("div");
-    actionButtons.className = "action-buttons";
-
-    var replyBtn = document.createElement("button");
-    replyBtn.textContent = "Répondre";
-    replyBtn.className = "reply-btn";
-    replyBtn.onclick = function() {
-        prepareReply(key, data.message);
-    };
-
-    var deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Supprimer";
-    deleteBtn.className = "btn-delete";
-    deleteBtn.onclick = function() {
-        db.child("messages/" + key).remove();
-    };
-
-    actionButtons.appendChild(replyBtn);
-    actionButtons.appendChild(deleteBtn);
-    msgDiv.appendChild(actionButtons);
-
-    document.getElementById("messages").appendChild(msgDiv);
-
-    setTimeout(function() {
-        textSpan.classList.add("flou");
-    }, 15000);
-
-    scrollToBottom();
-
-    msgDiv.onmouseover = function() {
-        textSpan.classList.remove("flou");
-    };
-    msgDiv.onmouseleave = function() {
-        textSpan.classList.add("flou");
-    };
-}
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
         const picker = document.getElementById(`emoji-picker-${key}`);
@@ -684,6 +675,7 @@ function displayMessage(key, data) {
         }
     });
 </script>
+
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
