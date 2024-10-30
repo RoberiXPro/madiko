@@ -349,6 +349,7 @@ h1:hover {
     </div>
 
 <script>
+    const notificationSound = new Audio('https://www.soundsnap.com/designed_short_delayed_impulse_click_sound_for_user_interface');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -514,8 +515,8 @@ h1:hover {
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
         var usernameDiv = document.createElement("div");
-       usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-       usernameDiv.textContent = data.user;
+        usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+        usernameDiv.textContent = data.user;
 
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text flou";
@@ -539,23 +540,23 @@ h1:hover {
         reactionContainer.className = "reaction-container";
         msgDiv.appendChild(reactionContainer);
 
-      // Affiche les réactions en temps réel
-db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-    reactionContainer.innerHTML = "";  // Efface les réactions précédentes
-    if (snapshot.exists()) {
-        // Ajoute le texte "Réaction :" s'il y a des réactions
-        var reactionLabel = document.createElement("span");
-        reactionLabel.className = "reaction-label";
-        reactionLabel.textContent = "Réaction : ";
-        reactionContainer.appendChild(reactionLabel);
-        snapshot.forEach(function(childSnapshot) {
-            const reactionEmoji = document.createElement("span");
-            reactionEmoji.className = "reaction-emoji";
-            reactionEmoji.textContent = childSnapshot.val();
-            reactionContainer.appendChild(reactionEmoji);
+        // Affiche les réactions en temps réel
+        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+            reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+            if (snapshot.exists()) {
+                // Ajoute le texte "Réaction :" s'il y a des réactions
+                var reactionLabel = document.createElement("span");
+                reactionLabel.className = "reaction-label";
+                reactionLabel.textContent = "Réaction : ";
+                reactionContainer.appendChild(reactionLabel);
+                snapshot.forEach(function(childSnapshot) {
+                    const reactionEmoji = document.createElement("span");
+                    reactionEmoji.className = "reaction-emoji";
+                    reactionEmoji.textContent = childSnapshot.val();
+                    reactionContainer.appendChild(reactionEmoji);
+                });
+            }
         });
-    }
-});
 
         // Affiche la citation si elle existe
         if (data.replyTo) {
@@ -635,7 +636,19 @@ db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
         msgDiv.onmouseleave = function() {
             textSpan.classList.add("flou");
         };
+
+        // Notification visuelle sur l'onglet si nouveau message et utilisateur n'est pas l'expéditeur
+        if (data.user !== username && document.visibilityState === 'hidden') {
+            document.title = '💬 Nouveau message!';
+        }
     }
+
+    // Réinitialise le titre lorsqu’on revient sur l’onglet
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            document.title = 'RS-Villa - Room sécurisé';
+        }
+    });
 
     // Fonction pour afficher/masquer le sélecteur d'émoji par message
     function toggleEmojiPickerMessage(key) {
@@ -688,6 +701,7 @@ db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
         }
     });
 </script>
+
 
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
