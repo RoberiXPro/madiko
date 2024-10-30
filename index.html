@@ -384,7 +384,7 @@ h1:hover {
     // Contract interface after 1 minute of inactivity
     function resetInactivityTimer() {
         clearTimeout(inactivityTimeout);
-        inactivityTimeout = setTimeout(contractInterface, 60000); // 1 minute
+        inactivityTimeout = setTimeout(contractInterface, 10000); // 1 minute
     }
 
     function contractInterface() {
