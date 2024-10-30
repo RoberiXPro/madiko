@@ -5,7 +5,7 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-<style>
+    <style>
         body {
             display: flex;
             flex-direction: column;
@@ -51,16 +51,6 @@
         .reply-btn:hover {
             background-color: #2980b9;
         }
-        #toggle-button {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    padding: 10px;
-    background-color: #3498db;
-    color: #fff;
-    border-radius: 5px;
-    cursor: pointer;
-}
         input, button {
             padding: 10px;
             border-radius: 5px;
@@ -354,172 +344,365 @@ h1:hover {
             <button onclick="quitRoom()">Quitter</button>
         </div>
         <div id="emoji-picker" style="display: none;">
-            <!-- Emoji Picker Content -->
-        </div>
+    <!-- Emoji Picker Content -->
+</div>
     </div>
 
-    <!-- Bouton Plier/Déplier -->
-    <button id="toggle-button" onclick="toggleInterface()">Plier</button>
+<script>
+    const notificationSound = new Audio('https://www.soundsnap.com/designed_short_delayed_impulse_click_sound_for_user_interface');
+    var firebaseConfig = {
+        apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+        authDomain: "madiko-rs.firebaseapp.com",
+        databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+        projectId: "madiko-rs",
+        storageBucket: "madiko-rs.appspot.com",
+        messagingSenderId: "746083664475",
+        appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+        measurementId: "G-EBWFWCMWFT"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-            authDomain: "madiko-rs.firebaseapp.com",
-            databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-            projectId: "madiko-rs",
-            storageBucket: "madiko-rs.appspot.com",
-            messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-            measurementId: "G-EBWFWCMWFT"
-        };
-        firebase.initializeApp(firebaseConfig);
+    var db;
+    var username;
+    var roomName;
+    var replyMessageId = null;
+    var replyMessageText = "";
+    var allMessagesVisible = false;
 
-        var db, username, roomName, replyMessageId = null, replyMessageText = "", allMessagesVisible = false;
-        var newMessageCount = 0, interfacePliee = false;
+    function joinRoom() {
+        username = document.getElementById("username").value;
+        roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
-        // Fonction pour joindre la room
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            roomName = document.getElementById("room-name-input").value;
-            var password = document.getElementById("password-input").value;
+        // Référence au room dans Firebase
+        db = firebase.database().ref("rooms/" + roomName);
 
-            db = firebase.database().ref("rooms/" + roomName);
-
-            db.once('value').then(function(snapshot) {
-                if (snapshot.exists()) {
-                    var dbPassword = snapshot.child("password").val();
-                    if (dbPassword === password) {
-                        alert("Connexion réussie !");
-                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                        switchToChat();
-                    } else {
-                        alert("Mot de passe incorrect !");
-                    }
+        // Vérifie l'existence et le mot de passe du room
+        db.once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+                var dbPassword = snapshot.child("password").val();
+                if (dbPassword === password) {
+                    alert("Connexion réussie !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    switchToChat();
                 } else {
-                    db.set({
-                        password: password,
-                        messages: {}
-                    }).then(() => {
-                        alert("Room créé avec succès !");
-                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                        switchToChat();
-                    });
+                    alert("Mot de passe incorrect !");
                 }
-            });
-        }
-
-        // Fonction pour basculer vers l'interface de chat
-        function switchToChat() {
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            loadMessages();
-            resetInactivityTimer();
-        }
-
-        function loadMessages() {
-            db.child('messages').on('child_added', function(snapshot) {
-                displayMessage(snapshot.key, snapshot.val());
-
-                // Mise à jour du compteur de nouveaux messages si l'interface est pliée
-                if (interfacePliee && snapshot.val().user !== username) {
-                    newMessageCount++;
-                    updateNotificationCount();
-                }
-            });
-
-            db.child('messages').on('child_removed', function(snapshot) {
-                const removedMessage = document.getElementById(snapshot.key);
-                if (removedMessage) removedMessage.remove();
-            });
-        }
-
-        function displayMessage(key, data) {
-            var msgDiv = document.createElement("div");
-            msgDiv.id = key;
-            msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
-            var usernameDiv = document.createElement("div");
-            usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-            usernameDiv.textContent = data.user;
-
-            var textSpan = document.createElement("span");
-            textSpan.className = "msg-text flou";
-            textSpan.textContent = data.message;
-
-            var timeDiv = document.createElement("div");
-            timeDiv.className = "timestamp";
-            timeDiv.style.fontSize = "0.8rem";
-            timeDiv.style.color = "#ccc";
-            timeDiv.style.position = "absolute";
-            timeDiv.style.top = "5px";
-            timeDiv.style.right = "10px";
-            timeDiv.textContent = data.timestamp;
-
-            msgDiv.appendChild(usernameDiv);
-            msgDiv.appendChild(timeDiv);
-            msgDiv.appendChild(textSpan);
-
-            var reactionContainer = document.createElement("div");
-            reactionContainer.className = "reaction-container";
-            msgDiv.appendChild(reactionContainer);
-
-            db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-                reactionContainer.innerHTML = "";
-                if (snapshot.exists()) {
-                    var reactionLabel = document.createElement("span");
-                    reactionLabel.className = "reaction-label";
-                    reactionLabel.textContent = "Réaction : ";
-                    reactionContainer.appendChild(reactionLabel);
-                    snapshot.forEach(function(childSnapshot) {
-                        const reactionEmoji = document.createElement("span");
-                        reactionEmoji.className = "reaction-emoji";
-                        reactionEmoji.textContent = childSnapshot.val();
-                        reactionContainer.appendChild(reactionEmoji);
-                    });
-                }
-            });
-
-            document.getElementById("messages").appendChild(msgDiv);
-            setTimeout(function() { textSpan.classList.add("flou"); }, 15000);
-            scrollToBottom();
-
-            if (data.user !== username && document.visibilityState === 'hidden') {
-                document.title = `💬 (${newMessageCount}) Nouveau(x) message(s)!`;
+            } else {
+                // Créer le room si inexistant
+                db.set({
+                    password: password,
+                    messages: {}
+                }).then(() => {
+                    alert("Room créé avec succès !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    switchToChat();
+                });
             }
+        });
+    }
+
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
+    }
+
+    function sendMessage() {
+        var messageInput = document.getElementById("message-input");
+        var message = messageInput.value;
+
+        if (message.trim() === "") {
+            return;
         }
 
-        // Gestion du compteur de messages non lus dans le titre
-        document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') {
-                document.title = 'RS-Villa - Room sécurisé';
-                newMessageCount = 0;
+        // Crée un horodatage
+        var timestamp = new Date().toLocaleTimeString(); // Affiche l'heure (ou utilise `toLocaleString` pour inclure la date)
+
+        var msgData = { 
+            "user": username, 
+            "message": message, 
+            "timestamp": timestamp,
+            "reactions": {} // Initialiser un objet vide pour les réactions
+        };
+        
+        // Inclure une citation si nécessaire
+        if (replyMessageId) {
+            msgData.replyTo = replyMessageText;
+            cancelReply();
+        }
+
+        var msgRef = db.child("messages").push();
+        msgRef.set(msgData);
+
+        messageInput.value = '';
+    }
+
+    function loadMessages() {
+        db.child('messages').on('child_added', function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        });
+
+        db.child('messages').on('child_removed', function(snapshot) {
+            const removedMessage = document.getElementById(snapshot.key);
+            if (removedMessage) {
+                removedMessage.remove();
+            }
+        });
+    }
+
+    function addReactionEmoji(messageId, emoji) {
+        // Enregistre la réaction dans Firebase sous le message correspondant
+        db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+    }
+
+    // Liste d'émojis de base
+    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+
+    function toggleEmojiPicker() {
+        const picker = document.getElementById("emoji-picker");
+        picker.style.display = picker.style.display === "none" ? "flex" : "none";
+    }
+
+    function loadEmojis() {
+        const picker = document.getElementById("emoji-picker");
+        emojis.forEach(emoji => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function() {
+                insertEmoji(emoji);
+            };
+            picker.appendChild(emojiSpan);
+        });
+    }
+
+    // Fermer le picker avec la touche Échap
+    document.addEventListener("keydown", function(event) {
+        if (event.key === "Escape") {
+            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+                picker.style.display = "none";
+            });
+        }
+    });
+
+    // Fermer le picker si clic en dehors
+    document.addEventListener("click", function(event) {
+        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
+            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+                picker.style.display = "none";
+            });
+        }
+    });
+
+    function insertEmoji(emoji) {
+        const messageInput = document.getElementById("message-input");
+        messageInput.value += emoji;
+        document.getElementById("emoji-picker").style.display = "none";
+    }
+
+    // Charger les émojis au chargement de la page
+    document.addEventListener("DOMContentLoaded", loadEmojis);
+
+    function quitRoom() {
+        document.getElementById("chat-container").style.display = "none";
+        document.getElementById("login-container").style.display = "block";
+    }
+
+    function displayMessage(key, data) {
+        var msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+        var usernameDiv = document.createElement("div");
+        usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+        usernameDiv.textContent = data.user;
+
+        var textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
+        textSpan.textContent = data.message;
+
+        var timeDiv = document.createElement("div");
+        timeDiv.className = "timestamp";
+        timeDiv.style.fontSize = "0.8rem";
+        timeDiv.style.color = "#ccc";
+        timeDiv.style.position = "absolute";
+        timeDiv.style.top = "5px";
+        timeDiv.style.right = "10px";
+        timeDiv.textContent = data.timestamp;
+
+        msgDiv.appendChild(usernameDiv);
+        msgDiv.appendChild(timeDiv);
+        msgDiv.appendChild(textSpan);
+
+        // Conteneur des réactions
+        var reactionContainer = document.createElement("div");
+        reactionContainer.className = "reaction-container";
+        msgDiv.appendChild(reactionContainer);
+
+        // Affiche les réactions en temps réel
+        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+            reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+            if (snapshot.exists()) {
+                // Ajoute le texte "Réaction :" s'il y a des réactions
+                var reactionLabel = document.createElement("span");
+                reactionLabel.className = "reaction-label";
+                reactionLabel.textContent = "Réaction : ";
+                reactionContainer.appendChild(reactionLabel);
+                snapshot.forEach(function(childSnapshot) {
+                    const reactionEmoji = document.createElement("span");
+                    reactionEmoji.className = "reaction-emoji";
+                    reactionEmoji.textContent = childSnapshot.val();
+                    reactionContainer.appendChild(reactionEmoji);
+                });
             }
         });
 
-        // Gestion de l'interface repliable
-        function toggleInterface() {
-            const chatContainer = document.getElementById("chat-container");
-            const toggleButton = document.getElementById("toggle-button");
-            chatContainer.style.display = interfacePliee ? "block" : "none";
-            toggleButton.textContent = interfacePliee ? "Plier" : `Déplier (${newMessageCount})`;
-            interfacePliee = !interfacePliee;
+        // Affiche la citation si elle existe
+        if (data.replyTo) {
+            var replyDiv = document.createElement("div");
+            replyDiv.className = "citation flou";
+            replyDiv.style.backgroundColor = "#444";
+            replyDiv.style.padding = "5px";
+            replyDiv.style.marginBottom = "5px";
+            replyDiv.style.borderRadius = "5px";
+            replyDiv.textContent = "Réponse à : " + data.replyTo;
+            msgDiv.appendChild(replyDiv);
+
+            setTimeout(function() {
+                replyDiv.classList.add("flou");
+            }, 15000);
         }
 
-        function updateNotificationCount() {
-            const toggleButton = document.getElementById("toggle-button");
-            toggleButton.textContent = interfacePliee && newMessageCount > 0 ? `Déplier (${newMessageCount})` : "Déplier";
-        }
+        // Bouton d'émoji pour chaque message
+        var emojiBtn = document.createElement("button");
+        emojiBtn.className = "emoji-btn";
+        emojiBtn.textContent = "😀";
+        emojiBtn.onclick = function () {
+            toggleEmojiPickerMessage(key);
+        };
+        msgDiv.appendChild(emojiBtn);
 
-        // Gestion de l'inactivité
-        let inactivityTimer;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(toggleInterface, 30000);
-        }
+        // Conteneur de sélection d'émojis pour chaque message
+        var emojiPickerMessage = document.createElement("div");
+        emojiPickerMessage.className = "emoji-picker-message";
+        emojiPickerMessage.id = `emoji-picker-${key}`;
 
-        document.addEventListener("mousemove", resetInactivityTimer);
-        document.addEventListener("keydown", resetInactivityTimer);
-    </script>
+        emojis.forEach((emoji) => {
+            const emojiSpan = document.createElement("span");
+            emojiSpan.textContent = emoji;
+            emojiSpan.className = "emoji";
+            emojiSpan.onclick = function () {
+                addReactionEmoji(key, emoji);  // Enregistre la réaction dans Firebase
+                emojiPickerMessage.style.display = "none";
+            };
+            emojiPickerMessage.appendChild(emojiSpan);
+        });
+
+        msgDiv.appendChild(emojiPickerMessage);
+
+        var actionButtons = document.createElement("div");
+        actionButtons.className = "action-buttons";
+
+        var replyBtn = document.createElement("button");
+        replyBtn.textContent = "Répondre";
+        replyBtn.className = "reply-btn";
+        replyBtn.onclick = function() {
+            prepareReply(key, data.message);
+        };
+
+        var deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.className = "btn-delete";
+        deleteBtn.onclick = function() {
+            db.child("messages/" + key).remove();
+        };
+
+        actionButtons.appendChild(replyBtn);
+        actionButtons.appendChild(deleteBtn);
+        msgDiv.appendChild(actionButtons);
+
+        document.getElementById("messages").appendChild(msgDiv);
+
+        setTimeout(function() {
+            textSpan.classList.add("flou");
+        }, 15000);
+
+        scrollToBottom();
+
+        msgDiv.onmouseover = function() {
+            textSpan.classList.remove("flou");
+        };
+        msgDiv.onmouseleave = function() {
+            textSpan.classList.add("flou");
+        };
+
+        // Notification visuelle sur l'onglet si nouveau message et utilisateur n'est pas l'expéditeur
+        if (data.user !== username && document.visibilityState === 'hidden') {
+            document.title = '💬 Nouveau message!';
+        }
+    }
+
+    // Réinitialise le titre lorsqu’on revient sur l’onglet
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            document.title = 'RS-Villa - Room sécurisé';
+        }
+    });
+
+    // Fonction pour afficher/masquer le sélecteur d'émoji par message
+    function toggleEmojiPickerMessage(key) {
+        const picker = document.getElementById(`emoji-picker-${key}`);
+        if (picker.style.display === "flex") {
+            picker.style.display = "none";
+        } else {
+            picker.style.display = "flex";
+        }
+    }
+
+    function prepareReply(key, message) {
+        replyMessageId = key;
+        replyMessageText = message;
+        document.getElementById("reply-message").textContent = "Réponse à : " + message;
+        document.getElementById("reply-container").style.display = "block";
+    }
+
+    function cancelReply() {
+        replyMessageId = null;
+        replyMessageText = "";
+        document.getElementById("reply-message").textContent = "";
+        document.getElementById("reply-container").style.display = "none";
+    }
+
+    function toggleAllMessages() {
+        var allMessages = document.querySelectorAll(".msg-text");
+        allMessages.forEach(function(message) {
+            if (allMessagesVisible) {
+                message.classList.add("flou");
+            } else {
+                message.classList.remove("flou");
+            }
+        });
+        allMessagesVisible = !allMessagesVisible;
+        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+    }
+
+    // Fonction de défilement automatique
+    function scrollToBottom() {
+        var messagesDiv = document.getElementById("messages");
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Envoi de message en appuyant sur Entrée
+    document.getElementById("message-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+</script>
+
+
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
