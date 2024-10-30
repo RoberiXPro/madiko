@@ -187,28 +187,34 @@
     display: inline-block;
 }
 
-.username {
-    font-size: 0.8rem; /* Réduire légèrement la taille de police */
+.username.user1 {
+    display: inline-block;
+    font-size: 0.9rem;
     font-weight: bold;
-    background: linear-gradient(135deg, #001d50, #feb47b, #ff6600);
-    -webkit-background-clip: text;
-    color: transparent;
-    padding: 2px 6px; /* Réduire l’espacement autour du texte */
-    box-shadow: 0 0 4px rgba(255, 99, 71, 0.5), 0 0 8px rgba(255, 165, 0, 0.3);
+    color: #fff;
+    background: linear-gradient(135deg, #3498db, #8e44ad); /* Dégradé pour user1 */
+    padding: 5px 8px;
+    border-radius: 6px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    animation: usernameGradientShift 6s ease infinite;
 }
 
-.username:hover {
-    transform: scale(1.05); /* Réduire l'expansion au survol */
-    box-shadow: 0 0 6px rgba(255, 99, 71, 0.7), 0 0 8px rgba(255, 215, 0, 0.5);
+.username.user2 {
+    display: inline-block;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, #f39c12, #e74c3c); /* Dégradé pour user2 */
+    padding: 5px 8px;
+    border-radius: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-@keyframes usernameGradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+.username.user1:hover,
+.username.user2:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
 }
+
         .flou {
     filter: blur(4px);
     transition: filter 0.3s ease;
@@ -508,8 +514,8 @@ h1:hover {
         msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
         var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = data.user;
+       usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+       usernameDiv.textContent = data.user;
 
         var textSpan = document.createElement("span");
         textSpan.className = "msg-text flou";
@@ -536,6 +542,12 @@ h1:hover {
         // Affiche les réactions en temps réel
         db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
             reactionContainer.innerHTML = "";  // Efface les réactions précédentes
+            if (snapshot.exists()) {
+            // Ajoute le texte "Réaction :" s'il y a des réactions
+            var reactionLabel = document.createElement("span");
+            reactionLabel.className = "reaction-label";
+            reactionLabel.textContent = "Réaction : ";
+            reactionContainer.appendChild(reactionLabel);
             snapshot.forEach(function(childSnapshot) {
                 const reactionEmoji = document.createElement("span");
                 reactionEmoji.className = "reaction-emoji";
