@@ -665,6 +665,11 @@ function updateUserStatusUI(user, status) {
     });
 
     function quitRoom() {
+            // Mettre à jour le statut de l'utilisateur sur "hors ligne" dans Firebase
+    firebase.database().ref("users/" + username).update({
+        status: "hors ligne",
+        lastSeen: new Date().toISOString()
+    });
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
@@ -839,6 +844,10 @@ function updateUserStatusUI(user, status) {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+    window.addEventListener("beforeunload", function() {
+    // Supprime l'utilisateur de Firebase
+    firebase.database().ref("users/" + username).remove();
+});
 </script>
 
 
