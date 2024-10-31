@@ -429,6 +429,8 @@
     var replyMessageId = null;
     var replyMessageText = "";
     var allMessagesVisible = false;
+    var messageListener = null;
+
 
 function joinRoom() {
     username = document.getElementById("username").value;
@@ -529,10 +531,11 @@ function setOnlineStatus() {
                 status: "hors ligne",
                 lastSeen: new Date().toISOString()
             });
+            // Supprime l'utilisateur de la base de données en cas de déconnexion
+            userRef.onDisconnect().remove();
         }
     });
 }
-
     
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
@@ -593,18 +596,26 @@ function updateUserStatusUI(user, status) {
         messageInput.value = '';
     }
 
-    function loadMessages() {
-        db.child('messages').on('child_added', function(snapshot) {
+function loadMessages() {
+    // Vérifie si le listener de messages n'est pas encore défini
+    if (!messageListener) {
+        // Définit `messageListener` en tant que fonction qui gère les nouveaux messages
+        messageListener = function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
-        });
+        };
+        db.child("messages").on("child_added", messageListener);
+    }
 
-        db.child('messages').on('child_removed', function(snapshot) {
+    // Listener pour la suppression des messages (défini une seule fois)
+    if (!db.child("messages").hasEventListener("child_removed")) {
+        db.child("messages").on("child_removed", function(snapshot) {
             const removedMessage = document.getElementById(snapshot.key);
             if (removedMessage) {
                 removedMessage.remove();
             }
         });
     }
+}
 
     function addReactionEmoji(messageId, emoji) {
         db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -670,6 +681,12 @@ function updateUserStatusUI(user, status) {
         status: "hors ligne",
         lastSeen: new Date().toISOString()
     });
+    // Supprime le listener de messages pour éviter les doublons lors de la reconnexion
+    if (messageListener) {
+        db.child("messages").off("child_added", messageListener);
+        messageListener = null;
+    }
+    
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
     }
