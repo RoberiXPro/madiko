@@ -82,6 +82,10 @@
     margin-right: 5px; /* Espace à droite */
 }
 
+.online { background-color: green; }  /* Statut en ligne */
+.occupied { background-color: red; }   /* Statut occupé */
+.absent { background-color: orange; }  /* Statut absent */
+
 /* Style pour le conteneur des utilisateurs en ligne */
 #online-users-container {
     padding: 10px;
@@ -89,7 +93,6 @@
     border-radius: 8px; /* Coins arrondis */
     background-color: rgba(60, 60, 60, 0.8); /* Fond semi-transparent */
 }
-
     #emoji-picker {
         display: flex;
         flex-wrap: wrap;
@@ -335,12 +338,13 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-       <div id="online-users-container" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ffd700; border-radius: 8px; background-color: rgba(60, 60, 60, 0.8);">
+     <div id="creator-name" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;"></div> <!-- Créateur du room -->
+<div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+
+<div id="online-users-container" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ffd700; border-radius: 8px; background-color: rgba(60, 60, 60, 0.8);">
     <h2 style="font-size: 1.5em; color: #ffd700;">Connecté :</h2>
     <div id="online-users" style="font-size: 1.2em; color: #ffd700;"></div> <!-- Section pour afficher les utilisateurs en ligne -->
 </div>
-
 
         <!-- Section pour répondre à un message -->
         <div id="reply-container">
@@ -385,47 +389,54 @@
     var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
 
     // Fonction pour rejoindre une room
-    function joinRoom() {
-        username = document.getElementById("username").value;
-        roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
+function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
 
-        // Référence au room dans Firebase
-        db = firebase.database().ref("rooms/" + roomName);
+    // Référence au room dans Firebase
+    db = firebase.database().ref("rooms/" + roomName);
 
-        // Vérifie l'existence et le mot de passe du room
-        db.once('value').then(function(snapshot) {
-            if (snapshot.exists()) {
-                var dbPassword = snapshot.child("password").val();
-                creator = snapshot.child("creator").val(); // Récupérer le créateur
-                if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    onlineUsers[username] = true; // Marquer l'utilisateur comme en ligne
-                    db.child("onlineUsers").child(username).set(true); // Ajouter l'utilisateur en ligne dans la base de données
-                    switchToChat();
-                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
+    // Vérifie l'existence et le mot de passe du room
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            creator = snapshot.child("creator").val(); // Récupérer le créateur
+            if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                
+                // Initialiser le statut de l'utilisateur
+                onlineUsers[username] = { status: 'online' }; 
+                // Enregistrer le statut en ligne dans Firebase
+                db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                
+                switchToChat();
+                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
             } else {
-                // Créer le room si inexistant
-                db.set({
-                    password: password,
-                    messages: {},
-                    creator: username // Enregistrer le créateur du room
-                }).then(() => {
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    onlineUsers[username] = true; // Marquer l'utilisateur comme en ligne
-                    db.child("onlineUsers").child(username).set(true); // Ajouter l'utilisateur en ligne dans la base de données
-                    switchToChat();
-                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-                });
+                alert("Mot de passe incorrect !");
             }
-        });
-    }
-    
+        } else {
+            // Créer le room si inexistant
+            db.set({
+                password: password,
+                messages: {},
+                creator: username // Enregistrer le créateur du room
+            }).then(() => {
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+
+                // Initialiser le statut de l'utilisateur
+                onlineUsers[username] = { status: 'online' }; 
+                // Enregistrer le statut en ligne dans Firebase
+                db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                
+                switchToChat();
+                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+            });
+        }
+    });
+}
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
@@ -539,9 +550,10 @@ function loadOnlineUsers() {
     });
 
     function quitRoom() {
+        db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
-    }
+      }
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
@@ -713,33 +725,29 @@ function loadOnlineUsers() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
-    function updateOnlineUsers() {
+ function updateOnlineUsers() {
     const onlineUsersDiv = document.getElementById("online-users");
     onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
-    // Afficher le créateur séparément
-    const creatorDiv = document.createElement("div");
-    creatorDiv.textContent = creator + " (Créateur)"; // Afficher le créateur
-    const creatorStatusDot = document.createElement("span");
-    creatorStatusDot.className = "online-status";
-    creatorStatusDot.style.backgroundColor = "green"; // Indiquer qu'il est en ligne
-    creatorDiv.prepend(creatorStatusDot);
-    onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
+    // Vérifiez si le créateur existe dans onlineUsers avant d'accéder à son statut
+    if (onlineUsers[creator]) {
+        const creatorDiv = createUserDiv(creator, onlineUsers[creator].status);
+        onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
+    }
 
+    // Afficher les autres utilisateurs
     for (const user in onlineUsers) {
         if (user !== creator) { // Exclure le créateur de la liste des utilisateurs connectés
-            const userDiv = document.createElement("div");
-            userDiv.textContent = user + " ";
-
-            // Créer un petit rond vert pour indiquer le statut en ligne
-            const statusDot = document.createElement("span");
-            statusDot.className = "online-status"; // Utiliser la classe CSS
-            statusDot.style.backgroundColor = onlineUsers[user] ? "green" : "red"; // Vert si en ligne, rouge si hors ligne
-
-            userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+            const userDiv = createUserDiv(user, onlineUsers[user].status);
             onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
         }
     }
+}
+
+function changeStatus(newStatus) {
+    onlineUsers[username].status = newStatus; // Mettre à jour le statut local
+    db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
+    updateOnlineUsers(); // Mettre à jour l'affichage
 }
 </script>
 
