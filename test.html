@@ -430,26 +430,7 @@
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-  function setOnlineStatus() {
-    var userRef = firebase.database().ref("users/" + username);
-
-    firebase.database().ref(".info/connected").on("value", function(snapshot) {
-        if (snapshot.val() === true) {
-            userRef.update({
-                status: "en ligne",
-                lastSeen: new Date().toISOString()
-            });
-
-            userRef.onDisconnect().update({
-                status: "hors ligne",
-                lastSeen: new Date().toISOString()
-            });
-        }
-    });
-}
-
-
-   function joinRoom() {
+function joinRoom() {
     username = document.getElementById("username").value;
     roomName = document.getElementById("room-name-input").value;
     var password = document.getElementById("password-input").value;
@@ -465,7 +446,12 @@
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
-                setOnlineStatus(); // Appeler ici pour mettre à jour le statut en ligne
+
+                // Initialiser les listeners pour afficher les utilisateurs connectés
+                initializeUserListeners();
+
+                // Mettre à jour le statut de l'utilisateur en ligne
+                setOnlineStatus();
             } else {
                 alert("Mot de passe incorrect !");
             }
@@ -478,11 +464,17 @@
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
-                setOnlineStatus(); // Appeler ici aussi après la création de la room
+
+                // Initialiser les listeners pour afficher les utilisateurs connectés
+                initializeUserListeners();
+
+                // Mettre à jour le statut de l'utilisateur en ligne
+                setOnlineStatus();
             });
         }
     });
 }
+
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
     var data = snapshot.val();
@@ -491,6 +483,32 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     updateUserStatusUI(user, data.status);
 });
 
+    function initializeUserListeners() {
+    // Charger l'état actuel de tous les utilisateurs
+    firebase.database().ref("users").once("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            const user = childSnapshot.key;
+            const status = childSnapshot.val().status;
+            updateUserStatusUI(user, status); // Affiche l'utilisateur si déjà connecté
+        });
+    });
+
+    // Écouter les nouvelles connexions
+    firebase.database().ref("users").on("child_added", function(snapshot) {
+        const user = snapshot.key;
+        const status = snapshot.val().status;
+        updateUserStatusUI(user, status);
+    });
+
+    // Écouter les changements de statut en temps réel
+    firebase.database().ref("users").on("child_changed", function(snapshot) {
+        const user = snapshot.key;
+        const status = snapshot.val().status;
+        updateUserStatusUI(user, status);
+    });
+}
+
+    
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
