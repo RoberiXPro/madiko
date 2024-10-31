@@ -430,20 +430,24 @@
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-    function setOnlineStatus() {
+  function setOnlineStatus() {
     var userRef = firebase.database().ref("users/" + username);
 
-    // Suivre l'état de connexion
     firebase.database().ref(".info/connected").on("value", function(snapshot) {
         if (snapshot.val() === true) {
-            // Marquer comme "en ligne" lorsque connecté
-            userRef.child("status").set("en ligne");
-            
-            // Marquer automatiquement "hors ligne" en cas de déconnexion
-            userRef.child("status").onDisconnect().set("hors ligne");
+            userRef.update({
+                status: "en ligne",
+                lastSeen: new Date().toISOString()
+            });
+
+            userRef.onDisconnect().update({
+                status: "hors ligne",
+                lastSeen: new Date().toISOString()
+            });
         }
     });
 }
+
 
    function joinRoom() {
     username = document.getElementById("username").value;
@@ -479,14 +483,14 @@
         }
     });
 }
-// Suivre les changements de statut pour tous les utilisateurs et mettre à jour l'interface
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
-    var status = snapshot.val().status;
-    
-    // Mettre à jour l'interface utilisateur pour afficher le statut de l'utilisateur
-    updateUserStatusUI(user, status);
+    var data = snapshot.val();
+
+    // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
+    updateUserStatusUI(user, data.status);
 });
+
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
@@ -501,14 +505,14 @@ function updateUserStatusUI(user, status) {
 
         const userNameText = document.createElement("span");
         userNameText.classList.add("user-status");
-        userNameText.textContent = user;
+        userNameText.textContent = user + " - " + status;
         userElement.appendChild(userNameText);
 
         document.getElementById("online-users").appendChild(userElement);
     } else {
-        // Mettre à jour le statut de l'utilisateur
         userElement.classList.toggle("status-online", status === "en ligne");
-        userElement.classList.toggle("status-offline", status === "hors ligne");
+        userElement.classList.toggle("status-offline", status !== "en ligne");
+        userElement.querySelector(".user-status").textContent = user + " - " + status;
     }
 }
 
