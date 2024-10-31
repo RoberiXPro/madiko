@@ -388,50 +388,51 @@
     var allMessagesVisible = false;
     var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
 
-// Fonction pour rejoindre une room
-function joinRoom() {
-    username = document.getElementById("username").value;
-    roomName = document.getElementById("room-name-input").value;
-    var password = document.getElementById("password-input").value;
+    // Fonction pour rejoindre une room
+    function joinRoom() {
+        username = document.getElementById("username").value;
+        roomName = document.getElementById("room-name-input").value;
+        var password = document.getElementById("password-input").value;
 
-    db = firebase.database().ref("rooms/" + roomName);
+        db = firebase.database().ref("rooms/" + roomName);
 
-    db.once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-            var dbPassword = snapshot.child("password").val();
-            creator = snapshot.child("creator").val(); // Récupérer le créateur
-            if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+        db.once('value').then(function(snapshot) {
+            if (snapshot.exists()) {
+                var dbPassword = snapshot.child("password").val();
+                creator = snapshot.child("creator").val(); // Récupérer le créateur
+                if (dbPassword === password) {
+                    alert("Connexion réussie !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName.toUpperCase(); // Majuscules pour le nom de la room
 
-                // Initialiser le statut de l'utilisateur
-                onlineUsers[username] = { status: 'online' }; 
-                db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                
-                switchToChat();
-                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                    // Initialiser le statut de l'utilisateur
+                    onlineUsers[username] = { status: 'online' }; 
+                    db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                    
+                    switchToChat();
+                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                } else {
+                    alert("Mot de passe incorrect !");
+                }
             } else {
-                alert("Mot de passe incorrect !");
-            }
-        } else {
-            db.set({
-                password: password,
-                messages: {},
-                creator: username // Enregistrer le créateur du room
-            }).then(() => {
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                db.set({
+                    password: password,
+                    messages: {},
+                    creator: username // Enregistrer le créateur du room
+                }).then(() => {
+                    alert("Room créé avec succès !");
+                    document.getElementById("room-name-display").textContent = "Villa : " + roomName.toUpperCase(); // Majuscules pour le nom de la room
 
-                // Initialiser le statut de l'utilisateur
-                onlineUsers[username] = { status: 'online' }; 
-                db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                
-                switchToChat();
-                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-            });
-        }
-    });
-}
+                    // Initialiser le statut de l'utilisateur
+                    onlineUsers[username] = { status: 'online' }; 
+                    db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                    
+                    switchToChat();
+                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                });
+            }
+        });
+    }
+
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
@@ -479,12 +480,13 @@ function joinRoom() {
             }
         });
     }
-function loadOnlineUsers() {
-    db.child("onlineUsers").on("value", function(snapshot) {
-        onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
-        updateOnlineUsers(); // Mettre à jour l'affichage
-    });
-}
+
+    function loadOnlineUsers() {
+        db.child("onlineUsers").on("value", function(snapshot) {
+            onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
+            updateOnlineUsers(); // Mettre à jour l'affichage
+        });
+    }
 
     function addReactionEmoji(messageId, emoji) {
         db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -548,7 +550,7 @@ function loadOnlineUsers() {
         db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
         document.getElementById("chat-container").style.display = "none";
         document.getElementById("login-container").style.display = "block";
-      }
+    }
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
@@ -720,42 +722,73 @@ function loadOnlineUsers() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
-function updateOnlineUsers() {
-    const onlineUsersDiv = document.getElementById("online-users");
-    onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
-    // Afficher le créateur séparément
-    if (onlineUsers[creator]) {
-        const creatorDiv = createUserDiv(creator, onlineUsers[creator].status);
-        creatorDiv.textContent += " (Créateur)"; // Ajouter (Créateur) à côté
-        onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
-    }
+    function updateOnlineUsers() {
+        const onlineUsersDiv = document.getElementById("online-users");
+        onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
-    // Afficher les autres utilisateurs
-    for (const user in onlineUsers) {
-        if (user !== creator) { // Exclure le créateur de la liste
-            const userDiv = createUserDiv(user, onlineUsers[user].status);
-            onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
+        // Afficher le nom de l'utilisateur qui s'est connecté
+        const userDisplayDiv = document.createElement("div");
+        userDisplayDiv.textContent = username; // Nom de l'utilisateur connecté
+        const userStatusDot = document.createElement("span");
+        userStatusDot.className = "online-status online"; // Appliquer le statut en ligne
+        userDisplayDiv.prepend(userStatusDot); // Ajouter le rond devant le nom
+        onlineUsersDiv.appendChild(userDisplayDiv); // Ajouter à la liste
+
+        // Afficher le créateur séparément pour les autres utilisateurs
+        if (onlineUsers[creator]) {
+            const creatorDiv = createUserDiv(creator, onlineUsers[creator].status);
+            creatorDiv.textContent += " (Créateur)"; // Ajouter (Créateur) à côté
+            onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
+        }
+
+        // Afficher les autres utilisateurs
+        for (const user in onlineUsers) {
+            if (user !== creator && user !== username) { // Exclure l'utilisateur connecté et le créateur
+                const userDiv = createUserDiv(user, onlineUsers[user].status);
+                onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
+            }
         }
     }
-}
+
     function createUserDiv(user, status) {
-    const userDiv = document.createElement("div");
-    userDiv.textContent = user + " ";
+        const userDiv = document.createElement("div");
+        userDiv.textContent = user + " ";
 
-    const statusDot = document.createElement("span");
-    statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
+        const statusDot = document.createElement("span");
+        statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
 
-    userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
-    return userDiv;
-}
+        userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
 
-// Fonction pour changer le statut
-function changeStatus(newStatus) {
-    onlineUsers[username].status = newStatus; // Mettre à jour le statut local
-    db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
-    updateOnlineUsers(); // Mettre à jour l'affichage
-}
+        // Ajouter un sélecteur pour changer le statut
+        const statusSelect = document.createElement("select");
+        const options = ["En ligne", "Occupé", "Absent"];
+        options.forEach(option => {
+            const opt = document.createElement("option");
+            opt.value = option.toLowerCase(); // Convertir en minuscule
+            opt.textContent = option;
+            if (option.toLowerCase() === status) {
+                opt.selected = true; // Sélectionner l'option par défaut
+            }
+            statusSelect.appendChild(opt);
+        });
+
+        // Écouter les changements de statut
+        statusSelect.addEventListener("change", function() {
+            changeStatus(this.value); // Appeler la fonction pour changer le statut
+        });
+
+        userDiv.appendChild(statusSelect); // Ajouter le sélecteur de statut
+
+        return userDiv;
+    }
+
+    // Fonction pour changer le statut
+    function changeStatus(newStatus) {
+        onlineUsers[username].status = newStatus; // Mettre à jour le statut local
+        db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
+        updateOnlineUsers(); // Mettre à jour l'affichage
+    }
 
 </script>
 
