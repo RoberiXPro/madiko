@@ -370,6 +370,7 @@
                     if (dbPassword === password) {
                         alert("Connexion réussie !");
                         document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                        changeStatus("online"); // Appel de la fonction pour changer le statut
                         switchToChat();
                     } else {
                         alert("Mot de passe incorrect !");
@@ -381,6 +382,7 @@
                     }).then(() => {
                         alert("Room créé avec succès !");
                         document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                         changeStatus("online"); // Appel de la fonction pour changer le statut
                         switchToChat();
                     });
                 }
@@ -436,12 +438,12 @@ function sendMessage() {
             });
         }
 
-        function loadOnlineUsers() {
-            db.child("onlineUsers").on("value", function(snapshot) {
-                onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
-                updateOnlineUsers(); // Mettre à jour l'affichage
-            });
-        }
+function loadOnlineUsers() {
+    db.child("onlineUsers").on("value", function(snapshot) {
+        onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
+        updateOnlineUsers(); // Mettre à jour l'affichage
+    });
+}
 
        function addReactionEmoji(messageId, emoji) {
             db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -484,11 +486,12 @@ function loadEmojis() {
             });
         });
 
-        function quitRoom() {
-            db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
-            document.getElementById("chat-container").style.display = "none";
-            document.getElementById("login-container").style.display = "block";
-        }
+       function quitRoom() {
+    changeStatus("offline"); // Changer le statut avant de quitter
+    db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
+    document.getElementById("chat-container").style.display = "none";
+    document.getElementById("login-container").style.display = "block";
+}
 
         function displayMessage(key, data) {
             var msgDiv = document.createElement("div");
@@ -688,13 +691,11 @@ function loadEmojis() {
             return userDiv;
         }
 
-        // Fonction pour changer le statut
-        function changeStatus(newStatus) {
-            onlineUsers[username].status = newStatus; // Mettre à jour le statut local
-            db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
-            updateOnlineUsers(); // Mettre à jour l'affichage
-        }
-
+function changeStatus(newStatus) {
+    onlineUsers[username].status = newStatus; // Mettre à jour le statut local
+    db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
+    updateOnlineUsers(); // Mettre à jour l'affichage
+}
     </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
