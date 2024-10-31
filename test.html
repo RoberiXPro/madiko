@@ -51,6 +51,68 @@
     .reply-btn:hover {
         background-color: #2980b9;
     }
+    #user-list {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 10px;
+    color: #ffd700;
+    width: 100%;
+    max-width: 350px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-align: left;
+}
+
+#user-list h2 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #ffd700;
+    text-align: center;
+    text-shadow: 0 2px 5px rgba(255, 215, 0, 0.6);
+}
+
+#online-users {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#online-users li {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    background-color: #444;
+    transition: background-color 0.3s ease;
+}
+
+#online-users li:hover {
+    background-color: #555;
+}
+
+.user-status {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1em;
+    margin-left: 10px;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: green; /* Vert pour "en ligne" */
+    transition: background-color 0.3s ease;
+}
+
+.status-offline .status-indicator {
+    background-color: gray; /* Gris pour "hors ligne" */
+}
+
     input, button {
         padding: 10px;
         border-radius: 5px;
@@ -322,6 +384,12 @@
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
 
+         <div id="user-list">
+        <h2>Utilisateurs connectés</h2>
+        <ul id="online-users">
+            <!-- Les utilisateurs et leur statut seront ajoutés ici -->
+        </ul>
+    </div>
         <!-- Section pour répondre à un message -->
         <div id="reply-container">
             <span id="reply-message"></span>
@@ -362,38 +430,87 @@
     var replyMessageText = "";
     var allMessagesVisible = false;
 
-    function joinRoom() {
-        username = document.getElementById("username").value;
-        roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
+    function setOnlineStatus() {
+    var userRef = firebase.database().ref("users/" + username);
 
-        // Référence au room dans Firebase
-        db = firebase.database().ref("rooms/" + roomName);
+    // Suivre l'état de connexion
+    firebase.database().ref(".info/connected").on("value", function(snapshot) {
+        if (snapshot.val() === true) {
+            // Marquer comme "en ligne" lorsque connecté
+            userRef.child("status").set("en ligne");
+            
+            // Marquer automatiquement "hors ligne" en cas de déconnexion
+            userRef.child("status").onDisconnect().set("hors ligne");
+        }
+    });
+}
 
-        // Vérifie l'existence et le mot de passe du room
-        db.once('value').then(function(snapshot) {
-            if (snapshot.exists()) {
-                var dbPassword = snapshot.child("password").val();
-                if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
+   function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
+
+    // Référence au room dans Firebase
+    db = firebase.database().ref("rooms/" + roomName);
+
+    // Vérifie l'existence et le mot de passe du room
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+                setOnlineStatus(); // Appeler ici pour mettre à jour le statut en ligne
             } else {
-                // Créer le room si inexistant
-                db.set({
-                    password: password,
-                    messages: {}
-                }).then(() => {
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                });
+                alert("Mot de passe incorrect !");
             }
-        });
+        } else {
+            // Créer le room si inexistant
+            db.set({
+                password: password,
+                messages: {}
+            }).then(() => {
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                switchToChat();
+                setOnlineStatus(); // Appeler ici aussi après la création de la room
+            });
+        }
+    });
+}
+// Suivre les changements de statut pour tous les utilisateurs et mettre à jour l'interface
+firebase.database().ref("users").on("child_changed", function(snapshot) {
+    var user = snapshot.key;
+    var status = snapshot.val().status;
+    
+    // Mettre à jour l'interface utilisateur pour afficher le statut de l'utilisateur
+    updateUserStatusUI(user, status);
+});
+function updateUserStatusUI(user, status) {
+    let userElement = document.getElementById("user-status-" + user);
+
+    if (!userElement) {
+        userElement = document.createElement("li");
+        userElement.id = "user-status-" + user;
+        userElement.classList.add(status === "en ligne" ? "status-online" : "status-offline");
+
+        const statusIndicator = document.createElement("span");
+        statusIndicator.classList.add("status-indicator");
+        userElement.appendChild(statusIndicator);
+
+        const userNameText = document.createElement("span");
+        userNameText.classList.add("user-status");
+        userNameText.textContent = user;
+        userElement.appendChild(userNameText);
+
+        document.getElementById("online-users").appendChild(userElement);
+    } else {
+        // Mettre à jour le statut de l'utilisateur
+        userElement.classList.toggle("status-online", status === "en ligne");
+        userElement.classList.toggle("status-offline", status === "hors ligne");
     }
+}
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
