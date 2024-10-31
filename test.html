@@ -74,6 +74,14 @@
     button:hover {
         background-color: #4c4c4c;
     }
+.online-status {
+    width: 10px; /* Taille du rond */
+    height: 10px;
+    border-radius: 50%; /* Rond */
+    background-color: green; /* Couleur verte */
+    display: inline-block; /* Affichage en ligne */
+    margin-right: 5px; /* Espace à droite */
+}
 
     #emoji-picker {
         display: flex;
@@ -321,6 +329,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <div id="online-users" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;"></div> <!-- Section pour afficher les utilisateurs en ligne -->
 
         <!-- Section pour répondre à un message -->
         <div id="reply-container">
@@ -358,10 +367,13 @@
     var db;
     var username;
     var roomName;
+    var creator; // Déclarez une variable pour le créateur de la salle
     var replyMessageId = null;
     var replyMessageText = "";
     var allMessagesVisible = false;
+    var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
 
+    // Fonction pour rejoindre une room
     function joinRoom() {
         username = document.getElementById("username").value;
         roomName = document.getElementById("room-name-input").value;
@@ -374,10 +386,14 @@
         db.once('value').then(function(snapshot) {
             if (snapshot.exists()) {
                 var dbPassword = snapshot.child("password").val();
+                creator = snapshot.child("creator").val(); // Récupérer le créateur
                 if (dbPassword === password) {
                     alert("Connexion réussie !");
                     document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    onlineUsers[username] = true; // Marquer l'utilisateur comme en ligne
+                    db.child("onlineUsers").child(username).set(true); // Ajouter l'utilisateur en ligne dans la base de données
                     switchToChat();
+                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
                 } else {
                     alert("Mot de passe incorrect !");
                 }
@@ -385,20 +401,25 @@
                 // Créer le room si inexistant
                 db.set({
                     password: password,
-                    messages: {}
+                    messages: {},
+                    creator: username // Enregistrer le créateur du room
                 }).then(() => {
                     alert("Room créé avec succès !");
                     document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                    onlineUsers[username] = true; // Marquer l'utilisateur comme en ligne
+                    db.child("onlineUsers").child(username).set(true); // Ajouter l'utilisateur en ligne dans la base de données
                     switchToChat();
+                    updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
                 });
             }
         });
     }
-
+    
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
+        loadOnlineUsers(); // Charger les utilisateurs en ligne lors du changement vers la chat
     }
 
     function sendMessage() {
@@ -441,6 +462,12 @@
             }
         });
     }
+function loadOnlineUsers() {
+    db.child("onlineUsers").on("value", function(snapshot) {
+        onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
+        updateOnlineUsers(); // Mettre à jour l'affichage
+    });
+}
 
     function addReactionEmoji(messageId, emoji) {
         db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -675,9 +702,30 @@
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+    function updateOnlineUsers() {
+    const onlineUsersDiv = document.getElementById("online-users");
+    onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
+
+    for (const user in onlineUsers) {
+        const userDiv = document.createElement("div");
+        userDiv.textContent = user + " ";
+
+        // Créer un petit rond vert pour indiquer le statut en ligne
+        const statusDot = document.createElement("span");
+        statusDot.style.width = "10px";
+        statusDot.style.height = "10px";
+        statusDot.style.borderRadius = "50%";
+        statusDot.style.backgroundColor = onlineUsers[user] ? "green" : "red"; // Vert si en ligne, rouge si hors ligne
+        statusDot.style.display = "inline-block";
+        statusDot.style.marginRight = "5px";
+
+        userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+
+        // Ne pas inclure le bouton Bannir
+        onlineUsersDiv.appendChild(userDiv);
+    }
+}
 </script>
-
-
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
