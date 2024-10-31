@@ -78,9 +78,16 @@
     width: 10px; /* Taille du rond */
     height: 10px;
     border-radius: 50%; /* Rond */
-    background-color: green; /* Couleur verte */
     display: inline-block; /* Affichage en ligne */
     margin-right: 5px; /* Espace à droite */
+}
+
+/* Style pour le conteneur des utilisateurs en ligne */
+#online-users-container {
+    padding: 10px;
+    border: 1px solid #ffd700; /* Bordure dorée */
+    border-radius: 8px; /* Coins arrondis */
+    background-color: rgba(60, 60, 60, 0.8); /* Fond semi-transparent */
 }
 
     #emoji-picker {
@@ -329,7 +336,11 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="online-users" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;"></div> <!-- Section pour afficher les utilisateurs en ligne -->
+       <div id="online-users-container" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ffd700; border-radius: 8px; background-color: rgba(60, 60, 60, 0.8);">
+    <h2 style="font-size: 1.5em; color: #ffd700;">Connecté :</h2>
+    <div id="online-users" style="font-size: 1.2em; color: #ffd700;"></div> <!-- Section pour afficher les utilisateurs en ligne -->
+</div>
+
 
         <!-- Section pour répondre à un message -->
         <div id="reply-container">
@@ -706,23 +717,28 @@ function loadOnlineUsers() {
     const onlineUsersDiv = document.getElementById("online-users");
     onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
+    // Afficher le créateur séparément
+    const creatorDiv = document.createElement("div");
+    creatorDiv.textContent = creator + " (Créateur)"; // Afficher le créateur
+    const creatorStatusDot = document.createElement("span");
+    creatorStatusDot.className = "online-status";
+    creatorStatusDot.style.backgroundColor = "green"; // Indiquer qu'il est en ligne
+    creatorDiv.prepend(creatorStatusDot);
+    onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
+
     for (const user in onlineUsers) {
-        const userDiv = document.createElement("div");
-        userDiv.textContent = user + " ";
+        if (user !== creator) { // Exclure le créateur de la liste des utilisateurs connectés
+            const userDiv = document.createElement("div");
+            userDiv.textContent = user + " ";
 
-        // Créer un petit rond vert pour indiquer le statut en ligne
-        const statusDot = document.createElement("span");
-        statusDot.style.width = "10px";
-        statusDot.style.height = "10px";
-        statusDot.style.borderRadius = "50%";
-        statusDot.style.backgroundColor = onlineUsers[user] ? "green" : "red"; // Vert si en ligne, rouge si hors ligne
-        statusDot.style.display = "inline-block";
-        statusDot.style.marginRight = "5px";
+            // Créer un petit rond vert pour indiquer le statut en ligne
+            const statusDot = document.createElement("span");
+            statusDot.className = "online-status"; // Utiliser la classe CSS
+            statusDot.style.backgroundColor = onlineUsers[user] ? "green" : "red"; // Vert si en ligne, rouge si hors ligne
 
-        userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
-
-        // Ne pas inclure le bouton Bannir
-        onlineUsersDiv.appendChild(userDiv);
+            userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+            onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
+        }
     }
 }
 </script>
