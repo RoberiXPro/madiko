@@ -6,123 +6,143 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
-            font-family: 'Arial', sans-serif;
-            color: #ffffff;
-            margin: 0;
-        }
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
+        font-family: 'Arial', sans-serif;
+        color: #ffffff;
+        margin: 0;
+    }
     #login-container, #chat-container {
-            width: 70%;
-            max-width: 800px;
-            background: rgba(60, 60, 60, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-        }
+        width: 70%;
+        max-width: 800px;
+        background: rgba(60, 60, 60, 0.9);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+        display: none;
+    }
+    #login-container {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+    #reply-container {
+        display: none;
+        background-color: #444;
+        padding: 5px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        color: #fff;
+    }
+    .reply-btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-left: 10px;
+        font-size: 0.9rem;
+        padding: 5px;
+    }
+    .reply-btn:hover {
+        background-color: #2980b9;
+    }
+    input, button {
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    }
+    input {
+        width: 100%;
+        margin-bottom: 10px;
+        background-color: #444;
+        color: #fff;
+    }
+    button {
+        background-color: #5a5a5a;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #4c4c4c;
+    }
+    #room-name-display {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #ffd700;
+        margin-bottom: 10px;
+    }
+    #user-status {
+        margin-left: 10px; 
+        padding: 5px; 
+        border-radius: 5px; 
+        border: 1px solid #ffd700; 
+        background-color: rgba(60, 60, 60, 0.8); 
+        color: #ffffff; 
+        font-size: 1em; 
+    }
+    .online-status {
+        width: 10px; 
+        height: 10px; 
+        border-radius: 50%; 
+        display: inline-block; 
+        margin-right: 5px; 
+    }
+    .online { background-color: green; }
+    .occupied { background-color: red; }
+    .absent { background-color: orange; }
+    #online-users-container {
+        padding: 10px;
+        border: 1px solid #ffd700;
+        border-radius: 8px;
+        background-color: rgba(60, 60, 60, 0.8);
+        margin-bottom: 20px;
+    }
+    #messages {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #2e2e2e;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .message {
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 5px;
+        word-wrap: break-word;
+        max-width: 70%;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+    .msg-text { margin-bottom: 5px; }
+    h1 { font-size: 3em; color: #ffd700; margin-bottom: 20px; text-align: center; }
 
-        #login-container {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        #reply-container {
-            display: none;
-            background-color: #444;
-            padding: 5px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-        .reply-btn {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 0.9rem;
-            padding: 5px;
-        }
-        .reply-btn:hover {
-            background-color: #2980b9;
-        }
-        input, button {
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-        }
-        input {
-            width: 100%;
-            margin-bottom: 10px;
-            background-color: #444;
-            color: #fff;
-        }
-        button {
-            background-color: #5a5a5a;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #4c4c4c;
-        }
-      #room-name-display {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #ffd700;
-            margin-bottom: 10px;
-        }
-   #user-status {
-            margin-left: 10px; 
-            padding: 5px; 
-            border-radius: 5px; 
-            border: 1px solid #ffd700; 
-            background-color: rgba(60, 60, 60, 0.8); 
-            color: #ffffff; 
-            font-size: 1em; 
-        }
-
-        .online-status {
-            width: 10px; 
-            height: 10px; 
-            border-radius: 50%; 
-            display: inline-block; 
-            margin-right: 5px; 
-        }
-
-        .online { background-color: green; }  
-        .occupied { background-color: red; }   
-        .absent { background-color: orange; }
-        /* Style pour le conteneur des utilisateurs en ligne */
-        #online-users-container {
-            padding: 10px;
-            border: 1px solid #ffd700; /* Bordure dorée */
-            border-radius: 8px; /* Coins arrondis */
-            background-color: rgba(60, 60, 60, 0.8); /* Fond semi-transparent */
-        }
-        #emoji-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            max-width: 200px;
-            background-color: #333;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            position: absolute;
-            bottom: 60px;
-            left: 20px;
-        }
+    /* Emoji Picker Styles */
+    #emoji-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 200px;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: absolute;
+        bottom: 60px;
+        left: 20px;
+    }
     .emoji-picker-message {
         display: none;
         position: absolute;
@@ -160,47 +180,8 @@
     .emoji:hover {
         transform: scale(1.2);
     }
-    #messages {
-        max-height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-        background-color: #2e2e2e;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .message {
-        padding: 10px;
-        margin-bottom: 8px;
-        border-radius: 5px;
-        word-wrap: break-word;
-        max-width: 70%;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-    }
-    .message.user1 {
-        background: linear-gradient(to right, #8e44ad, #3498db);
-        align-self: flex-end;
-        border-radius: 10px 10px 0 10px;
-    }
-    .message.user2 {
-        background: linear-gradient(to right, #95a5a6, #7f8c8d);
-        align-self: flex-start;
-        border-radius: 10px 10px 10px 0;
-    }
-    .msg-text {
-        margin-bottom: 5px;
-    }
-    .citation {
-        background-color: #444;
-        padding: 5px;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        font-style: italic;
-        color: #ccc;
-    }
+
+    /* Additional styles for message reactions, usernames, and more */
     .reaction-container {
         margin-top: 5px;
         display: flex;
@@ -250,31 +231,13 @@
     .message:hover .flou {
         filter: none;
     }
-    h1 {
-        font-size: 3em;
-        color: #ffd700;
-        margin-bottom: 20px;
-        padding: 20px 40px;
-        border-radius: 15px;
-        text-align: center;
-        background: linear-gradient(135deg, #8800ff, #ff6600, #ffcc00, #ffd700);
-        background-size: 200% 200%;
-        animation: gradientBackground 4s ease infinite;
-        text-shadow: 0 0 10px #ffcc00, 0 0 20px #ff9900, 0 0 30px #ff6600, 0 0 40px #ff3300, 0 0 50px #ff0000;
-        border: 2px solid transparent;
-        border-image: linear-gradient(45deg, #ffd700, #ff6600, #ff3300, #8800ff);
-        border-image-slice: 1;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 165, 0, 0.5), 0 0 45px rgba(255, 99, 71, 0.4);
-        transition: transform 0.3s ease;
-    }
-    @keyframes gradientBackground {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    h1:hover {
-        transform: scale(1.05);
-        text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
+    .citation {
+        background-color: #444;
+        padding: 5px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        font-style: italic;
+        color: #ccc;
     }
     .action-buttons {
         display: flex;
@@ -311,7 +274,7 @@
         color: #ffd700;
     }
 
-    /* Ajout de media queries pour adaptation aux tablettes */
+    /* Media queries for responsiveness */
     @media (max-width: 600px) {
         body {
             padding: 10px;
@@ -341,11 +304,10 @@
     }
 </style>
 
+
 </head>
 <body>
-   <h1>TEST</h1>
-
-    <!-- Section de connexion -->
+    <h1>TEST</h1>
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
@@ -353,291 +315,275 @@
         <button onclick="joinRoom()">Entrez dans la Villa</button>
     </div>
 
-    <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display"></div>
+        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <div id="user-name-display" style="font-size: 1.2em; color: #ffd700;"></div> <!-- Nom de l'utilisateur et statut -->
 
-        <div id="user-name-display" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;">
-            <!-- Le nom de l'utilisateur sera ajouté ici -->
-        </div>
-
-        <select id="status-selector" onchange="changeStatus(this.value)">
-            <option value="online">En ligne</option>
-            <option value="occupied">Occupé</option>
-            <option value="absent">Absent</option>
-        </select>
-
-        <div id="reply-container">
-            <span id="reply-message"></span>
-            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
+        <div id="online-users-container">
+            <h2 style="font-size: 1.5em; color: #ffd700;">Connecté :</h2>
+            <div id="online-users" style="font-size: 1.2em; color: #ffd700;"></div>
         </div>
 
         <div id="messages"></div>
         <div id="input-section">
-            <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
-            <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
         <div id="emoji-picker" style="display: none;">
             <!-- Emoji Picker Content -->
         </div>
     </div>
+    <script>
+        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
+        var firebaseConfig = {
+            apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+            authDomain: "madiko-rs.firebaseapp.com",
+            databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+            projectId: "madiko-rs",
+            storageBucket: "madiko-rs.appspot.com",
+            messagingSenderId: "746083664475",
+            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+            measurementId: "G-EBWFWCMWFT"
+        };
+        firebase.initializeApp(firebaseConfig);
 
-<script>
-// Script JavaScript avec toutes les fonctionnalités
-const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
-var firebaseConfig = {
-    apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-    authDomain: "madiko-rs.firebaseapp.com",
-    databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-    projectId: "madiko-rs",
-    storageBucket: "madiko-rs.appspot.com",
-    messagingSenderId: "746083664475",
-    appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-    measurementId: "G-EBWFWCMWFT"
-};
-firebase.initializeApp(firebaseConfig);
+        var db;
+        var username;
+        var roomName;
+        var replyMessageId = null;
+        var replyMessageText = "";
+        var allMessagesVisible = false;
+        var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
 
-var db;
-var username;
-var roomName;
-var replyMessageId = null;
-var replyMessageText = "";
-var allMessagesVisible = false;
-var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
+        function joinRoom() {
+            username = document.getElementById("username").value;
+            roomName = document.getElementById("room-name-input").value.toUpperCase(); // Convertir en majuscules
+            var password = document.getElementById("password-input").value;
 
-// Fonction pour rejoindre une room
-function joinRoom() {
-    username = document.getElementById("username").value;
-    roomName = document.getElementById("room-name-input").value.toUpperCase(); // Convertir en majuscules
-    var password = document.getElementById("password-input").value;
+            db = firebase.database().ref("rooms/" + roomName);
 
-    db = firebase.database().ref("rooms/" + roomName);
+            db.once('value').then(function(snapshot) {
+                if (snapshot.exists()) {
+                    var dbPassword = snapshot.child("password").val();
+                    if (dbPassword === password) {
+                        alert("Connexion réussie !");
+                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
 
-    db.once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-            var dbPassword = snapshot.child("password").val();
-            if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                        // Initialiser le statut de l'utilisateur
+                        onlineUsers[username] = { status: 'online' }; 
+                        db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                        
+                        displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
+                        switchToChat();
+                        updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                    } else {
+                        alert("Mot de passe incorrect !");
+                    }
+                } else {
+                    db.set({
+                        password: password,
+                        messages: {},
+                        creator: username // Enregistrer le créateur du room
+                    }).then(() => {
+                        alert("Room créé avec succès !");
+                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
 
-                // Initialiser le statut de l'utilisateur
-                onlineUsers[username] = { status: 'online' }; 
-                db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                
-                displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
-                switchToChat();
-                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-            } else {
-                alert("Mot de passe incorrect !");
-            }
-        } else {
-            db.set({
-                password: password,
-                messages: {},
-                creator: username // Enregistrer le créateur du room
-            }).then(() => {
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-
-                // Initialiser le statut de l'utilisateur
-                onlineUsers[username] = { status: 'online' }; 
-                db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                
-                displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
-                switchToChat();
-                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                        // Initialiser le statut de l'utilisateur
+                        onlineUsers[username] = { status: 'online' }; 
+                        db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                        
+                        displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
+                        switchToChat();
+                        updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+                    });
+                }
             });
         }
-    });
-}
 
-function displayUser() {
-    const userNameDisplay = document.getElementById("user-name-display");
-    userNameDisplay.innerHTML = `<span class="online-status online"></span>${username}`;
-    userNameDisplay.appendChild(document.getElementById("status-selector")); // Ajout du sélecteur de statut
-}
-
-function switchToChat() {
-    document.getElementById("login-container").style.display = "none";
-    document.getElementById("chat-container").style.display = "block";
-    loadMessages();
-    loadOnlineUsers(); // Charger les utilisateurs en ligne lors du changement vers la chat
-}
-
-function sendMessage() {
-    var messageInput = document.getElementById("message-input");
-    var message = messageInput.value;
-
-    if (message.trim() === "") {
-        return;
-    }
-
-    var timestamp = new Date().toLocaleTimeString();
-
-    var msgData = { 
-        "user": username, 
-        "message": message, 
-        "timestamp": timestamp,
-        "reactions": {}
-    };
-    
-    if (replyMessageId) {
-        msgData.replyTo = replyMessageText;
-        cancelReply();
-    }
-
-    var msgRef = db.child("messages").push();
-    msgRef.set(msgData);
-
-    messageInput.value = '';
-}
-
-function loadMessages() {
-    db.child('messages').on('child_added', function(snapshot) {
-        displayMessage(snapshot.key, snapshot.val());
-    });
-
-    db.child('messages').on('child_removed', function(snapshot) {
-        const removedMessage = document.getElementById(snapshot.key);
-        if (removedMessage) {
-            removedMessage.remove();
+        function displayUser() {
+            const userNameDisplay = document.getElementById("user-name-display");
+            userNameDisplay.innerHTML = `<span class="online-status online"></span>${username}`;
         }
-    });
-}
 
-function loadOnlineUsers() {
-    db.child("onlineUsers").on("value", function(snapshot) {
-        onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
-        updateOnlineUsers(); // Mettre à jour l'affichage
-    });
-}
-
-function addReactionEmoji(messageId, emoji) {
-    db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
-}
-
-// Liste d'émojis de base
-const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
-
-function toggleEmojiPicker() {
-    const picker = document.getElementById("emoji-picker");
-    picker.style.display = picker.style.display === "none" ? "flex" : "none";
-}
-
-function insertEmoji(emoji) {
-    const messageInput = document.getElementById("message-input");
-    messageInput.value += emoji;
-    document.getElementById("emoji-picker").style.display = "none";
-}
-
-document.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        event.preventDefault(); // Empêche le comportement par défaut de la touche "Entrée"
-        sendMessage(); // Envoie le message
-    }
-});
-
-function quitRoom() {
-    db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
-    document.getElementById("chat-container").style.display = "none";
-    document.getElementById("login-container").style.display = "block";
-}
-
-function displayMessage(key, data) {
-    var msgDiv = document.createElement("div");
-    msgDiv.id = key;
-    msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
-    var usernameDiv = document.createElement("div");
-    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-    usernameDiv.textContent = data.user;
-
-    var textSpan = document.createElement("span");
-    textSpan.className = "msg-text flou";
-    textSpan.textContent = data.message;
-
-    var timeDiv = document.createElement("div");
-    timeDiv.className = "timestamp";
-    timeDiv.style.fontSize = "0.8rem";
-    timeDiv.style.color = "#ccc";
-    timeDiv.style.position = "absolute";
-    timeDiv.style.top = "5px";
-    timeDiv.style.right = "10px";
-    timeDiv.textContent = data.timestamp;
-
-    msgDiv.appendChild(usernameDiv);
-    msgDiv.appendChild(timeDiv);
-    msgDiv.appendChild(textSpan);
-
-    // Emoji picker for the message
-    var emojiBtn = document.createElement("button");
-    emojiBtn.className = "emoji-btn";
-    emojiBtn.textContent = "😀";
-    emojiBtn.onclick = function () {
-        toggleEmojiPickerMessage(key);
-    };
-    msgDiv.appendChild(emojiBtn);
-
-    var emojiPickerMessage = document.createElement("div");
-    emojiPickerMessage.className = "emoji-picker-message";
-    emojiPickerMessage.id = `emoji-picker-${key}`;
-
-    emojis.forEach((emoji) => {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.textContent = emoji;
-        emojiSpan.className = "emoji";
-        emojiSpan.onclick = function () {
-            addReactionEmoji(key, emoji);
-            emojiPickerMessage.style.display = "none";
-        };
-        emojiPickerMessage.appendChild(emojiSpan);
-    });
-
-    msgDiv.appendChild(emojiPickerMessage);
-
-    document.getElementById("messages").appendChild(msgDiv);
-    scrollToBottom();
-}
-
-function updateOnlineUsers() {
-    const onlineUsersDiv = document.getElementById("online-users");
-    onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
-
-    // Afficher l'utilisateur qui s'est connecté
-    const currentUserDiv = createUserDiv(username, onlineUsers[username].status);
-    onlineUsersDiv.appendChild(currentUserDiv); // Ajouter le nom de l'utilisateur en haut
-
-    // Afficher les autres utilisateurs
-    for (const user in onlineUsers) {
-        if (user !== username) { // Exclure l'utilisateur actuel de la liste
-            const userDiv = createUserDiv(user, onlineUsers[user].status);
-            onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
+        function switchToChat() {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("chat-container").style.display = "block";
+            loadMessages();
+            loadOnlineUsers(); // Charger les utilisateurs en ligne lors du changement vers la chat
         }
-    }
-}
 
-function createUserDiv(user, status) {
-    const userDiv = document.createElement("div");
-    userDiv.textContent = user + " ";
+        function sendMessage() {
+            var messageInput = document.getElementById("message-input");
+            var message = messageInput.value;
 
-    const statusDot = document.createElement("span");
-    statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
+            if (message.trim() === "") {
+                return;
+            }
 
-    userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
-    return userDiv;
-}
+            var timestamp = new Date().toLocaleTimeString();
 
-// Fonction pour changer le statut
-function changeStatus(newStatus) {
-    onlineUsers[username].status = newStatus; // Mettre à jour le statut local
-    db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
-    updateOnlineUsers(); // Mettre à jour l'affichage
-}
+            var msgData = { 
+                "user": username, 
+                "message": message, 
+                "timestamp": timestamp,
+                "reactions": {}
+            };
+            
+            if (replyMessageId) {
+                msgData.replyTo = replyMessageText;
+                cancelReply();
+            }
 
-</script>
+            var msgRef = db.child("messages").push();
+            msgRef.set(msgData);
+
+            messageInput.value = '';
+        }
+
+        function loadMessages() {
+            db.child('messages').on('child_added', function(snapshot) {
+                displayMessage(snapshot.key, snapshot.val());
+            });
+
+            db.child('messages').on('child_removed', function(snapshot) {
+                const removedMessage = document.getElementById(snapshot.key);
+                if (removedMessage) {
+                    removedMessage.remove();
+                }
+            });
+        }
+
+        function loadOnlineUsers() {
+            db.child("onlineUsers").on("value", function(snapshot) {
+                onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
+                updateOnlineUsers(); // Mettre à jour l'affichage
+            });
+        }
+
+        function addReactionEmoji(messageId, emoji) {
+            db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+        }
+
+        // Liste d'émojis de base
+        const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById("emoji-picker");
+            picker.style.display = picker.style.display === "none" ? "flex" : "none";
+        }
+
+        function insertEmoji(emoji) {
+            const messageInput = document.getElementById("message-input");
+            messageInput.value += emoji;
+            document.getElementById("emoji-picker").style.display = "none";
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Empêche le comportement par défaut de la touche "Entrée"
+                sendMessage(); // Envoie le message
+            }
+        });
+
+        function quitRoom() {
+            db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
+            document.getElementById("chat-container").style.display = "none";
+            document.getElementById("login-container").style.display = "block";
+        }
+
+        function displayMessage(key, data) {
+            var msgDiv = document.createElement("div");
+            msgDiv.id = key;
+            msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+            var usernameDiv = document.createElement("div");
+            usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+            usernameDiv.textContent = data.user;
+
+            var textSpan = document.createElement("span");
+            textSpan.className = "msg-text flou";
+            textSpan.textContent = data.message;
+
+            var timeDiv = document.createElement("div");
+            timeDiv.className = "timestamp";
+            timeDiv.style.fontSize = "0.8rem";
+            timeDiv.style.color = "#ccc";
+            timeDiv.style.position = "absolute";
+            timeDiv.style.top = "5px";
+            timeDiv.style.right = "10px";
+            timeDiv.textContent = data.timestamp;
+
+            msgDiv.appendChild(usernameDiv);
+            msgDiv.appendChild(timeDiv);
+            msgDiv.appendChild(textSpan);
+
+            // Emoji picker for the message
+            var emojiBtn = document.createElement("button");
+            emojiBtn.className = "emoji-btn";
+            emojiBtn.textContent = "😀";
+            emojiBtn.onclick = function () {
+                toggleEmojiPickerMessage(key);
+            };
+            msgDiv.appendChild(emojiBtn);
+
+            var emojiPickerMessage = document.createElement("div");
+            emojiPickerMessage.className = "emoji-picker-message";
+            emojiPickerMessage.id = `emoji-picker-${key}`;
+
+            emojis.forEach((emoji) => {
+                const emojiSpan = document.createElement("span");
+                emojiSpan.textContent = emoji;
+                emojiSpan.className = "emoji";
+                emojiSpan.onclick = function () {
+                    addReactionEmoji(key, emoji);
+                    emojiPickerMessage.style.display = "none";
+                };
+                emojiPickerMessage.appendChild(emojiSpan);
+            });
+
+            msgDiv.appendChild(emojiPickerMessage);
+
+            document.getElementById("messages").appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function updateOnlineUsers() {
+            const onlineUsersDiv = document.getElementById("online-users");
+            onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
+
+            // Afficher l'utilisateur qui s'est connecté
+            const currentUserDiv = createUserDiv(username, onlineUsers[username].status);
+            onlineUsersDiv.appendChild(currentUserDiv); // Ajouter le nom de l'utilisateur en haut
+
+            // Afficher les autres utilisateurs
+            for (const user in onlineUsers) {
+                if (user !== username) { // Exclure l'utilisateur actuel de la liste
+                    const userDiv = createUserDiv(user, onlineUsers[user].status);
+                    onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
+                }
+            }
+        }
+
+        function createUserDiv(user, status) {
+            const userDiv = document.createElement("div");
+            userDiv.textContent = user + " ";
+
+            const statusDot = document.createElement("span");
+            statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
+
+            userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+            return userDiv;
+        }
+
+        // Fonction pour changer le statut
+        function changeStatus(newStatus) {
+            onlineUsers[username].status = newStatus; // Mettre à jour le statut local
+            db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
+            updateOnlineUsers(); // Mettre à jour l'affichage
+        }
+
+    </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
