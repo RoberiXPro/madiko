@@ -30,6 +30,24 @@
             display: block;
             animation: fadeIn 0.5s ease;
         }
+    #connected-users-container {
+            text-align: left;
+            margin-bottom: 15px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        #connected-users-container .user-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        #connected-users-container .user-item span {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff00; /* Cercle vert pour les utilisateurs en ligne */
+            border-radius: 50%;
+            margin-right: 8px;
+        }
         #reply-container {
             display: none;
             background-color: #444;
@@ -325,17 +343,13 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-
-        <!-- Section pour répondre à un message -->
-        <div id="reply-container">
-            <span id="reply-message"></span>
-            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
+        
+        <!-- Bloc pour afficher les utilisateurs connectés -->
+        <div id="connected-users-container">
+            Connecté : 
+            <div id="connected-users-list"></div>
         </div>
-    <!-- Section pour afficher les utilisateurs en ligne -->
-    <div id="online-users-container">
-        <h3>Utilisateurs en ligne :</h3>
-        <div id="online-users"></div> <!-- Liste des utilisateurs en ligne -->
-    </div>
+
         <div id="messages"></div>
         <div id="input-section">
             <button onclick="toggleEmojiPicker()">😊</button>
@@ -370,7 +384,7 @@
     var onlineUsers = {}; // Stocke les utilisateurs en ligne
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    function joinRoom() {
+   function joinRoom() {
         username = document.getElementById("username").value;
         roomName = document.getElementById("room-name-input").value.toUpperCase();
         const password = document.getElementById("password-input").value;
@@ -437,6 +451,7 @@
         messageInput.value = '';
     }
 
+// Charge les messages et limite à 10
     function loadMessages() {
         db.child('messages').on('child_added', function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
@@ -448,46 +463,62 @@
                 removedMessage.remove();
             }
         });
+
+        // Supprime les anciens messages toutes les minutes si > 10
+        setInterval(() => {
+            db.child('messages').once('value').then(snapshot => {
+                if (snapshot.numChildren() > 10) {
+                    let messages = [];
+                    snapshot.forEach(childSnapshot => {
+                        messages.push(childSnapshot);
+                    });
+                    messages.slice(0, messages.length - 10).forEach(msg => {
+                        db.child('messages/' + msg.key).remove();
+                    });
+                }
+            });
+        }, 60000); // 60000 ms = 1 minute
     }
 
-    function loadOnlineUsers() {
+     function loadOnlineUsers() {
         db.child("onlineUsers").on("value", function(snapshot) {
-            onlineUsers = snapshot.val() || {}; // Met à jour les utilisateurs en ligne
-            updateOnlineUsers(); // Met à jour l'affichage
+            onlineUsers = snapshot.val() || {};
+            updateOnlineUsers();
         });
     }
 
-    function updateOnlineUsers() {
-        const onlineUsersDiv = document.getElementById("online-users");
-        onlineUsersDiv.innerHTML = ""; // Réinitialise la liste
+   function updateOnlineUsers() {
+    const onlineUsersDiv = document.getElementById("connected-users-list");
+    onlineUsersDiv.innerHTML = "";
 
-        // Affiche l'utilisateur actuel en premier
-        const currentUserDiv = createUserDiv(username, onlineUsers[username].status);
-        onlineUsersDiv.appendChild(currentUserDiv);
-
-        // Affiche les autres utilisateurs
-        for (const user in onlineUsers) {
-            if (user !== username) { // Exclut l'utilisateur actuel de la liste
-                const userDiv = createUserDiv(user, onlineUsers[user].status);
-                onlineUsersDiv.appendChild(userDiv);
-            }
-        }
+    // Affiche chaque utilisateur avec le rond vert via createUserDiv
+    for (const user in onlineUsers) {
+        const userDiv = createUserDiv(user, onlineUsers[user].status);
+        onlineUsersDiv.appendChild(userDiv);
     }
+}
 
-    function createUserDiv(user, status) {
-        const userDiv = document.createElement("div");
-        userDiv.textContent = user + " ";
-        const statusDot = document.createElement("span");
-        statusDot.className = "online-status " + status; // Applique la classe CSS selon le statut
-        userDiv.prepend(statusDot); // Ajoute le statut devant le nom d'utilisateur
-        return userDiv;
-    }
+// Fonction pour créer un div utilisateur avec le statut en ligne
+function createUserDiv(user, status) {
+    const userDiv = document.createElement("div");
+    userDiv.classList.add("user-item");
 
-    function changeStatus(newStatus) {
+    const statusDot = document.createElement("span");
+    statusDot.className = "online-status " + status; // Classe pour le statut
+    userDiv.appendChild(statusDot); // Ajoute le point vert
+
+    const usernameSpan = document.createElement("span");
+    usernameSpan.textContent = user;
+    userDiv.appendChild(usernameSpan);
+
+    return userDiv;
+}
+
+function changeStatus(newStatus) {
         db.child("onlineUsers").child(username).update({ status: newStatus, lastSeen: new Date().toISOString() });
         updateOnlineUsers();
     }
-
+  
     function quitRoom() {
         changeStatus("offline"); // Change le statut avant de quitter
         db.child("onlineUsers").child(username).remove(); // Supprime l'utilisateur de la liste en ligne
