@@ -388,16 +388,14 @@
     var allMessagesVisible = false;
     var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
 
-    // Fonction pour rejoindre une room
+// Fonction pour rejoindre une room
 function joinRoom() {
     username = document.getElementById("username").value;
     roomName = document.getElementById("room-name-input").value;
     var password = document.getElementById("password-input").value;
 
-    // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
 
-    // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
             var dbPassword = snapshot.child("password").val();
@@ -405,10 +403,9 @@ function joinRoom() {
             if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                
+
                 // Initialiser le statut de l'utilisateur
                 onlineUsers[username] = { status: 'online' }; 
-                // Enregistrer le statut en ligne dans Firebase
                 db.child("onlineUsers").child(username).set({ status: 'online' }); 
                 
                 switchToChat();
@@ -417,7 +414,6 @@ function joinRoom() {
                 alert("Mot de passe incorrect !");
             }
         } else {
-            // Créer le room si inexistant
             db.set({
                 password: password,
                 messages: {},
@@ -428,7 +424,6 @@ function joinRoom() {
 
                 // Initialiser le statut de l'utilisateur
                 onlineUsers[username] = { status: 'online' }; 
-                // Enregistrer le statut en ligne dans Firebase
                 db.child("onlineUsers").child(username).set({ status: 'online' }); 
                 
                 switchToChat();
@@ -725,30 +720,43 @@ function loadOnlineUsers() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
- function updateOnlineUsers() {
+function updateOnlineUsers() {
     const onlineUsersDiv = document.getElementById("online-users");
     onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
-    // Vérifiez si le créateur existe dans onlineUsers avant d'accéder à son statut
+    // Afficher le créateur séparément
     if (onlineUsers[creator]) {
         const creatorDiv = createUserDiv(creator, onlineUsers[creator].status);
+        creatorDiv.textContent += " (Créateur)"; // Ajouter (Créateur) à côté
         onlineUsersDiv.appendChild(creatorDiv); // Ajouter le créateur à la liste
     }
 
     // Afficher les autres utilisateurs
     for (const user in onlineUsers) {
-        if (user !== creator) { // Exclure le créateur de la liste des utilisateurs connectés
+        if (user !== creator) { // Exclure le créateur de la liste
             const userDiv = createUserDiv(user, onlineUsers[user].status);
             onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
         }
     }
 }
+    function createUserDiv(user, status) {
+    const userDiv = document.createElement("div");
+    userDiv.textContent = user + " ";
 
+    const statusDot = document.createElement("span");
+    statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
+
+    userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+    return userDiv;
+}
+
+// Fonction pour changer le statut
 function changeStatus(newStatus) {
     onlineUsers[username].status = newStatus; // Mettre à jour le statut local
     db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
     updateOnlineUsers(); // Mettre à jour l'affichage
 }
+
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
