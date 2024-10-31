@@ -368,18 +368,21 @@
                 if (snapshot.exists()) {
                     var dbPassword = snapshot.child("password").val();
                     if (dbPassword === password) {
+                        console.log("Connexion réussie !");
                         alert("Connexion réussie !");
                         document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                        changeStatus("online"); // Appel de la fonction pour changer le statut
-                        switchToChat();
+                       switchToChat();
+                    changeStatus("online"); // Appel de la fonction pour changer le statut
                     } else {
                         alert("Mot de passe incorrect !");
+                        console.log("Mot de passe incorrect !");
                     }
                 } else {
                     db.set({
                         password: password,
                         messages: {}
                     }).then(() => {
+                        console.log("Room créé avec succès !");
                         alert("Room créé avec succès !");
                         document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                          changeStatus("online"); // Appel de la fonction pour changer le statut
@@ -389,11 +392,12 @@
             });
         }
 function switchToChat() {
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            loadMessages();
-            loadOnlineUsers(); // Charger les utilisateurs en ligne
-        }
+    document.getElementById("login-container").style.display = "none"; // Cacher le conteneur de connexion
+    document.getElementById("chat-container").style.display = "block"; // Afficher le conteneur de discussion
+    loadMessages(); // Charger les messages
+    loadOnlineUsers(); // Charger les utilisateurs en ligne
+    changeStatus("online"); // Changer le statut en ligne
+}
         function displayUser() {
             const userNameDisplay = document.getElementById("user-name-display");
             userNameDisplay.innerHTML = `<span class="online-status online"></span>${username}`;
