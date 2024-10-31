@@ -507,6 +507,31 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
         updateUserStatusUI(user, status);
     });
 }
+// Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
+function setOnlineStatus() {
+    // Vérifie que le nom d'utilisateur est défini
+    if (!username) return;
+
+    // Référence pour l'utilisateur dans Firebase
+    var userRef = firebase.database().ref("users/" + username);
+
+    // Suivi de l'état de connexion
+    firebase.database().ref(".info/connected").on("value", function(snapshot) {
+        if (snapshot.val() === true) {
+            // Met à jour le statut de l'utilisateur en ligne et enregistre l'heure de connexion
+            userRef.update({
+                status: "en ligne",
+                lastSeen: new Date().toISOString()
+            });
+
+            // Définir le statut sur "hors ligne" en cas de déconnexion
+            userRef.onDisconnect().update({
+                status: "hors ligne",
+                lastSeen: new Date().toISOString()
+            });
+        }
+    });
+}
 
     
 function updateUserStatusUI(user, status) {
