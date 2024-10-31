@@ -6,7 +6,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <style>
-  body {
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -17,7 +17,7 @@
             color: #ffffff;
             margin: 0;
         }
-        #login-container, #chat-container {
+    #login-container, #chat-container {
             width: 70%;
             max-width: 800px;
             background: rgba(60, 60, 60, 0.9);
@@ -26,10 +26,12 @@
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
             display: none;
         }
+
         #login-container {
             display: block;
             animation: fadeIn 0.5s ease;
         }
+
         #reply-container {
             display: none;
             background-color: #444;
@@ -74,16 +76,33 @@
         button:hover {
             background-color: #4c4c4c;
         }
-        .online-status {
-            width: 10px; /* Taille du rond */
-            height: 10px;
-            border-radius: 50%; /* Rond */
-            display: inline-block; /* Affichage en ligne */
-            margin-right: 5px; /* Espace à droite */
+      #room-name-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 10px;
         }
-        .online { background-color: green; }  /* Statut en ligne */
-        .occupied { background-color: red; }   /* Statut occupé */
-        .absent { background-color: orange; }  /* Statut absent */
+   #user-status {
+            margin-left: 10px; 
+            padding: 5px; 
+            border-radius: 5px; 
+            border: 1px solid #ffd700; 
+            background-color: rgba(60, 60, 60, 0.8); 
+            color: #ffffff; 
+            font-size: 1em; 
+        }
+
+        .online-status {
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 5px; 
+        }
+
+        .online { background-color: green; }  
+        .occupied { background-color: red; }   
+        .absent { background-color: orange; }
         /* Style pour le conteneur des utilisateurs en ligne */
         #online-users-container {
             padding: 10px;
@@ -336,13 +355,17 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-        <div id="user-name-display" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;"></div> <!-- Nom de l'utilisateur avec statut -->
+        <div id="room-name-display"></div>
 
-        <div id="online-users-container" style="margin-bottom: 20px;">
-            <h2 style="font-size: 1.5em; color: #ffd700;">Connecté :</h2>
-            <div id="online-users" style="font-size: 1.2em; color: #ffd700;"></div> <!-- Section pour afficher les utilisateurs en ligne -->
+        <div id="user-name-display" style="font-size: 1.2em; color: #ffd700; margin-bottom: 10px;">
+            <!-- Le nom de l'utilisateur sera ajouté ici -->
         </div>
+
+        <select id="status-selector" onchange="changeStatus(this.value)">
+            <option value="online">En ligne</option>
+            <option value="occupied">Occupé</option>
+            <option value="absent">Absent</option>
+        </select>
 
         <div id="reply-container">
             <span id="reply-message"></span>
@@ -357,206 +380,265 @@
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
-        <div id="emoji-picker" style="display: none;"></div>
+        <div id="emoji-picker" style="display: none;">
+            <!-- Emoji Picker Content -->
+        </div>
     </div>
 
- <script>
-        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
-        var firebaseConfig = {
-            apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-            authDomain: "madiko-rs.firebaseapp.com",
-            databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-            projectId: "madiko-rs",
-            storageBucket: "madiko-rs.appspot.com",
-            messagingSenderId: "746083664475",
-            appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-            measurementId: "G-EBWFWCMWFT"
+<script>
+// Script JavaScript avec toutes les fonctionnalités
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
+var firebaseConfig = {
+    apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+    authDomain: "madiko-rs.firebaseapp.com",
+    databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+    projectId: "madiko-rs",
+    storageBucket: "madiko-rs.appspot.com",
+    messagingSenderId: "746083664475",
+    appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+    measurementId: "G-EBWFWCMWFT"
+};
+firebase.initializeApp(firebaseConfig);
+
+var db;
+var username;
+var roomName;
+var replyMessageId = null;
+var replyMessageText = "";
+var allMessagesVisible = false;
+var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
+
+// Fonction pour rejoindre une room
+function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value.toUpperCase(); // Convertir en majuscules
+    var password = document.getElementById("password-input").value;
+
+    db = firebase.database().ref("rooms/" + roomName);
+
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+
+                // Initialiser le statut de l'utilisateur
+                onlineUsers[username] = { status: 'online' }; 
+                db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                
+                displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
+                switchToChat();
+                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+            } else {
+                alert("Mot de passe incorrect !");
+            }
+        } else {
+            db.set({
+                password: password,
+                messages: {},
+                creator: username // Enregistrer le créateur du room
+            }).then(() => {
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+
+                // Initialiser le statut de l'utilisateur
+                onlineUsers[username] = { status: 'online' }; 
+                db.child("onlineUsers").child(username).set({ status: 'online' }); 
+                
+                displayUser(); // Afficher le nom de l'utilisateur et le sélecteur de statut
+                switchToChat();
+                updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
+            });
+        }
+    });
+}
+
+function displayUser() {
+    const userNameDisplay = document.getElementById("user-name-display");
+    userNameDisplay.innerHTML = `<span class="online-status online"></span>${username}`;
+    userNameDisplay.appendChild(document.getElementById("status-selector")); // Ajout du sélecteur de statut
+}
+
+function switchToChat() {
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("chat-container").style.display = "block";
+    loadMessages();
+    loadOnlineUsers(); // Charger les utilisateurs en ligne lors du changement vers la chat
+}
+
+function sendMessage() {
+    var messageInput = document.getElementById("message-input");
+    var message = messageInput.value;
+
+    if (message.trim() === "") {
+        return;
+    }
+
+    var timestamp = new Date().toLocaleTimeString();
+
+    var msgData = { 
+        "user": username, 
+        "message": message, 
+        "timestamp": timestamp,
+        "reactions": {}
+    };
+    
+    if (replyMessageId) {
+        msgData.replyTo = replyMessageText;
+        cancelReply();
+    }
+
+    var msgRef = db.child("messages").push();
+    msgRef.set(msgData);
+
+    messageInput.value = '';
+}
+
+function loadMessages() {
+    db.child('messages').on('child_added', function(snapshot) {
+        displayMessage(snapshot.key, snapshot.val());
+    });
+
+    db.child('messages').on('child_removed', function(snapshot) {
+        const removedMessage = document.getElementById(snapshot.key);
+        if (removedMessage) {
+            removedMessage.remove();
+        }
+    });
+}
+
+function loadOnlineUsers() {
+    db.child("onlineUsers").on("value", function(snapshot) {
+        onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
+        updateOnlineUsers(); // Mettre à jour l'affichage
+    });
+}
+
+function addReactionEmoji(messageId, emoji) {
+    db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+}
+
+// Liste d'émojis de base
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault(); // Empêche le comportement par défaut de la touche "Entrée"
+        sendMessage(); // Envoie le message
+    }
+});
+
+function quitRoom() {
+    db.child("onlineUsers").child(username).remove(); // Supprimer l'utilisateur de la liste en ligne
+    document.getElementById("chat-container").style.display = "none";
+    document.getElementById("login-container").style.display = "block";
+}
+
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+    usernameDiv.textContent = data.user;
+
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text flou";
+    textSpan.textContent = data.message;
+
+    var timeDiv = document.createElement("div");
+    timeDiv.className = "timestamp";
+    timeDiv.style.fontSize = "0.8rem";
+    timeDiv.style.color = "#ccc";
+    timeDiv.style.position = "absolute";
+    timeDiv.style.top = "5px";
+    timeDiv.style.right = "10px";
+    timeDiv.textContent = data.timestamp;
+
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(timeDiv);
+    msgDiv.appendChild(textSpan);
+
+    // Emoji picker for the message
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
+
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
+
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            addReactionEmoji(key, emoji);
+            emojiPickerMessage.style.display = "none";
         };
-        firebase.initializeApp(firebaseConfig);
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
 
-        var db;
-        var username;
-        var roomName;
-        var replyMessageId = null;
-        var replyMessageText = "";
-        var allMessagesVisible = false;
-        var onlineUsers = {}; // Variable pour stocker les utilisateurs en ligne
+    msgDiv.appendChild(emojiPickerMessage);
 
-        function joinRoom() {
-            username = document.getElementById("username").value;
-            roomName = document.getElementById("room-name-input").value.toUpperCase(); // Convertir en majuscules
-            var password = document.getElementById("password-input").value;
+    document.getElementById("messages").appendChild(msgDiv);
+    scrollToBottom();
+}
 
-            db = firebase.database().ref("rooms/" + roomName);
+function updateOnlineUsers() {
+    const onlineUsersDiv = document.getElementById("online-users");
+    onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
 
-            db.once('value').then(function(snapshot) {
-                if (snapshot.exists()) {
-                    var dbPassword = snapshot.child("password").val();
-                    if (dbPassword === password) {
-                        alert("Connexion réussie !");
-                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                        document.getElementById("user-name-display").textContent = username; // Afficher le nom de l'utilisateur
+    // Afficher l'utilisateur qui s'est connecté
+    const currentUserDiv = createUserDiv(username, onlineUsers[username].status);
+    onlineUsersDiv.appendChild(currentUserDiv); // Ajouter le nom de l'utilisateur en haut
 
-                        // Initialiser le statut de l'utilisateur
-                        onlineUsers[username] = { status: 'online' }; 
-                        db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                        
-                        switchToChat();
-                        updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-                    } else {
-                        alert("Mot de passe incorrect !");
-                    }
-                } else {
-                    db.set({
-                        password: password,
-                        messages: {},
-                        creator: username // Enregistrer le créateur du room
-                    }).then(() => {
-                        alert("Room créé avec succès !");
-                        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                        document.getElementById("user-name-display").textContent = username; // Afficher le nom de l'utilisateur
-
-                        // Initialiser le statut de l'utilisateur
-                        onlineUsers[username] = { status: 'online' }; 
-                        db.child("onlineUsers").child(username).set({ status: 'online' }); 
-                        
-                        switchToChat();
-                        updateOnlineUsers(); // Mettre à jour la liste des utilisateurs en ligne
-                    });
-                }
-            });
+    // Afficher les autres utilisateurs
+    for (const user in onlineUsers) {
+        if (user !== username) { // Exclure l'utilisateur actuel de la liste
+            const userDiv = createUserDiv(user, onlineUsers[user].status);
+            onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
         }
+    }
+}
 
-        function switchToChat() {
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            loadMessages();
-            loadOnlineUsers(); // Charger les utilisateurs en ligne lors du changement vers la chat
-        }
+function createUserDiv(user, status) {
+    const userDiv = document.createElement("div");
+    userDiv.textContent = user + " ";
 
-        function sendMessage() {
-            var messageInput = document.getElementById("message-input");
-            var message = messageInput.value;
+    const statusDot = document.createElement("span");
+    statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
 
-            if (message.trim() === "") {
-                return;
-            }
+    userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
+    return userDiv;
+}
 
-            var timestamp = new Date().toLocaleTimeString();
-
-            var msgData = { 
-                "user": username, 
-                "message": message, 
-                "timestamp": timestamp,
-                "reactions": {}
-            };
-            
-            if (replyMessageId) {
-                msgData.replyTo = replyMessageText;
-                cancelReply();
-            }
-
-            var msgRef = db.child("messages").push();
-            msgRef.set(msgData);
-
-            messageInput.value = '';
-        }
-
-        function loadMessages() {
-            db.child('messages').on('child_added', function(snapshot) {
-                displayMessage(snapshot.key, snapshot.val());
-            });
-
-            db.child('messages').on('child_removed', function(snapshot) {
-                const removedMessage = document.getElementById(snapshot.key);
-                if (removedMessage) {
-                    removedMessage.remove();
-                }
-            });
-        }
-
-        function loadOnlineUsers() {
-            db.child("onlineUsers").on("value", function(snapshot) {
-                onlineUsers = snapshot.val() || {}; // Mettre à jour les utilisateurs en ligne
-                updateOnlineUsers(); // Mettre à jour l'affichage
-            });
-        }
-
-        function displayMessage(key, data) {
-            var msgDiv = document.createElement("div");
-            msgDiv.id = key;
-            msgDiv.className = (data.user === username ? "message user1" : "message user2");
-
-            var usernameDiv = document.createElement("div");
-            usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-            usernameDiv.textContent = data.user;
-
-            var textSpan = document.createElement("span");
-            textSpan.className = "msg-text flou";
-            textSpan.textContent = data.message;
-
-            var timeDiv = document.createElement("div");
-            timeDiv.className = "timestamp";
-            timeDiv.style.fontSize = "0.8rem";
-            timeDiv.style.color = "#ccc";
-            timeDiv.style.position = "absolute";
-            timeDiv.style.top = "5px";
-            timeDiv.style.right = "10px";
-            timeDiv.textContent = data.timestamp;
-
-            msgDiv.appendChild(usernameDiv);
-            msgDiv.appendChild(timeDiv);
-            msgDiv.appendChild(textSpan);
-
-            // Ajouter un indicateur de statut à l'utilisateur
-            var statusDot = document.createElement("span");
-            statusDot.className = "online-status " + (onlineUsers[data.user]?.status || 'absent');
-            usernameDiv.prepend(statusDot);
-
-            document.getElementById("messages").appendChild(msgDiv);
-        }
-
-        function updateOnlineUsers() {
-            const onlineUsersDiv = document.getElementById("online-users");
-            onlineUsersDiv.innerHTML = ""; // Réinitialiser la liste
-
-            // Afficher l'utilisateur qui s'est connecté
-            const currentUserDiv = createUserDiv(username, onlineUsers[username].status);
-            onlineUsersDiv.appendChild(currentUserDiv); // Ajouter le nom de l'utilisateur en haut
-
-            // Afficher les autres utilisateurs
-            for (const user in onlineUsers) {
-                if (user !== username) { // Exclure l'utilisateur actuel de la liste
-                    const userDiv = createUserDiv(user, onlineUsers[user].status);
-                    onlineUsersDiv.appendChild(userDiv); // Ajouter à la liste
-                }
-            }
-        }
-
-        function createUserDiv(user, status) {
-            const userDiv = document.createElement("div");
-            userDiv.textContent = user + " ";
-
-            const statusDot = document.createElement("span");
-            statusDot.className = "online-status " + status; // Appliquer la classe CSS selon le statut
-
-            userDiv.prepend(statusDot); // Ajouter le statut devant le nom d'utilisateur
-            return userDiv;
-        }
-
-        // Fonction pour changer le statut
-        function changeStatus(newStatus) {
-            onlineUsers[username].status = newStatus; // Mettre à jour le statut local
-            db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
-            updateOnlineUsers(); // Mettre à jour l'affichage
-        }
-
-        // Écouter les changements de statut
-        document.getElementById("status-selector").addEventListener("change", function() {
-            changeStatus(this.value);
-        });
+// Fonction pour changer le statut
+function changeStatus(newStatus) {
+    onlineUsers[username].status = newStatus; // Mettre à jour le statut local
+    db.child("onlineUsers").child(username).set({ status: newStatus }); // Mettre à jour le statut dans Firebase
+    updateOnlineUsers(); // Mettre à jour l'affichage
+}
 
 </script>
+
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2024
     </footer>
