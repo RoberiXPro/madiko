@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TEST - Room sécurisé</title>
+    <title>RS Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -99,15 +99,7 @@
     font-size: 1em;
     margin-left: 10px;
 }
-/* Ajouter la classe pour le statut absent */
-.status-absent .status-indicator {
-    background-color: orange; /* Couleur orange pour le statut "Absent" */
-}
 
-/* Ajouter le style de texte pour le statut "Absent" */
-.user-status-absent {
-    color: orange;
-}
 .status-indicator {
     width: 10px;
     height: 10px;
@@ -378,7 +370,7 @@
 
 </head>
 <body>
-    <h1>TEST</h1>
+    <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
     <div id="login-container">
@@ -432,177 +424,152 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    var db;
-    var username;
-    var roomName;
-    var replyMessageId = null;
-    var replyMessageText = "";
-    var allMessagesVisible = false;
-    var messageListener = null;
-    var childRemovedListenerSet = false;
-    var userRef;
-    var inactivityTimeout;
-    var isUserAbsent = false;
-    const INACTIVITY_DURATION = 5 * 60 * 1000; // 5 minutes
+var db;
+var username;
+var roomName;
+var replyMessageId = null;
+var replyMessageText = "";
+var allMessagesVisible = false;
+var messageListener = null;
+var childRemovedListenerSet = false;
+var userRef;
 
-    function joinRoom() {
-        username = document.getElementById("username").value;
-        roomName = document.getElementById("room-name-input").value;
-        var password = document.getElementById("password-input").value;
 
-        db = firebase.database().ref("rooms/" + roomName);
-        
-        db.once('value').then(function(snapshot) {
-            if (snapshot.exists()) {
-                var dbPassword = snapshot.child("password").val();
-                if (dbPassword === password) {
-                    alert("Connexion réussie !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                    initializeUserListeners();
-                    setOnlineStatus();
-                    startInactivityTimer();
-                } else {
-                    alert("Mot de passe incorrect !");
-                }
+function joinRoom() {
+    username = document.getElementById("username").value;
+    roomName = document.getElementById("room-name-input").value;
+    var password = document.getElementById("password-input").value;
+
+    // Référence au room dans Firebase
+    db = firebase.database().ref("rooms/" + roomName);
+    
+    
+    // Vérifie l'existence et le mot de passe du room
+    db.once('value').then(function(snapshot) {
+        if (snapshot.exists()) {
+            var dbPassword = snapshot.child("password").val();
+            if (dbPassword === password) {
+                alert("Connexion réussie !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                                switchToChat();
+
+                // Initialiser les listeners pour afficher les utilisateurs connectés
+                initializeUserListeners();
+
+                // Mettre à jour le statut de l'utilisateur en ligne
+                setOnlineStatus();
             } else {
-                db.set({
-                    password: password,
-                    messages: {}
-                }).then(() => {
-                    alert("Room créé avec succès !");
-                    document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                    switchToChat();
-                    initializeUserListeners();
-                    setOnlineStatus();
-                    startInactivityTimer();
-                });
+                alert("Mot de passe incorrect !");
             }
-        });
-    }
+        } else {
+            // Créer le room si inexistant
+            db.set({
+                password: password,
+                messages: {}
+            }).then(() => {
+                alert("Room créé avec succès !");
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                               switchToChat();
 
-    function initializeUserListeners() {
-        const usersRef = firebase.database().ref("users");
+                // Initialiser les listeners pour afficher les utilisateurs connectés
+                initializeUserListeners();
 
-        usersRef.on("child_added", (snapshot) => {
-            const user = snapshot.key;
-            const status = snapshot.val().status;
-            updateUserStatusUI(user, status);
-        });
-
-        usersRef.on("child_changed", (snapshot) => {
-            const user = snapshot.key;
-            const status = snapshot.val().status;
-            updateUserStatusUI(user, status);
-        });
-
-        usersRef.on("child_removed", (snapshot) => {
-            const user = snapshot.key;
-            removeUserFromUI(user);
-        });
-    }
-
-    function setOnlineStatus() {
-        if (!username) return;
-        userRef = firebase.database().ref("users/" + username);
-
-        firebase.database().ref(".info/connected").on("value", function (snapshot) {
-            if (snapshot.val() === true) {
-                userRef.update({
-                    status: "en ligne",
-                    lastSeen: new Date().toISOString()
-                });
-
-                userRef.onDisconnect().update({
-                    status: "hors ligne",
-                    lastSeen: new Date().toISOString()
-                });
-                resetInactivityTimer();
-            }
-        });
-    }
-
-    function startInactivityTimer() {
-        clearTimeout(inactivityTimeout);
-        inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
-    }
-
-    function resetInactivityTimer() {
-        clearTimeout(inactivityTimeout);
-        markAsOnline();
-        inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
-    }
-
-    function markAsAbsent() {
-        if (!isUserAbsent) {
-            userRef.update({
-                status: "Absent",
-                lastSeen: new Date().toISOString()
+                // Mettre à jour le statut de l'utilisateur en ligne
+                setOnlineStatus();
             });
-            updateUserStatusUI(username, "Absent");
-            isUserAbsent = true;
         }
-    }
+    });
+}
 
-    function markAsOnline() {
-        if (isUserAbsent) {
+firebase.database().ref("users").on("child_changed", function(snapshot) {
+    var user = snapshot.key;
+    var data = snapshot.val();
+
+    // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
+    updateUserStatusUI(user, data.status);
+});
+
+// Fonction d'initialisation des listeners pour la liste des utilisateurs
+function initializeUserListeners() {
+    const usersRef = firebase.database().ref("users");
+
+    usersRef.on("child_added", (snapshot) => {
+        const user = snapshot.key;
+        const status = snapshot.val().status;
+        updateUserStatusUI(user, status);
+    });
+
+    usersRef.on("child_changed", (snapshot) => {
+        const user = snapshot.key;
+        const status = snapshot.val().status;
+        updateUserStatusUI(user, status);
+    });
+
+    usersRef.on("child_removed", (snapshot) => {
+        const user = snapshot.key;
+        const userElement = document.getElementById("user-status-" + user);
+        if (userElement) userElement.remove();
+    });
+}
+
+// Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
+function setOnlineStatus() {
+    if (!username) return;
+
+    // Référence pour l'utilisateur dans Firebase
+    var userRef = firebase.database().ref("users/" + username);
+
+    // Suivi de l'état de connexion
+    firebase.database().ref(".info/connected").on("value", function (snapshot) {
+        if (snapshot.val() === true) {
             userRef.update({
                 status: "en ligne",
                 lastSeen: new Date().toISOString()
             });
-            updateUserStatusUI(username, "en ligne");
-            isUserAbsent = false;
-        }
-        resetInactivityTimer();
-    }
 
-    document.addEventListener("mousemove", resetInactivityTimer);
-    document.addEventListener("keydown", resetInactivityTimer);
-    document.addEventListener("click", resetInactivityTimer);
-
-    document.addEventListener("visibilitychange", function() {
-        if (document.visibilityState === 'visible') {
-            markAsOnline();
-        } else {
-            resetInactivityTimer();
+            // Met à jour automatiquement l'état en "hors ligne" lors de la déconnexion
+            userRef.onDisconnect().update({
+                status: "hors ligne",
+                lastSeen: new Date().toISOString()
+            });
         }
     });
+}
+// Mise à jour des utilisateurs en ligne
+function updateUserStatusUI(user, status) {
+    let userElement = document.getElementById("user-status-" + user);
 
-    function updateUserStatusUI(user, status) {
-        let userElement = document.getElementById("user-status-" + user);
+    if (status === "hors ligne") {
+        // Supprime l'utilisateur de l'interface s'il est hors ligne
+        if (userElement) userElement.remove();
+    } else {
+        if (!userElement) {
+            userElement = document.createElement("li");
+            userElement.id = "user-status-" + user;
+            userElement.classList.add("status-online");
 
-        if (status === "hors ligne") {
-            if (userElement) userElement.remove();
+            const statusIndicator = document.createElement("span");
+            statusIndicator.classList.add("status-indicator");
+            userElement.appendChild(statusIndicator);
+
+            const userNameText = document.createElement("span");
+            userNameText.classList.add("user-status");
+            userNameText.textContent = user + " - " + status;
+            userElement.appendChild(userNameText);
+
+            document.getElementById("online-users").appendChild(userElement);
         } else {
-            if (!userElement) {
-                userElement = document.createElement("li");
-                userElement.id = "user-status-" + user;
-                userElement.classList.add(status === "en ligne" ? "status-online" : "status-absent");
-
-                const statusIndicator = document.createElement("span");
-                statusIndicator.classList.add("status-indicator");
-                userElement.appendChild(statusIndicator);
-
-                const userNameText = document.createElement("span");
-                userNameText.classList.add("user-status", status === "en ligne" ? "" : "user-status-absent");
-                userNameText.textContent = user + " - " + status;
-                userElement.appendChild(userNameText);
-
-                document.getElementById("online-users").appendChild(userElement);
-            } else {
-                userElement.querySelector(".user-status").textContent = user + " - " + status;
-                userElement.classList.toggle("status-online", status === "en ligne");
-                userElement.classList.toggle("status-absent", status === "Absent");
-                userElement.querySelector(".status-indicator").style.backgroundColor = 
-                    status === "en ligne" ? "green" : "orange";
-            }
+            userElement.querySelector(".user-status").textContent = user + " - " + status;
         }
     }
-
-    function removeUserFromUI(user) {
-        const userElement = document.getElementById("user-status-" + user);
-        if (userElement) userElement.remove();
+}
+    
+function removeUserFromUI(user) {
+    const userElement = document.getElementById("user-status-" + user);
+    if (userElement) {
+        userElement.remove();
     }
+}
 
     function switchToChat() {
         document.getElementById("login-container").style.display = "none";
@@ -619,6 +586,7 @@
         }
 
         var timestamp = new Date().toLocaleTimeString();
+
         var msgData = { 
             "user": username, 
             "message": message, 
@@ -637,29 +605,36 @@
         messageInput.value = '';
     }
 
-    function loadMessages() {
-        if (!messageListener) {
-            messageListener = function(snapshot) {
-                displayMessage(snapshot.key, snapshot.val());
-            };
-            db.child("messages").on("child_added", messageListener);
-        }
+var childRemovedListenerSet = false;
 
-        if (!childRemovedListenerSet) {
-            db.child("messages").on("child_removed", function(snapshot) {
-                const removedMessage = document.getElementById(snapshot.key);
-                if (removedMessage) {
-                    removedMessage.remove();
-                }
-            });
-            childRemovedListenerSet = true;
-        }
+function loadMessages() {
+    // Vérifie si le listener de messages n'est pas encore défini
+    if (!messageListener) {
+        // Définit `messageListener` pour écouter les nouveaux messages
+        messageListener = function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        };
+        db.child("messages").on("child_added", messageListener);
     }
 
+    // Listener pour la suppression des messages (utilise un drapeau pour éviter les doublons)
+    if (!childRemovedListenerSet) {
+        db.child("messages").on("child_removed", function(snapshot) {
+            const removedMessage = document.getElementById(snapshot.key);
+            if (removedMessage) {
+                removedMessage.remove();
+            }
+        });
+        childRemovedListenerSet = true; // Définit le drapeau une fois que le listener est ajouté
+    }
+}
+
+    //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
         db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
     }
 
+    // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
     function toggleEmojiPicker() {
@@ -712,30 +687,33 @@
             }
         });
     });
-
-    function quitRoom() {
-        if (userRef) {
-            userRef.update({
-                status: "hors ligne",
-                lastSeen: new Date().toISOString()
-            });
-        }
-
-        firebase.database().ref("users/" + username).remove();
-
-        if (messageListener) db.child("messages").off("child_added", messageListener);
-        if (childRemovedListenerSet) db.child("messages").off("child_removed");
-        childRemovedListenerSet = false;
-
-        document.getElementById("chat-container").style.display = "none";
-        document.getElementById("login-container").style.display = "block";
+// Quitte la room et supprime l'utilisateur de Firebase de manière sécurisée
+function quitRoom() {
+    if (userRef) {
+        userRef.update({
+            status: "hors ligne",
+            lastSeen: new Date().toISOString()
+        });
     }
 
-    window.addEventListener("beforeunload", function () {
-        if (username) {
-            firebase.database().ref("users/" + username).remove();
-        }
-    });
+    // Supprime l'utilisateur de Firebase lors de la déconnexion
+    firebase.database().ref("users/" + username).remove();
+
+    // Retire les listeners pour éviter les doublons
+    if (messageListener) db.child("messages").off("child_added", messageListener);
+    if (childRemovedListenerSet) db.child("messages").off("child_removed");
+    childRemovedListenerSet = false;
+
+    document.getElementById("chat-container").style.display = "none";
+    document.getElementById("login-container").style.display = "block";
+}
+
+// Supprime l'utilisateur de Firebase lorsqu'on ferme la page
+window.addEventListener("beforeunload", function () {
+    if (username) {
+        firebase.database().ref("users/" + username).remove();
+    }
+});
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
@@ -907,10 +885,10 @@
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
-
+        // Supprime l'utilisateur de Firebase
     window.addEventListener("beforeunload", function() {
-        firebase.database().ref("users/" + username).remove();
-    });
+    firebase.database().ref("users/" + username).remove();
+});
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
