@@ -697,71 +697,51 @@ function loadMessages() {
     document.getElementById("login-container").style.display = "block";
 }
 
- function displayMessage(key, data) {
-    var msgDiv = document.createElement("div");
-    msgDiv.id = key;
-    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+    function displayMessage(key, data) {
+        var msgDiv = document.createElement("div");
+        msgDiv.id = key;
+        msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-    var usernameDiv = document.createElement("div");
-    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-    usernameDiv.textContent = data.user;
+        var usernameDiv = document.createElement("div");
+        usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+        usernameDiv.textContent = data.user;
 
-    var textSpan = document.createElement("span");
-    textSpan.className = "msg-text flou";
-    textSpan.textContent = data.message;
+        var textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
+        textSpan.textContent = data.message;
 
-    var timeDiv = document.createElement("div");
-    timeDiv.className = "timestamp";
-    timeDiv.style.fontSize = "0.8rem";
-    timeDiv.style.color = "#ccc";
-    timeDiv.style.position = "absolute";
-    timeDiv.style.top = "5px";
-    timeDiv.style.right = "10px";
-    timeDiv.textContent = data.timestamp;
+        var timeDiv = document.createElement("div");
+        timeDiv.className = "timestamp";
+        timeDiv.style.fontSize = "0.8rem";
+        timeDiv.style.color = "#ccc";
+        timeDiv.style.position = "absolute";
+        timeDiv.style.top = "5px";
+        timeDiv.style.right = "10px";
+        timeDiv.textContent = data.timestamp;
 
-    msgDiv.appendChild(usernameDiv);
-    msgDiv.appendChild(timeDiv);
+        msgDiv.appendChild(usernameDiv);
+        msgDiv.appendChild(timeDiv);
+        msgDiv.appendChild(textSpan);
 
-    // Ajout de la citation avant le message principal
-    if (data.replyTo) {
-        var replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.style.backgroundColor = "#444";
-        replyDiv.style.padding = "5px";
-        replyDiv.style.marginBottom = "5px";
-        replyDiv.style.borderRadius = "5px";
-        replyDiv.textContent = "Réponse à : " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
+        var reactionContainer = document.createElement("div");
+        reactionContainer.className = "reaction-container";
+        msgDiv.appendChild(reactionContainer);
 
-        setTimeout(function() {
-            replyDiv.classList.add("flou");
-        }, 15000);
-    }
-
-    msgDiv.appendChild(textSpan); // Ajout du texte principal après la citation
-
-    var reactionContainer = document.createElement("div");
-    reactionContainer.className = "reaction-container";
-    msgDiv.appendChild(reactionContainer);
-
-    db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-        reactionContainer.innerHTML = "";
-        if (snapshot.exists()) {
-            var reactionLabel = document.createElement("span");
-            reactionLabel.className = "reaction-label";
-            reactionLabel.textContent = "Réaction : ";
-            reactionContainer.appendChild(reactionLabel);
-            snapshot.forEach(function(childSnapshot) {
-                const reactionEmoji = document.createElement("span");
-                reactionEmoji.className = "reaction-emoji";
-                reactionEmoji.textContent = childSnapshot.val();
-                reactionContainer.appendChild(reactionEmoji);
-            });
-        }
-    });
-
-    document.getElementById("messages").appendChild(msgDiv);
-}
+        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+            reactionContainer.innerHTML = "";
+            if (snapshot.exists()) {
+                var reactionLabel = document.createElement("span");
+                reactionLabel.className = "reaction-label";
+                reactionLabel.textContent = "Réaction : ";
+                reactionContainer.appendChild(reactionLabel);
+                snapshot.forEach(function(childSnapshot) {
+                    const reactionEmoji = document.createElement("span");
+                    reactionEmoji.className = "reaction-emoji";
+                    reactionEmoji.textContent = childSnapshot.val();
+                    reactionContainer.appendChild(reactionEmoji);
+                });
+            }
+        });
 
         if (data.replyTo) {
             var replyDiv = document.createElement("div");
