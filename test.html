@@ -441,52 +441,41 @@ var allMessagesVisible = false;
 var messageListener = null;
 var childRemovedListenerSet = false;
 var userRef;
-
+var inactivityTimeout;
+var isUserAbsent = false;
+const INACTIVITY_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function joinRoom() {
     username = document.getElementById("username").value;
     roomName = document.getElementById("room-name-input").value;
     var password = document.getElementById("password-input").value;
 
-    // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
     
-    
-    // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
             var dbPassword = snapshot.child("password").val();
             if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                                switchToChat();
-
-                // Initialiser les listeners pour afficher les utilisateurs connectés
+                switchToChat();
                 initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
                 setOnlineStatus();
-                // Démarrer le minuteur d'inactivité
                 startInactivityTimer();
             } else {
                 alert("Mot de passe incorrect !");
             }
         } else {
-            // Créer le room si inexistant
             db.set({
                 password: password,
                 messages: {}
             }).then(() => {
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                               switchToChat();
-
-                // Initialiser les listeners pour afficher les utilisateurs connectés
+                switchToChat();
                 initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
                 setOnlineStatus();
-                 startInactivityTimer();
+                startInactivityTimer();
             });
         }
     });
@@ -495,12 +484,9 @@ function joinRoom() {
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
     var data = snapshot.val();
-
-    // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
     updateUserStatusUI(user, data.status);
 });
 
-// Fonction d'initialisation des listeners pour la liste des utilisateurs
 function initializeUserListeners() {
     const usersRef = firebase.database().ref("users");
 
@@ -522,15 +508,11 @@ function initializeUserListeners() {
         if (userElement) userElement.remove();
     });
 }
-var inactivityTimer;
-// Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
+
 function setOnlineStatus() {
     if (!username) return;
+    userRef = firebase.database().ref("users/" + username);
 
-    // Référence pour l'utilisateur dans Firebase
-    var userRef = firebase.database().ref("users/" + username);
-
-      // Gère la connexion et définit l'utilisateur "en ligne"
     firebase.database().ref(".info/connected").on("value", function (snapshot) {
         if (snapshot.val() === true) {
             userRef.update({
@@ -538,49 +520,26 @@ function setOnlineStatus() {
                 lastSeen: new Date().toISOString()
             });
 
-            // Met à jour automatiquement l'état en "hors ligne" lors de la déconnexion
             userRef.onDisconnect().update({
                 status: "hors ligne",
                 lastSeen: new Date().toISOString()
             });
-            // Réinitialiser le statut à "en ligne" en cas de reprise d'activité
             resetInactivityTimer();
         }
     });
 }
-// Fonction pour démarrer le minuteur d'inactivité
+
 function startInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-        userRef.update({
-            status: "Absent",
-            lastSeen: new Date().toISOString()
-        });
-        updateUserStatusUI(username, "Absent");
-    }, 5 * 60 * 1000); // 5 minutes
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
 }
 
-// Fonction pour réinitialiser le minuteur d'inactivité
 function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    userRef.update({ status: "en ligne" });
-    updateUserStatusUI(username, "en ligne");
-    startInactivityTimer();
+    clearTimeout(inactivityTimeout);
+    markAsOnline();
+    inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
 }
 
-// Détecte les mouvements de souris et les interactions clavier pour réinitialiser le minuteur
-document.addEventListener("mousemove", resetInactivityTimer);
-document.addEventListener("keydown", resetInactivityTimer);
-document.addEventListener("click", resetInactivityTimer);
-    
-// Initialiser les variables de temporisation et état
-let inactivityTimeout;
-let isUserAbsent = false;
-
-// Durée d'inactivité (5 minutes en millisecondes)
-const INACTIVITY_DURATION = 5 * 60 * 1000;
-
-// Fonction pour passer l'utilisateur en mode "Absent"
 function markAsAbsent() {
     if (!isUserAbsent) {
         userRef.update({
@@ -592,7 +551,6 @@ function markAsAbsent() {
     }
 }
 
-// Fonction pour remettre l'utilisateur en mode "En ligne" si activité détectée
 function markAsOnline() {
     if (isUserAbsent) {
         userRef.update({
@@ -605,31 +563,18 @@ function markAsOnline() {
     resetInactivityTimer();
 }
 
-// Réinitialiser le minuteur d’inactivité
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimeout);
-    inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
-}
+document.addEventListener("mousemove", resetInactivityTimer);
+document.addEventListener("keydown", resetInactivityTimer);
+document.addEventListener("click", resetInactivityTimer);
 
-// Écouteur de visibilité pour savoir si l'onglet est actif ou non
 document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === 'visible') {
-        markAsOnline(); // Remettre l'utilisateur "en ligne" si l'onglet redevient actif
+        markAsOnline();
     } else {
-        resetInactivityTimer(); // Relancer la minuterie en cas de changement de visibilité
+        resetInactivityTimer();
     }
 });
 
-// Écouter les activités de l'utilisateur pour remettre "en ligne"
-["mousemove", "keydown", "click"].forEach(eventType => {
-    document.addEventListener(eventType, markAsOnline);
-});
-
-// Démarrer la minuterie d'inactivité lors de la connexion
-resetInactivityTimer();
-
-    
-// Mise à jour des utilisateurs en ligne
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
@@ -661,61 +606,52 @@ function updateUserStatusUI(user, status) {
     }
 }
 
-    
 function removeUserFromUI(user) {
     const userElement = document.getElementById("user-status-" + user);
-    if (userElement) {
-        userElement.remove();
-    }
+    if (userElement) userElement.remove();
 }
 
-    function switchToChat() {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-        loadMessages();
+function switchToChat() {
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("chat-container").style.display = "block";
+    loadMessages();
+}
+
+function sendMessage() {
+    var messageInput = document.getElementById("message-input");
+    var message = messageInput.value;
+
+    if (message.trim() === "") {
+        return;
     }
 
-    function sendMessage() {
-        var messageInput = document.getElementById("message-input");
-        var message = messageInput.value;
-
-        if (message.trim() === "") {
-            return;
-        }
-
-        var timestamp = new Date().toLocaleTimeString();
-
-        var msgData = { 
-            "user": username, 
-            "message": message, 
-            "timestamp": timestamp,
-            "reactions": {}
-        };
-        
-        if (replyMessageId) {
-            msgData.replyTo = replyMessageText;
-            cancelReply();
-        }
-
-        var msgRef = db.child("messages").push();
-        msgRef.set(msgData);
-
-        messageInput.value = '';
+    var timestamp = new Date().toLocaleTimeString();
+    var msgData = { 
+        "user": username, 
+        "message": message, 
+        "timestamp": timestamp,
+        "reactions": {}
+    };
+    
+    if (replyMessageId) {
+        msgData.replyTo = replyMessageText;
+        cancelReply();
     }
 
-var childRemovedListenerSet = false;
+    var msgRef = db.child("messages").push();
+    msgRef.set(msgData);
+
+    messageInput.value = '';
+}
 
 function loadMessages() {
-    // Vérifie si le listener de messages n'est pas encore défini
     if (!messageListener) {
-        // Définit `messageListener` pour écouter les nouveaux messages
         messageListener = function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         };
         db.child("messages").on("child_added", messageListener);
     }
 
-    // Listener pour la suppression des messages (utilise un drapeau pour éviter les doublons)
     if (!childRemovedListenerSet) {
         db.child("messages").on("child_removed", function(snapshot) {
             const removedMessage = document.getElementById(snapshot.key);
@@ -723,69 +659,67 @@ function loadMessages() {
                 removedMessage.remove();
             }
         });
-        childRemovedListenerSet = true; // Définit le drapeau une fois que le listener est ajouté
+        childRemovedListenerSet = true;
     }
 }
 
-    //fonction pour les réactions dans les messages 
-    function addReactionEmoji(messageId, emoji) {
-        db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
-    }
+function addReactionEmoji(messageId, emoji) {
+    db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
+}
 
-    // Liste d'émojis de base
-    const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
+const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    function toggleEmojiPicker() {
-        const picker = document.getElementById("emoji-picker");
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
 
-    function loadEmojis() {
-        const picker = document.getElementById("emoji-picker");
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                insertEmoji(emoji);
-            };
-            picker.appendChild(emojiSpan);
+function loadEmojis() {
+    const picker = document.getElementById("emoji-picker");
+    emojis.forEach(emoji => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function() {
+            insertEmoji(emoji);
+        };
+        picker.appendChild(emojiSpan);
+    });
+}
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+            picker.style.display = "none";
         });
     }
+});
 
-    document.addEventListener("keydown", function(event) {
-        if (event.key === "Escape") {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    document.addEventListener("click", function(event) {
-        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        loadEmojis();
-
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
+document.addEventListener("click", function(event) {
+    if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
+        document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
+            picker.style.display = "none";
         });
+    }
+});
+
+function insertEmoji(emoji) {
+    const messageInput = document.getElementById("message-input");
+    messageInput.value += emoji;
+    document.getElementById("emoji-picker").style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadEmojis();
+
+    document.getElementById("message-input").addEventListener("keydown", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
     });
-// Quitte la room et supprime l'utilisateur de Firebase de manière sécurisée
+});
+
 function quitRoom() {
     if (userRef) {
         userRef.update({
@@ -794,10 +728,8 @@ function quitRoom() {
         });
     }
 
-    // Supprime l'utilisateur de Firebase lors de la déconnexion
     firebase.database().ref("users/" + username).remove();
 
-    // Retire les listeners pour éviter les doublons
     if (messageListener) db.child("messages").off("child_added", messageListener);
     if (childRemovedListenerSet) db.child("messages").off("child_removed");
     childRemovedListenerSet = false;
@@ -806,189 +738,187 @@ function quitRoom() {
     document.getElementById("login-container").style.display = "block";
 }
 
-// Supprime l'utilisateur de Firebase lorsqu'on ferme la page
 window.addEventListener("beforeunload", function () {
     if (username) {
         firebase.database().ref("users/" + username).remove();
     }
 });
 
-    function displayMessage(key, data) {
-        var msgDiv = document.createElement("div");
-        msgDiv.id = key;
-        msgDiv.className = (data.user === username ? "message user1" : "message user2");
+function displayMessage(key, data) {
+    var msgDiv = document.createElement("div");
+    msgDiv.id = key;
+    msgDiv.className = (data.user === username ? "message user1" : "message user2");
 
-        var usernameDiv = document.createElement("div");
-        usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-        usernameDiv.textContent = data.user;
+    var usernameDiv = document.createElement("div");
+    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
+    usernameDiv.textContent = data.user;
 
-        var textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
-        textSpan.textContent = data.message;
+    var textSpan = document.createElement("span");
+    textSpan.className = "msg-text flou";
+    textSpan.textContent = data.message;
 
-        var timeDiv = document.createElement("div");
-        timeDiv.className = "timestamp";
-        timeDiv.style.fontSize = "0.8rem";
-        timeDiv.style.color = "#ccc";
-        timeDiv.style.position = "absolute";
-        timeDiv.style.top = "5px";
-        timeDiv.style.right = "10px";
-        timeDiv.textContent = data.timestamp;
+    var timeDiv = document.createElement("div");
+    timeDiv.className = "timestamp";
+    timeDiv.style.fontSize = "0.8rem";
+    timeDiv.style.color = "#ccc";
+    timeDiv.style.position = "absolute";
+    timeDiv.style.top = "5px";
+    timeDiv.style.right = "10px";
+    timeDiv.textContent = data.timestamp;
 
-        msgDiv.appendChild(usernameDiv);
-        msgDiv.appendChild(timeDiv);
-        msgDiv.appendChild(textSpan);
+    msgDiv.appendChild(usernameDiv);
+    msgDiv.appendChild(timeDiv);
+    msgDiv.appendChild(textSpan);
 
-        var reactionContainer = document.createElement("div");
-        reactionContainer.className = "reaction-container";
-        msgDiv.appendChild(reactionContainer);
+    var reactionContainer = document.createElement("div");
+    reactionContainer.className = "reaction-container";
+    msgDiv.appendChild(reactionContainer);
 
-        db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
-            reactionContainer.innerHTML = "";
-            if (snapshot.exists()) {
-                var reactionLabel = document.createElement("span");
-                reactionLabel.className = "reaction-label";
-                reactionLabel.textContent = "Réaction : ";
-                reactionContainer.appendChild(reactionLabel);
-                snapshot.forEach(function(childSnapshot) {
-                    const reactionEmoji = document.createElement("span");
-                    reactionEmoji.className = "reaction-emoji";
-                    reactionEmoji.textContent = childSnapshot.val();
-                    reactionContainer.appendChild(reactionEmoji);
-                });
-            }
-        });
-
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.className = "citation flou";
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-
-            setTimeout(function() {
-                replyDiv.classList.add("flou");
-            }, 15000);
-        }
-
-        var emojiBtn = document.createElement("button");
-        emojiBtn.className = "emoji-btn";
-        emojiBtn.textContent = "😀";
-        emojiBtn.onclick = function () {
-            toggleEmojiPickerMessage(key);
-        };
-        msgDiv.appendChild(emojiBtn);
-
-        var emojiPickerMessage = document.createElement("div");
-        emojiPickerMessage.className = "emoji-picker-message";
-        emojiPickerMessage.id = `emoji-picker-${key}`;
-
-        emojis.forEach((emoji) => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function () {
-                addReactionEmoji(key, emoji);
-                emojiPickerMessage.style.display = "none";
-            };
-            emojiPickerMessage.appendChild(emojiSpan);
-        });
-
-        msgDiv.appendChild(emojiPickerMessage);
-
-        var actionButtons = document.createElement("div");
-        actionButtons.className = "action-buttons";
-
-        var replyBtn = document.createElement("button");
-        replyBtn.textContent = "Répondre";
-        replyBtn.className = "reply-btn";
-        replyBtn.onclick = function() {
-            prepareReply(key, data.message);
-        };
-
-        var deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.className = "btn-delete";
-        deleteBtn.onclick = function() {
-            db.child("messages/" + key).remove();
-        };
-
-        actionButtons.appendChild(replyBtn);
-        actionButtons.appendChild(deleteBtn);
-        msgDiv.appendChild(actionButtons);
-
-        document.getElementById("messages").appendChild(msgDiv);
-
-        setTimeout(function() {
-            textSpan.classList.add("flou");
-        }, 15000);
-
-        scrollToBottom();
-
-        msgDiv.onmouseover = function() {
-            textSpan.classList.remove("flou");
-        };
-        msgDiv.onmouseleave = function() {
-            textSpan.classList.add("flou");
-        };
-
-        if (data.user !== username && document.visibilityState === 'hidden') {
-            document.title = '💬 Nouveau message!';
-            notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
-        }
-    }
-
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') {
-            document.title = 'RS-Villa - Room sécurisé';
+    db.child("messages/" + key + "/reactions").on("value", function(snapshot) {
+        reactionContainer.innerHTML = "";
+        if (snapshot.exists()) {
+            var reactionLabel = document.createElement("span");
+            reactionLabel.className = "reaction-label";
+            reactionLabel.textContent = "Réaction : ";
+            reactionContainer.appendChild(reactionLabel);
+            snapshot.forEach(function(childSnapshot) {
+                const reactionEmoji = document.createElement("span");
+                reactionEmoji.className = "reaction-emoji";
+                reactionEmoji.textContent = childSnapshot.val();
+                reactionContainer.appendChild(reactionEmoji);
+            });
         }
     });
 
-    function toggleEmojiPickerMessage(key) {
-        const picker = document.getElementById(`emoji-picker-${key}`);
-        picker.style.display = picker.style.display === "flex" ? "none" : "flex";
+    if (data.replyTo) {
+        var replyDiv = document.createElement("div");
+        replyDiv.className = "citation flou";
+        replyDiv.style.backgroundColor = "#444";
+        replyDiv.style.padding = "5px";
+        replyDiv.style.marginBottom = "5px";
+        replyDiv.style.borderRadius = "5px";
+        replyDiv.textContent = "Réponse à : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+
+        setTimeout(function() {
+            replyDiv.classList.add("flou");
+        }, 15000);
     }
 
-    function prepareReply(key, message) {
-        replyMessageId = key;
-        replyMessageText = message;
-        document.getElementById("reply-message").textContent = "Réponse à : " + message;
-        document.getElementById("reply-container").style.display = "block";
-    }
+    var emojiBtn = document.createElement("button");
+    emojiBtn.className = "emoji-btn";
+    emojiBtn.textContent = "😀";
+    emojiBtn.onclick = function () {
+        toggleEmojiPickerMessage(key);
+    };
+    msgDiv.appendChild(emojiBtn);
 
-    function cancelReply() {
-        replyMessageId = null;
-        replyMessageText = "";
-        document.getElementById("reply-message").textContent = "";
-        document.getElementById("reply-container").style.display = "none";
-    }
+    var emojiPickerMessage = document.createElement("div");
+    emojiPickerMessage.className = "emoji-picker-message";
+    emojiPickerMessage.id = `emoji-picker-${key}`;
 
-    function toggleAllMessages() {
-        var allMessages = document.querySelectorAll(".msg-text");
-        allMessages.forEach(function(message) {
-            if (allMessagesVisible) {
-                message.classList.add("flou");
-            } else {
-                message.classList.remove("flou");
-            }
-        });
-        allMessagesVisible = !allMessagesVisible;
-        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
-    }
+    emojis.forEach((emoji) => {
+        const emojiSpan = document.createElement("span");
+        emojiSpan.textContent = emoji;
+        emojiSpan.className = "emoji";
+        emojiSpan.onclick = function () {
+            addReactionEmoji(key, emoji);
+            emojiPickerMessage.style.display = "none";
+        };
+        emojiPickerMessage.appendChild(emojiSpan);
+    });
 
-    function scrollToBottom() {
-        var messagesDiv = document.getElementById("messages");
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    msgDiv.appendChild(emojiPickerMessage);
+
+    var actionButtons = document.createElement("div");
+    actionButtons.className = "action-buttons";
+
+    var replyBtn = document.createElement("button");
+    replyBtn.textContent = "Répondre";
+    replyBtn.className = "reply-btn";
+    replyBtn.onclick = function() {
+        prepareReply(key, data.message);
+    };
+
+    var deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.className = "btn-delete";
+    deleteBtn.onclick = function() {
+        db.child("messages/" + key).remove();
+    };
+
+    actionButtons.appendChild(replyBtn);
+    actionButtons.appendChild(deleteBtn);
+    msgDiv.appendChild(actionButtons);
+
+    document.getElementById("messages").appendChild(msgDiv);
+
+    setTimeout(function() {
+        textSpan.classList.add("flou");
+    }, 15000);
+
+    scrollToBottom();
+
+    msgDiv.onmouseover = function() {
+        textSpan.classList.remove("flou");
+    };
+    msgDiv.onmouseleave = function() {
+        textSpan.classList.add("flou");
+    };
+
+    if (data.user !== username && document.visibilityState === 'hidden') {
+        document.title = '💬 Nouveau message!';
+        notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
     }
-        // Supprime l'utilisateur de Firebase
-    window.addEventListener("beforeunload", function() {
+}
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+        document.title = 'RS-Villa - Room sécurisé';
+    }
+});
+
+function toggleEmojiPickerMessage(key) {
+    const picker = document.getElementById(`emoji-picker-${key}`);
+    picker.style.display = picker.style.display === "flex" ? "none" : "flex";
+}
+
+function prepareReply(key, message) {
+    replyMessageId = key;
+    replyMessageText = message;
+    document.getElementById("reply-message").textContent = "Réponse à : " + message;
+    document.getElementById("reply-container").style.display = "block";
+}
+
+function cancelReply() {
+    replyMessageId = null;
+    replyMessageText = "";
+    document.getElementById("reply-message").textContent = "";
+    document.getElementById("reply-container").style.display = "none";
+}
+
+function toggleAllMessages() {
+    var allMessages = document.querySelectorAll(".msg-text");
+    allMessages.forEach(function(message) {
+        if (allMessagesVisible) {
+            message.classList.add("flou");
+        } else {
+            message.classList.remove("flou");
+        }
+    });
+    allMessagesVisible = !allMessagesVisible;
+    document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
+}
+
+function scrollToBottom() {
+    var messagesDiv = document.getElementById("messages");
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
 </script>
-
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; BigLittleBob 2024
     </footer>
