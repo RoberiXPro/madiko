@@ -99,7 +99,15 @@
     font-size: 1em;
     margin-left: 10px;
 }
+/* Ajouter la classe pour le statut absent */
+.status-absent .status-indicator {
+    background-color: orange; /* Couleur orange pour le statut "Absent" */
+}
 
+/* Ajouter le style de texte pour le statut "Absent" */
+.user-status-absent {
+    color: orange;
+}
 .status-indicator {
     width: 10px;
     height: 10px;
@@ -458,6 +466,8 @@ function joinRoom() {
 
                 // Mettre à jour le statut de l'utilisateur en ligne
                 setOnlineStatus();
+                // Démarrer le minuteur d'inactivité
+                startInactivityTimer();
             } else {
                 alert("Mot de passe incorrect !");
             }
@@ -476,6 +486,7 @@ function joinRoom() {
 
                 // Mettre à jour le statut de l'utilisateur en ligne
                 setOnlineStatus();
+                 startInactivityTimer();
             });
         }
     });
@@ -511,7 +522,7 @@ function initializeUserListeners() {
         if (userElement) userElement.remove();
     });
 }
-
+var inactivityTimer;
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
 function setOnlineStatus() {
     if (!username) return;
@@ -519,7 +530,7 @@ function setOnlineStatus() {
     // Référence pour l'utilisateur dans Firebase
     var userRef = firebase.database().ref("users/" + username);
 
-    // Suivi de l'état de connexion
+      // Gère la connexion et définit l'utilisateur "en ligne"
     firebase.database().ref(".info/connected").on("value", function (snapshot) {
         if (snapshot.val() === true) {
             userRef.update({
@@ -532,37 +543,124 @@ function setOnlineStatus() {
                 status: "hors ligne",
                 lastSeen: new Date().toISOString()
             });
+            // Réinitialiser le statut à "en ligne" en cas de reprise d'activité
+            resetInactivityTimer();
         }
     });
 }
+// Fonction pour démarrer le minuteur d'inactivité
+function startInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+        userRef.update({
+            status: "Absent",
+            lastSeen: new Date().toISOString()
+        });
+        updateUserStatusUI(username, "Absent");
+    }, 5 * 60 * 1000); // 5 minutes
+}
+
+// Fonction pour réinitialiser le minuteur d'inactivité
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    userRef.update({ status: "en ligne" });
+    updateUserStatusUI(username, "en ligne");
+    startInactivityTimer();
+}
+
+// Détecte les mouvements de souris et les interactions clavier pour réinitialiser le minuteur
+document.addEventListener("mousemove", resetInactivityTimer);
+document.addEventListener("keydown", resetInactivityTimer);
+document.addEventListener("click", resetInactivityTimer);
+    
+// Initialiser les variables de temporisation et état
+let inactivityTimeout;
+let isUserAbsent = false;
+
+// Durée d'inactivité (5 minutes en millisecondes)
+const INACTIVITY_DURATION = 5 * 60 * 1000;
+
+// Fonction pour passer l'utilisateur en mode "Absent"
+function markAsAbsent() {
+    if (!isUserAbsent) {
+        userRef.update({
+            status: "Absent",
+            lastSeen: new Date().toISOString()
+        });
+        updateUserStatusUI(username, "Absent");
+        isUserAbsent = true;
+    }
+}
+
+// Fonction pour remettre l'utilisateur en mode "En ligne" si activité détectée
+function markAsOnline() {
+    if (isUserAbsent) {
+        userRef.update({
+            status: "en ligne",
+            lastSeen: new Date().toISOString()
+        });
+        updateUserStatusUI(username, "en ligne");
+        isUserAbsent = false;
+    }
+    resetInactivityTimer();
+}
+
+// Réinitialiser le minuteur d’inactivité
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimeout);
+    inactivityTimeout = setTimeout(markAsAbsent, INACTIVITY_DURATION);
+}
+
+// Écouteur de visibilité pour savoir si l'onglet est actif ou non
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === 'visible') {
+        markAsOnline(); // Remettre l'utilisateur "en ligne" si l'onglet redevient actif
+    } else {
+        resetInactivityTimer(); // Relancer la minuterie en cas de changement de visibilité
+    }
+});
+
+// Écouter les activités de l'utilisateur pour remettre "en ligne"
+["mousemove", "keydown", "click"].forEach(eventType => {
+    document.addEventListener(eventType, markAsOnline);
+});
+
+// Démarrer la minuterie d'inactivité lors de la connexion
+resetInactivityTimer();
+
+    
 // Mise à jour des utilisateurs en ligne
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
     if (status === "hors ligne") {
-        // Supprime l'utilisateur de l'interface s'il est hors ligne
         if (userElement) userElement.remove();
     } else {
         if (!userElement) {
             userElement = document.createElement("li");
             userElement.id = "user-status-" + user;
-            userElement.classList.add("status-online");
+            userElement.classList.add(status === "en ligne" ? "status-online" : "status-absent");
 
             const statusIndicator = document.createElement("span");
             statusIndicator.classList.add("status-indicator");
             userElement.appendChild(statusIndicator);
 
             const userNameText = document.createElement("span");
-            userNameText.classList.add("user-status");
+            userNameText.classList.add("user-status", status === "en ligne" ? "" : "user-status-absent");
             userNameText.textContent = user + " - " + status;
             userElement.appendChild(userNameText);
 
             document.getElementById("online-users").appendChild(userElement);
         } else {
             userElement.querySelector(".user-status").textContent = user + " - " + status;
+            userElement.classList.toggle("status-online", status === "en ligne");
+            userElement.classList.toggle("status-absent", status === "Absent");
+            userElement.querySelector(".status-indicator").style.backgroundColor = 
+                status === "en ligne" ? "green" : "orange";
         }
     }
 }
+
     
 function removeUserFromUI(user) {
     const userElement = document.getElementById("user-status-" + user);
