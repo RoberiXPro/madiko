@@ -137,19 +137,22 @@
         background-color: #4c4c4c;
     }
 
-    #emoji-picker {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        max-width: 200px;
-        background-color: #333;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        position: absolute;
-        bottom: 60px;
-        left: 20px;
-    }
+#emoji-picker {
+    display: none;
+    position: absolute;
+    bottom: 60px; /* Positionné juste au-dessus du champ de saisie */
+    left: 20px; /* Ajusté pour se placer correctement sous le bouton emoji */
+    max-width: 250px;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    flex-wrap: wrap;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 200px;
+}
     .emoji-picker-message {
         display: none;
         position: absolute;
@@ -381,22 +384,28 @@
     </div>
 
     <!-- Section de chat -->
-    <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+  <div id="chat-container">
+    <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
 
-         <div id="user-list">
+    <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
             <!-- Les utilisateurs et leur statut seront ajoutés ici -->
         </ul>
     </div>
+
+    <!-- Conteneur pour les messages -->
+    <div id="messages"></div>
+
+    <!-- Conteneur pour le champ de saisie et la zone de réponse -->
+    <div id="input-container">
         <!-- Section pour répondre à un message -->
         <div id="reply-container">
             <span id="reply-message"></span>
             <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
         </div>
 
-        <div id="messages"></div>
+        <!-- Champ de saisie et autres contrôles -->
         <div id="input-section">
             <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
@@ -404,10 +413,13 @@
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
-        <div id="emoji-picker" style="display: none;">
-    <!-- Emoji Picker Content -->
-</div>
     </div>
+
+    <!-- Emoji picker -->
+    <div id="emoji-picker" style="display: none;">
+        <!-- Emoji Picker Content -->
+    </div>
+</div>
 
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
@@ -632,10 +644,15 @@ function loadMessages() {
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    function toggleEmojiPicker() {
-        const picker = document.getElementById("emoji-picker");
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+   function toggleEmojiPicker() {
+    const picker = document.getElementById("emoji-picker");
+    const inputSection = document.getElementById("input-section");
+    const rect = inputSection.getBoundingClientRect();
+
+    picker.style.top = `${rect.top - picker.offsetHeight - 10}px`; // Position au-dessus du champ de saisie
+    picker.style.left = `${rect.left}px`;
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
 
     function loadEmojis() {
         const picker = document.getElementById("emoji-picker");
@@ -855,14 +872,16 @@ function loadMessages() {
         const picker = document.getElementById(`emoji-picker-${key}`);
         picker.style.display = picker.style.display === "flex" ? "none" : "flex";
     }
-
-    function prepareReply(key, message) {
-        replyMessageId = key;
-        replyMessageText = message;
-        document.getElementById("reply-message").textContent = "Réponse à : " + message;
-        document.getElementById("reply-container").style.display = "block";
-    }
-
+//l'interface défile vers le champ de saisie dès que tu appuies sur "Répondre"
+   function prepareReply(key, message) {
+    replyMessageId = key;
+    replyMessageText = message;
+    document.getElementById("reply-message").textContent = "Réponse à : " + message;
+    document.getElementById("reply-container").style.display = "block";
+    
+    // Défilement automatique vers le champ de réponse pour faciliter l'affichage
+    document.getElementById("input-section").scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
     function cancelReply() {
         replyMessageId = null;
         replyMessageText = "";
