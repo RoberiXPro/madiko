@@ -383,7 +383,7 @@
     <!-- Section de chat -->
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div><br>
- <div id="username" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+
         
          <div id="user-list">
         <h2>Utilisateurs connectés</h2>
@@ -440,7 +440,7 @@ function joinRoom() {
 
     // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
-    db = firebase.database().ref("users/" + username);
+    
     
     // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
@@ -449,8 +449,7 @@ function joinRoom() {
             if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                document.getElementById("username").textContent = "Pseudo : " + username;
-                switchToChat();
+                                switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
@@ -468,8 +467,7 @@ function joinRoom() {
             }).then(() => {
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                document.getElementById("username").textContent = "Pseudo : " + username;
-                switchToChat();
+                               switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
