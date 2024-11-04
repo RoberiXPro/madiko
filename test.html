@@ -435,6 +435,7 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+    document.addEventListener("DOMContentLoaded", function() {
     var db;
     var username;
     var roomName;
@@ -780,21 +781,6 @@ function loadMessages() {
     document.getElementById("messages").appendChild(msgDiv);
 }
 
-        if (data.replyTo) {
-            var replyDiv = document.createElement("div");
-            replyDiv.className = "citation flou";
-            replyDiv.style.backgroundColor = "#444";
-            replyDiv.style.padding = "5px";
-            replyDiv.style.marginBottom = "5px";
-            replyDiv.style.borderRadius = "5px";
-            replyDiv.textContent = "Réponse à : " + data.replyTo;
-            msgDiv.appendChild(replyDiv);
-
-            setTimeout(function() {
-                replyDiv.classList.add("flou");
-            }, 15000);
-        }
-
         var emojiBtn = document.createElement("button");
         emojiBtn.className = "emoji-btn";
         emojiBtn.textContent = "😀";
@@ -909,6 +895,7 @@ function loadMessages() {
         // Supprime l'utilisateur de Firebase
     window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
+});
 });
 </script>
 
