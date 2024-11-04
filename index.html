@@ -440,7 +440,8 @@ function joinRoom() {
 
     // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
-
+    db = firebase.database().ref("users/" + username);
+    
     // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
@@ -467,6 +468,7 @@ function joinRoom() {
             }).then(() => {
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+                document.getElementById("username").textContent = "Pseudo : " + username;
                 switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
