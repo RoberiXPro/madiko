@@ -435,17 +435,11 @@
     };
     firebase.initializeApp(firebaseConfig);
 
+//resaka DOM
     document.addEventListener("DOMContentLoaded", function() {
-    var db;
-    var username;
-    var roomName;
-    var replyMessageId = null;
-    var replyMessageText = "";
-    var allMessagesVisible = false;
-    var messageListener = null;
+        document.getElementById("enter-room-button").addEventListener("click", joinRoom);
 
-
-function joinRoom() {
+    function joinRoom() {
     username = document.getElementById("username").value;
     roomName = document.getElementById("room-name-input").value;
     var password = document.getElementById("password-input").value;
@@ -489,6 +483,16 @@ function joinRoom() {
         }
     });
 }
+        
+    var db;
+    var username;
+    var roomName;
+    var replyMessageId = null;
+    var replyMessageText = "";
+    var allMessagesVisible = false;
+    var messageListener = null;
+
+
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
