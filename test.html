@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RS Villa - Room sécurisé</title>
+    <title>TEST - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -370,7 +370,7 @@
 
 </head>
 <body>
-    <h1>RS-Villa</h1>
+    <h1>TEST</h1>
 
     <!-- Section de connexion -->
     <div id="login-container">
@@ -382,9 +382,8 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div><br>
+        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
 
-        
          <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -424,15 +423,13 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-var db;
-var username;
-var roomName;
-var replyMessageId = null;
-var replyMessageText = "";
-var allMessagesVisible = false;
-var messageListener = null;
-var childRemovedListenerSet = false;
-var userRef;
+    var db;
+    var username;
+    var roomName;
+    var replyMessageId = null;
+    var replyMessageText = "";
+    var allMessagesVisible = false;
+    var messageListener = null;
 
 
 function joinRoom() {
@@ -442,8 +439,7 @@ function joinRoom() {
 
     // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
-    
-    
+
     // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
@@ -451,7 +447,7 @@ function joinRoom() {
             if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                                switchToChat();
+                switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
@@ -469,7 +465,7 @@ function joinRoom() {
             }).then(() => {
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                               switchToChat();
+                switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
@@ -489,26 +485,27 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     updateUserStatusUI(user, data.status);
 });
 
-// Fonction d'initialisation des listeners pour la liste des utilisateurs
 function initializeUserListeners() {
-    const usersRef = firebase.database().ref("users");
+    var usersRef = firebase.database().ref("users");
 
-    usersRef.on("child_added", (snapshot) => {
+    // Écoute les ajouts d'utilisateurs
+    usersRef.on("child_added", function(snapshot) {
         const user = snapshot.key;
         const status = snapshot.val().status;
         updateUserStatusUI(user, status);
     });
 
-    usersRef.on("child_changed", (snapshot) => {
+    // Écoute les changements de statut d'utilisateur
+    usersRef.on("child_changed", function(snapshot) {
         const user = snapshot.key;
         const status = snapshot.val().status;
         updateUserStatusUI(user, status);
     });
 
-    usersRef.on("child_removed", (snapshot) => {
+    // Écoute les suppressions d'utilisateurs
+    usersRef.on("child_removed", function(snapshot) {
         const user = snapshot.key;
-        const userElement = document.getElementById("user-status-" + user);
-        if (userElement) userElement.remove();
+        removeUserFromUI(user);
     });
 }
 
@@ -520,14 +517,15 @@ function setOnlineStatus() {
     var userRef = firebase.database().ref("users/" + username);
 
     // Suivi de l'état de connexion
-    firebase.database().ref(".info/connected").on("value", function (snapshot) {
+    firebase.database().ref(".info/connected").on("value", function(snapshot) {
         if (snapshot.val() === true) {
+            // Statut en ligne et mise à jour de l'heure
             userRef.update({
                 status: "en ligne",
                 lastSeen: new Date().toISOString()
             });
 
-            // Met à jour automatiquement l'état en "hors ligne" lors de la déconnexion
+            // Définir sur "hors ligne" ou supprimer en cas de déconnexion
             userRef.onDisconnect().update({
                 status: "hors ligne",
                 lastSeen: new Date().toISOString()
@@ -535,32 +533,29 @@ function setOnlineStatus() {
         }
     });
 }
-// Mise à jour des utilisateurs en ligne
+//Fonction pour Supprimer un Utilisateur de l’Interface (removeUserFromUI)    
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
-    if (status === "hors ligne") {
-        // Supprime l'utilisateur de l'interface s'il est hors ligne
-        if (userElement) userElement.remove();
+    if (!userElement) {
+        userElement = document.createElement("li");
+        userElement.id = "user-status-" + user;
+        userElement.classList.add(status === "en ligne" ? "status-online" : "status-offline");
+
+        const statusIndicator = document.createElement("span");
+        statusIndicator.classList.add("status-indicator");
+        userElement.appendChild(statusIndicator);
+
+        const userNameText = document.createElement("span");
+        userNameText.classList.add("user-status");
+        userNameText.textContent = user + " - " + status;
+        userElement.appendChild(userNameText);
+
+        document.getElementById("online-users").appendChild(userElement);
     } else {
-        if (!userElement) {
-            userElement = document.createElement("li");
-            userElement.id = "user-status-" + user;
-            userElement.classList.add("status-online");
-
-            const statusIndicator = document.createElement("span");
-            statusIndicator.classList.add("status-indicator");
-            userElement.appendChild(statusIndicator);
-
-            const userNameText = document.createElement("span");
-            userNameText.classList.add("user-status");
-            userNameText.textContent = user + " - " + status;
-            userElement.appendChild(userNameText);
-
-            document.getElementById("online-users").appendChild(userElement);
-        } else {
-            userElement.querySelector(".user-status").textContent = user + " - " + status;
-        }
+        userElement.classList.toggle("status-online", status === "en ligne");
+        userElement.classList.toggle("status-offline", status !== "en ligne");
+        userElement.querySelector(".user-status").textContent = user + " - " + status;
     }
 }
     
@@ -687,33 +682,20 @@ function loadMessages() {
             }
         });
     });
-// Quitte la room et supprime l'utilisateur de Firebase de manière sécurisée
-function quitRoom() {
-    if (userRef) {
-        userRef.update({
-            status: "hors ligne",
-            lastSeen: new Date().toISOString()
-        });
-    }
-
-    // Supprime l'utilisateur de Firebase lors de la déconnexion
+//Bouton Quitter
+  function quitRoom() {
+    // Supprime l'utilisateur de Firebase
     firebase.database().ref("users/" + username).remove();
 
-    // Retire les listeners pour éviter les doublons
-    if (messageListener) db.child("messages").off("child_added", messageListener);
-    if (childRemovedListenerSet) db.child("messages").off("child_removed");
-    childRemovedListenerSet = false;
+    // Supprime le listener de messages pour éviter les doublons
+    if (messageListener) {
+        db.child("messages").off("child_added", messageListener);
+        messageListener = null;
+    }
 
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("login-container").style.display = "block";
 }
-
-// Supprime l'utilisateur de Firebase lorsqu'on ferme la page
-window.addEventListener("beforeunload", function () {
-    if (username) {
-        firebase.database().ref("users/" + username).remove();
-    }
-});
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
@@ -845,7 +827,7 @@ window.addEventListener("beforeunload", function () {
 
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') {
-            document.title = 'RS-Villa - Room sécurisé';
+            document.title = 'TEST-Villa - Room sécurisé';
         }
     });
 
@@ -892,7 +874,7 @@ window.addEventListener("beforeunload", function () {
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; BigLittleBob 2024
+        &copy; RoberiX 2024
     </footer>
 </body>
 </html>
