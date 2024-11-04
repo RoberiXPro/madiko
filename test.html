@@ -382,8 +382,9 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div><br>
 
+        
          <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -423,13 +424,15 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    var db;
-    var username;
-    var roomName;
-    var replyMessageId = null;
-    var replyMessageText = "";
-    var allMessagesVisible = false;
-    var messageListener = null;
+var db;
+var username;
+var roomName;
+var replyMessageId = null;
+var replyMessageText = "";
+var allMessagesVisible = false;
+var messageListener = null;
+var childRemovedListenerSet = false;
+var userRef;
 
 
 function joinRoom() {
@@ -439,7 +442,8 @@ function joinRoom() {
 
     // Référence au room dans Firebase
     db = firebase.database().ref("rooms/" + roomName);
-
+    
+    
     // Vérifie l'existence et le mot de passe du room
     db.once('value').then(function(snapshot) {
         if (snapshot.exists()) {
@@ -447,7 +451,7 @@ function joinRoom() {
             if (dbPassword === password) {
                 alert("Connexion réussie !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
+                                switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
@@ -465,7 +469,7 @@ function joinRoom() {
             }).then(() => {
                 alert("Room créé avec succès !");
                 document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
+                               switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
                 initializeUserListeners();
@@ -485,27 +489,26 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     updateUserStatusUI(user, data.status);
 });
 
+// Fonction d'initialisation des listeners pour la liste des utilisateurs
 function initializeUserListeners() {
-    var usersRef = firebase.database().ref("users");
+    const usersRef = firebase.database().ref("users");
 
-    // Écoute les ajouts d'utilisateurs
-    usersRef.on("child_added", function(snapshot) {
+    usersRef.on("child_added", (snapshot) => {
         const user = snapshot.key;
         const status = snapshot.val().status;
         updateUserStatusUI(user, status);
     });
 
-    // Écoute les changements de statut d'utilisateur
-    usersRef.on("child_changed", function(snapshot) {
+    usersRef.on("child_changed", (snapshot) => {
         const user = snapshot.key;
         const status = snapshot.val().status;
         updateUserStatusUI(user, status);
     });
 
-    // Écoute les suppressions d'utilisateurs
-    usersRef.on("child_removed", function(snapshot) {
+    usersRef.on("child_removed", (snapshot) => {
         const user = snapshot.key;
-        removeUserFromUI(user);
+        const userElement = document.getElementById("user-status-" + user);
+        if (userElement) userElement.remove();
     });
 }
 
@@ -517,15 +520,14 @@ function setOnlineStatus() {
     var userRef = firebase.database().ref("users/" + username);
 
     // Suivi de l'état de connexion
-    firebase.database().ref(".info/connected").on("value", function(snapshot) {
+    firebase.database().ref(".info/connected").on("value", function (snapshot) {
         if (snapshot.val() === true) {
-            // Statut en ligne et mise à jour de l'heure
             userRef.update({
                 status: "en ligne",
                 lastSeen: new Date().toISOString()
             });
 
-            // Définir sur "hors ligne" ou supprimer en cas de déconnexion
+            // Met à jour automatiquement l'état en "hors ligne" lors de la déconnexion
             userRef.onDisconnect().update({
                 status: "hors ligne",
                 lastSeen: new Date().toISOString()
@@ -533,29 +535,32 @@ function setOnlineStatus() {
         }
     });
 }
-//Fonction pour Supprimer un Utilisateur de l’Interface (removeUserFromUI)    
+// Mise à jour des utilisateurs en ligne
 function updateUserStatusUI(user, status) {
     let userElement = document.getElementById("user-status-" + user);
 
-    if (!userElement) {
-        userElement = document.createElement("li");
-        userElement.id = "user-status-" + user;
-        userElement.classList.add(status === "en ligne" ? "status-online" : "status-offline");
-
-        const statusIndicator = document.createElement("span");
-        statusIndicator.classList.add("status-indicator");
-        userElement.appendChild(statusIndicator);
-
-        const userNameText = document.createElement("span");
-        userNameText.classList.add("user-status");
-        userNameText.textContent = user + " - " + status;
-        userElement.appendChild(userNameText);
-
-        document.getElementById("online-users").appendChild(userElement);
+    if (status === "hors ligne") {
+        // Supprime l'utilisateur de l'interface s'il est hors ligne
+        if (userElement) userElement.remove();
     } else {
-        userElement.classList.toggle("status-online", status === "en ligne");
-        userElement.classList.toggle("status-offline", status !== "en ligne");
-        userElement.querySelector(".user-status").textContent = user + " - " + status;
+        if (!userElement) {
+            userElement = document.createElement("li");
+            userElement.id = "user-status-" + user;
+            userElement.classList.add("status-online");
+
+            const statusIndicator = document.createElement("span");
+            statusIndicator.classList.add("status-indicator");
+            userElement.appendChild(statusIndicator);
+
+            const userNameText = document.createElement("span");
+            userNameText.classList.add("user-status");
+            userNameText.textContent = user + " - " + status;
+            userElement.appendChild(userNameText);
+
+            document.getElementById("online-users").appendChild(userElement);
+        } else {
+            userElement.querySelector(".user-status").textContent = user + " - " + status;
+        }
     }
 }
     
@@ -682,20 +687,33 @@ function loadMessages() {
             }
         });
     });
-//Bouton Quitter
-  function quitRoom() {
-    // Supprime l'utilisateur de Firebase
+// Quitte la room et supprime l'utilisateur de Firebase de manière sécurisée
+function quitRoom() {
+    if (userRef) {
+        userRef.update({
+            status: "hors ligne",
+            lastSeen: new Date().toISOString()
+        });
+    }
+
+    // Supprime l'utilisateur de Firebase lors de la déconnexion
     firebase.database().ref("users/" + username).remove();
 
-    // Supprime le listener de messages pour éviter les doublons
-    if (messageListener) {
-        db.child("messages").off("child_added", messageListener);
-        messageListener = null;
-    }
+    // Retire les listeners pour éviter les doublons
+    if (messageListener) db.child("messages").off("child_added", messageListener);
+    if (childRemovedListenerSet) db.child("messages").off("child_removed");
+    childRemovedListenerSet = false;
 
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("login-container").style.display = "block";
 }
+
+// Supprime l'utilisateur de Firebase lorsqu'on ferme la page
+window.addEventListener("beforeunload", function () {
+    if (username) {
+        firebase.database().ref("users/" + username).remove();
+    }
+});
 
     function displayMessage(key, data) {
         var msgDiv = document.createElement("div");
@@ -827,7 +845,7 @@ function loadMessages() {
 
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') {
-            document.title = 'TEST-Villa - Room sécurisé';
+            document.title = 'RS-Villa - Room sécurisé';
         }
     });
 
@@ -874,7 +892,7 @@ function loadMessages() {
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiX 2024
+        &copy; BigLittleBob 2024
     </footer>
 </body>
 </html>
