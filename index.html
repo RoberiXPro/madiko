@@ -458,7 +458,7 @@
             var dbPassword = snapshot.child("password").val();
             if (dbPassword === password) {
                 alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Lieu de RDV : " + roomName;
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
@@ -476,7 +476,7 @@
                 messages: {}
             }).then(() => {
                 alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Lieu de RDV : " + roomName;
+                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
                 switchToChat();
 
                 // Initialiser les listeners pour afficher les utilisateurs connectés
