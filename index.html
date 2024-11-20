@@ -576,11 +576,25 @@ function removeUserFromUI(user) {
     }
 }
 
-    function switchToChat() {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-        loadMessages();
+  function switchToChat() {
+    // Vérifie si les éléments nécessaires existent avant de les manipuler
+    const loginContainer = document.getElementById("login-container");
+    const chatContainer = document.getElementById("chat-container");
+
+    if (!loginContainer || !chatContainer) {
+        console.error("Erreur : 'login-container' ou 'chat-container' introuvable.");
+        return; // Empêche l'exécution si les éléments sont manquants
     }
+
+    // Masquer l'écran de connexion et afficher l'interface de chat
+    loginContainer.style.display = "none";
+    chatContainer.style.display = "block";
+
+    console.log("Basculé vers l'interface de chat.");
+
+    // Charger les messages et initialiser les écouteurs
+    loadMessages();
+}
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -614,8 +628,13 @@ function sendMessage() {
 
 var childRemovedListenerSet = false;
 
-    function monitorMessageView() {
+  function monitorMessageView() {
     const messagesDiv = document.getElementById("messages");
+
+    if (!messagesDiv) {
+        console.error("Impossible de surveiller la vue des messages : élément 'messages' introuvable.");
+        return;
+    }
 
     messagesDiv.addEventListener("scroll", function () {
         // Si l'utilisateur atteint le bas de la zone des messages
@@ -656,8 +675,13 @@ function loadMessages() {
         });
         childRemovedListenerSet = true;
     }
-        // Appeler la surveillance du défilement
-    monitorMessageView();
+        // Appeler la surveillance du défilement si l'élément messages existe
+    const messagesDiv = document.getElementById("messages");
+    if (messagesDiv) {
+        monitorMessageView();
+    } else {
+        console.error("L'élément 'messages' est introuvable dans le DOM.");
+    }
 }
 
     //fonction pour les réactions dans les messages 
@@ -708,16 +732,23 @@ function loadMessages() {
         document.getElementById("emoji-picker").style.display = "none";
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        loadEmojis();
+    document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM complètement chargé.");
+    loadEmojis();
 
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
+    const messageInput = document.getElementById("message-input");
+    if (messageInput) {
+        messageInput.addEventListener("keydown", function (event) {
             if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
             }
         });
-    });
+    } else {
+        console.error("L'élément 'message-input' est introuvable.");
+    }
+});
+
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
