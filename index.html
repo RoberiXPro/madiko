@@ -430,8 +430,6 @@
     var replyMessageText = "";
     var allMessagesVisible = false;
     var messageListener = null;
-    let hasUnreadMessages = false; // Indique s'il y a des messages non lus
-
 
 // Fonction pour afficher la notification
         function showNotification() {
@@ -576,25 +574,11 @@ function removeUserFromUI(user) {
     }
 }
 
-  function switchToChat() {
-    // Vérifie si les éléments nécessaires existent avant de les manipuler
-    const loginContainer = document.getElementById("login-container");
-    const chatContainer = document.getElementById("chat-container");
-
-    if (!loginContainer || !chatContainer) {
-        console.error("Erreur : 'login-container' ou 'chat-container' introuvable.");
-        return; // Empêche l'exécution si les éléments sont manquants
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
     }
-
-    // Masquer l'écran de connexion et afficher l'interface de chat
-    loginContainer.style.display = "none";
-    chatContainer.style.display = "block";
-
-    console.log("Basculé vers l'interface de chat.");
-
-    // Charger les messages et initialiser les écouteurs
-    loadMessages();
-}
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -628,33 +612,6 @@ function sendMessage() {
 
 var childRemovedListenerSet = false;
 
-  function monitorMessageView() {
-    const messagesDiv = document.getElementById("messages");
-
-    if (!messagesDiv) {
-        console.error("Impossible de surveiller la vue des messages : élément 'messages' introuvable.");
-        return;
-    }
-
-    messagesDiv.addEventListener("scroll", function () {
-        // Si l'utilisateur atteint le bas de la zone des messages
-        if (
-            messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight &&
-            hasUnreadMessages
-        ) {
-            hasUnreadMessages = false; // Tous les messages sont considérés comme lus
-            document.title = 'Votre Chat'; // Réinitialise le titre de l'onglet
-
-            // Optionnel : Masquer toute icône de notification
-            const notification = document.getElementById("notification");
-            if (notification) {
-                notification.style.display = "none";
-            }
-        }
-    });
-}
-
-
 function loadMessages() {
     // Écoute les nouveaux messages ajoutés pour les afficher
     if (!messageListener) {
@@ -674,13 +631,6 @@ function loadMessages() {
             }
         });
         childRemovedListenerSet = true;
-    }
-        // Appeler la surveillance du défilement si l'élément messages existe
-    const messagesDiv = document.getElementById("messages");
-    if (messagesDiv) {
-        monitorMessageView();
-    } else {
-        console.error("L'élément 'messages' est introuvable dans le DOM.");
     }
 }
 
@@ -732,23 +682,16 @@ function loadMessages() {
         document.getElementById("emoji-picker").style.display = "none";
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM complètement chargé.");
-    loadEmojis();
+    document.addEventListener("DOMContentLoaded", function() {
+        loadEmojis();
 
-    const messageInput = document.getElementById("message-input");
-    if (messageInput) {
-        messageInput.addEventListener("keydown", function (event) {
+        document.getElementById("message-input").addEventListener("keydown", function(event) {
             if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 sendMessage();
             }
         });
-    } else {
-        console.error("L'élément 'message-input' est introuvable.");
-    }
-});
-
+    });
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
@@ -917,13 +860,13 @@ msgDiv.onmouseover = function() {
     scrollToBottom();
 
     // Notifications pour nouveaux messages
-if (data.user !== username && document.visibilityState === 'hidden') {
-    hasUnreadMessages = true; // Indique qu'il y a un message non lu
-    document.title = '💬 Nouveau message!';
-    notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+    if (data.user !== username && document.visibilityState === 'hidden') {
+        document.title = '💬 Nouveau message!';
+        notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+    }
 }
 
-  
+   
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
 function toggleEmojiPickerMessage(key) {
     document.querySelectorAll(".emoji-picker-message").forEach(picker => {
@@ -973,19 +916,14 @@ function toggleEmojiPickerMessage(key) {
     window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
-   document.addEventListener("visibilitychange", function() {
+    document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === 'visible') {
-        // Si l'utilisateur est sur l'onglet actif
-        if (hasUnreadMessages) {
-            hasUnreadMessages = false; // Considère les messages comme lus
-            document.title = 'Votre Chat'; // Réinitialise le titre de l'onglet
+        // Réinitialiser l'icône de notification lorsque l'utilisateur consulte l'onglet
+        const notification = document.getElementById("notification");
+        notification.style.display = "none";  // Masquer la notification
 
-            // Optionnel : Masquer toute icône de notification
-            const notification = document.getElementById("notification");
-            if (notification) {
-                notification.style.display = "none";
-            }
-        }
+        // Réinitialiser le titre de l'onglet si un nouveau message était arrivé
+        document.title = 'Votre Chat';
     }
 });
 
