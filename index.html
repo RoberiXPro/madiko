@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
+<head>    <!-- mandeha rehetra, ankoatran le drapeau notif ts miala amin onglet -->
+
     <title>RS-Villa - Room sécurisé</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
@@ -761,8 +762,8 @@ function quitRoom() {
        // Fonction pour démarrer un compte à rebours avant suppression (10 secondes)
     function startDeletionTimer(msgDiv, key) {
         setTimeout(function() {
-            deleteMessage(msgDiv, key); // Supprimer le message après 5 minutes
-        }, 300000); // 5 minutes
+            deleteMessage(msgDiv, key); // Supprimer le message après 10 minutes
+        }, 600000); // 10 minutes
     }
 
     // Fonction de suppression du message
@@ -860,10 +861,11 @@ msgDiv.onmouseover = function() {
 
     // Notifications pour nouveaux messages
     if (data.user !== username && document.visibilityState === 'hidden') {
-    document.title = '💬 Nouveau message!';
-    hasNewMessages = true;
-    notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+        document.title = '💬 Nouveau message!';
+        notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+    }
 }
+
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
 function toggleEmojiPickerMessage(key) {
@@ -914,28 +916,16 @@ function toggleEmojiPickerMessage(key) {
     window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
-   document.addEventListener("visibilitychange", function () {
+    document.addEventListener("visibilitychange", function() {
     if (document.visibilityState === 'visible') {
-        // Réinitialiser l'icône de notification
-        if (hasNewMessages) {
-            document.title = 'Votre Chat';
-            hasNewMessages = false;
-        }
+        // Réinitialiser l'icône de notification lorsque l'utilisateur consulte l'onglet
+        const notification = document.getElementById("notification");
+        notification.style.display = "none";  // Masquer la notification
+
+        // Réinitialiser le titre de l'onglet si un nouveau message était arrivé
+        document.title = 'Votre Chat';
     }
 });
-function checkIfMessagesAreViewed() {
-    const messagesDiv = document.getElementById("messages");
-    if (messagesDiv.scrollHeight - messagesDiv.scrollTop === messagesDiv.clientHeight) {
-        // Réinitialiser l'icône de notification si tous les messages sont visibles
-        if (hasNewMessages) {
-            document.title = 'Votre Chat';
-            hasNewMessages = false;
-        }
-    }
-}
-
-// Ajouter un événement de défilement pour vérifier
-document.getElementById("messages").addEventListener("scroll", checkIfMessagesAreViewed);
 
 </script>
 
