@@ -401,6 +401,10 @@
     <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
+    <div id="notification" style="display:none; background-color:#444; padding:10px; color:#fff; margin:10px 0; border-radius:5px; text-align:center;">
+    ✅ Connexion réussie
+</div>
+
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
@@ -764,55 +768,56 @@ function displayMessage(key, data) {
     let textSpan = null;
 
     if (data.type === "audio") {
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.src = data.audioBase64;
-    audio.style.marginTop = "10px";
-    audio.className = "audio-message";
-    msgDiv.appendChild(audio);
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = data.audioBase64;
+        audio.style.marginTop = "10px";
+        audio.className = "audio-message";
+        msgDiv.appendChild(audio);
 
-} else if (data.type === "image") {
-const img = document.createElement("img");
-img.src = data.imageBase64;
-img.style.maxWidth = "250px";
-img.style.borderRadius = "8px";
-img.style.marginTop = "10px";
-img.className = "image-message";
-img.style.cursor = "pointer";
-img.onclick = () => openImagePopup(img.src); // Clic pour agrandir
-msgDiv.appendChild(img);
+    } else if (data.type === "image") {
+        const img = document.createElement("img");
+        img.src = data.imageBase64;
+        img.style.maxWidth = "250px";
+        img.style.borderRadius = "8px";
+        img.style.marginTop = "10px";
+        img.className = "image-message";
+        img.style.cursor = "pointer";
+        img.onclick = () => openImagePopup(img.src);
+        msgDiv.appendChild(img);
 
+    } else {
+        textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
 
-} else {
-   textSpan = document.createElement("span");
-textSpan.className = "msg-text flou";
+        const messageText = data.message || "";
+        const imageRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/gi;
+        const urlRegex = /(https?:\/\/[^\s]+)/gi;
 
-const messageText = data.message;
-const imageRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/gi;
-const matches = messageText.match(imageRegex) || [];
+        // Remplacer les URL par des liens cliquables
+        let formattedText = messageText.replace(urlRegex, function (url) {
+            return `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`;
+        });
 
-textSpan.innerHTML = messageText.replace(imageRegex, function (url) {
-    return `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`;
-});
-msgDiv.appendChild(textSpan);
+        textSpan.innerHTML = formattedText;
+        msgDiv.appendChild(textSpan);
 
-// Affiche les aperçus d’image cliquables
-if (matches.length > 0) {
-    matches.forEach(url => {
-        const imgPreview = document.createElement("img");
-        imgPreview.src = url;
-        imgPreview.style.maxWidth = "250px";
-        imgPreview.style.borderRadius = "8px";
-        imgPreview.style.marginTop = "10px";
-        imgPreview.className = "image-preview";
-        imgPreview.style.cursor = "pointer";
-        imgPreview.onclick = () => openImagePopup(url);
-        msgDiv.appendChild(imgPreview);
-    });
-}
+        // Affiche les aperçus d’images détectées dans le texte
+        const matches = messageText.match(imageRegex) || [];
+        matches.forEach(url => {
+            const imgPreview = document.createElement("img");
+            imgPreview.src = url;
+            imgPreview.style.maxWidth = "250px";
+            imgPreview.style.borderRadius = "8px";
+            imgPreview.style.marginTop = "10px";
+            imgPreview.className = "image-preview";
+            imgPreview.style.cursor = "pointer";
+            imgPreview.onclick = () => openImagePopup(url);
+            msgDiv.appendChild(imgPreview);
+        });
     }
 
-    var timeDiv = document.createElement("div");
+    const timeDiv = document.createElement("div");
     timeDiv.className = "timestamp";
     timeDiv.style.fontSize = "0.8rem";
     timeDiv.style.color = "#ccc";
@@ -820,19 +825,24 @@ if (matches.length > 0) {
     timeDiv.style.top = "5px";
     timeDiv.style.right = "10px";
     timeDiv.textContent = data.timestamp;
-
     msgDiv.appendChild(usernameDiv);
     msgDiv.appendChild(timeDiv);
 
-    // Reaction container
-    var reactionContainer = document.createElement("div");
+    if (data.replyTo) {
+        const replyDiv = document.createElement("div");
+        replyDiv.className = "citation flou";
+        replyDiv.textContent = "Réponse du : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+    }
+
+    const reactionContainer = document.createElement("div");
     reactionContainer.className = "reaction-container";
     msgDiv.appendChild(reactionContainer);
 
     db.child("rooms/" + roomName + "/messages/" + key + "/reactions").on("value", function(snapshot) {
         reactionContainer.innerHTML = "";
         if (snapshot.exists()) {
-            var reactionLabel = document.createElement("span");
+            const reactionLabel = document.createElement("span");
             reactionLabel.className = "reaction-label";
             reactionLabel.textContent = "Réaction : ";
             reactionContainer.appendChild(reactionLabel);
@@ -845,39 +855,7 @@ if (matches.length > 0) {
         }
     });
 
-    function startDeletionTimer(msgDiv, key) {
-        setTimeout(function() {
-            deleteMessage(msgDiv, key);
-        }, 600000);
-    }
-
-    function deleteMessage(msgDiv, key) {
-        msgDiv.classList.add("fondu");
-        setTimeout(function() {
-            msgDiv.remove();
-            db.child("rooms/" + roomName + "/messages/" + key).remove();
-        }, 1000);
-    }
-
-    msgDiv.onmouseover = function () {
-        if (data.user !== username) {
-            if (textSpan) textSpan.classList.remove("flou");
-            startDeletionTimer(msgDiv, key);
-        }
-    };
-
-    msgDiv.onmouseleave = function () {
-        if (textSpan) textSpan.classList.add("flou");
-    };
-
-    if (data.replyTo) {
-        var replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.textContent = "Réponse du : " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
-    }
-
-    var emojiBtn = document.createElement("button");
+    const emojiBtn = document.createElement("button");
     emojiBtn.className = "emoji-btn";
     emojiBtn.textContent = "😀";
     emojiBtn.onclick = function () {
@@ -885,7 +863,7 @@ if (matches.length > 0) {
     };
     msgDiv.appendChild(emojiBtn);
 
-    var emojiPickerMessage = document.createElement("div");
+    const emojiPickerMessage = document.createElement("div");
     emojiPickerMessage.className = "emoji-picker-message";
     emojiPickerMessage.id = `emoji-picker-${key}`;
     emojis.forEach((emoji) => {
@@ -900,20 +878,20 @@ if (matches.length > 0) {
     });
     msgDiv.appendChild(emojiPickerMessage);
 
-    var actionButtons = document.createElement("div");
+    const actionButtons = document.createElement("div");
     actionButtons.className = "action-buttons";
 
-    var replyBtn = document.createElement("button");
+    const replyBtn = document.createElement("button");
     replyBtn.textContent = "Répondre";
     replyBtn.className = "reply-btn";
-    replyBtn.onclick = function() {
+    replyBtn.onclick = function () {
         prepareReply(key, data.message);
     };
 
-    var deleteBtn = document.createElement("button");
+    const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Supprimer";
     deleteBtn.className = "btn-delete";
-    deleteBtn.onclick = function() {
+    deleteBtn.onclick = function () {
         db.child("rooms/" + roomName + "/messages/" + key).remove();
     };
 
@@ -924,10 +902,17 @@ if (matches.length > 0) {
     document.getElementById("messages").appendChild(msgDiv);
 
     if (textSpan) {
-        setTimeout(function () {
-            textSpan.classList.add("flou");
-        }, 15000);
+        setTimeout(() => textSpan.classList.add("flou"), 15000);
     }
+
+    msgDiv.onmouseover = function () {
+        if (data.user !== username) {
+            if (textSpan) textSpan.classList.remove("flou");
+        }
+    };
+    msgDiv.onmouseleave = function () {
+        if (textSpan) textSpan.classList.add("flou");
+    };
 
     scrollToBottom();
 
@@ -936,6 +921,7 @@ if (matches.length > 0) {
         notificationSound.play().catch(error => console.log("Erreur de notification :", error));
     }
 }
+
 
 
    
@@ -1124,14 +1110,37 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
+// Fermer popup en cliquant dehors ou sur ESC
+document.addEventListener("DOMContentLoaded", function () {
+    const popup = document.getElementById("image-popup");
+    const popupImg = document.getElementById("popup-img");
+
+    if (popup && popupImg) {
+        popup.onclick = function () {
+            this.style.display = "none";
+        };
+
+        document.addEventListener("click", function (e) {
+            if (popup.style.display === "flex" && !popupImg.contains(e.target)) {
+                popup.style.display = "none";
+            }
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                popup.style.display = "none";
+            }
+        });
+    }
+});
+
 </script>
 
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2025
     </footer>
-    <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
+ <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
   <img id="popup-img" src="" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
 </div>
-
 </body>
 </html>
