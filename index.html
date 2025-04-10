@@ -1038,7 +1038,7 @@ function uploadAudio() {
 
 function cancelAudio() {
     recordedBlob = null;
-    document.getElementById('audio-preview').style.display = "none";
+    document.getElementById('audio-preview').style.display = "none";// transforme le blob en base64 cool
     document.getElementById('audio-player').src = "";
 }
 
