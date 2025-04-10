@@ -424,14 +424,20 @@
   <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
 </div>
 
-        <div id="input-section">
-            <button onclick="toggleEmojiPicker()">😊</button>
-            <input type="text" id="message-input" placeholder="Écrivez un message">
-            <button onclick="sendMessage()">Envoyer</button>
-            <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-            <button onclick="toggleAllMessages()">Afficher tous</button>
-            <button onclick="quitRoom()">Quitter</button>
-        </div>
+<div id="input-section">
+    <button onclick="toggleEmojiPicker()">😊</button>
+    <input type="text" id="message-input" placeholder="Écrivez un message">
+    <button onclick="sendMessage()">Envoyer</button>
+    <button onclick="toggleRecording()" id="record-btn">🎙️</button>
+
+    <!-- BOUTON IMAGE -->
+    <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+    <button onclick="document.getElementById('image-input').click()">🖼️</button>
+
+    <button onclick="toggleAllMessages()">Afficher tous</button>
+    <button onclick="quitRoom()">Quitter</button>
+</div>
+
         <div id="emoji-picker" style="display: none;">
     <!-- Emoji Picker Content -->
 </div>
@@ -751,18 +757,28 @@ function displayMessage(key, data) {
     let textSpan = null;
 
     if (data.type === "audio") {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.src = data.audioBase64;
-        audio.style.marginTop = "10px";
-        audio.className = "audio-message";
-        msgDiv.appendChild(audio);
-    } else {
-        textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
-        textSpan.textContent = data.message;
-        msgDiv.appendChild(textSpan);
-    }
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = data.audioBase64;
+    audio.style.marginTop = "10px";
+    audio.className = "audio-message";
+    msgDiv.appendChild(audio);
+
+} else if (data.type === "image") {
+    const img = document.createElement("img");
+    img.src = data.imageBase64;
+    img.style.maxWidth = "250px";
+    img.style.borderRadius = "8px";
+    img.style.marginTop = "10px";
+    img.className = "image-message";
+    msgDiv.appendChild(img);
+
+} else {
+    textSpan = document.createElement("span");
+    textSpan.className = "msg-text flou";
+    textSpan.textContent = data.message;
+    msgDiv.appendChild(textSpan);
+}
 
     var timeDiv = document.createElement("div");
     timeDiv.className = "timestamp";
@@ -1040,6 +1056,29 @@ function cancelAudio() {
     recordedBlob = null;
     document.getElementById('audio-preview').style.display = "none";// transforme le blob en base64 cool
     document.getElementById('audio-player').src = "";
+}
+function handleImageUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = function () {
+            const base64Image = reader.result;
+
+            const imageMessage = {
+                user: username,
+                type: "image",
+                imageBase64: base64Image,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            db.child("rooms/" + roomName + "/messages").push(imageMessage);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    event.target.value = ""; // Pour pouvoir renvoyer la même image ensuite si besoin
 }
 
 </script>
