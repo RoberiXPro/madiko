@@ -394,6 +394,10 @@
     <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
+    <div id="notification" style="display:none; padding: 10px; background: #ffd700; color: #000; font-weight: bold; text-align: center;">
+    Connexion en cours...
+</div>
+
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
@@ -462,18 +466,6 @@
     var messageListener = null;
 
 // Fonction pour afficher la notification
-        function showNotification() {
-            const notification = document.getElementById("notification");
-            notification.style.display = "block";
-
-            // Cacher la notification après quelques secondes
-            setTimeout(() => {
-                notification.style.display = "none";
-            }, 5000); // La notification reste affichée 10 secondes
-        }
-
-        // Affiche la notification au chargement de la page
-        document.addEventListener("DOMContentLoaded", showNotification);
 
     function joinRoom() {
     username = document.getElementById("username").value;
