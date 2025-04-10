@@ -453,7 +453,15 @@
     <!-- Emoji Picker Content -->
 </div>
     </div>
-
+    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+        &copy; RoberiX 2025
+    </footer>
+<div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
+  <div id="popup-inner" style="position: relative;">
+    <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
+    <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
+  </div>
+</div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
     var firebaseConfig = {
@@ -1098,10 +1106,6 @@ function handleImageUpload(event) {
 
     event.target.value = ""; // Pour pouvoir renvoyer la même image ensuite si besoin
 }
-// Popup image preview
-document.getElementById("image-popup").onclick = function () {
-    this.style.display = "none";
-};
 
 function openImagePopup(src) {
     const popup = document.getElementById("image-popup");
@@ -1121,16 +1125,11 @@ document.addEventListener("DOMContentLoaded", function () {
         popup.style.display = "none";
     });
 
-    // 🖱️ Fermer en cliquant à l’extérieur de l’image
+    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
     popup.addEventListener("click", (e) => {
-        if (e.target === popup) {
+        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
             popup.style.display = "none";
         }
-    });
-
-    // Bloquer les clics sur l'image elle-même
-    popupInner.addEventListener("click", (e) => {
-        e.stopPropagation();
     });
 
     // ⌨️ Fermer avec la touche Échap
@@ -1141,19 +1140,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-
-
 </script>
-    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiX 2025
-    </footer>
-<div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-  <div id="popup-inner" style="position: relative;">
-    <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
-    <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
-  </div>
-</div>
-
 
 </body>
 </html>
