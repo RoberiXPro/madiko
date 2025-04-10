@@ -6,7 +6,6 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
 <style>
     body {
         display: flex;
@@ -368,6 +367,26 @@
             font-size: 2.5em;
         }
     }
+    .audio-message {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 10px;
+    background-color: #222;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+    @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+}
+
+.recording {
+    animation: pulse 1.5s infinite;
+    background-color: #e74c3c !important;
+    color: #fff;
+    border: 2px solid #fff;
+}
+
 </style>
 
 </head>
@@ -729,10 +748,19 @@ function quitRoom() {
     usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
     usernameDiv.textContent = data.user;
 
-    var textSpan = document.createElement("span");
+    if (data.type === "audio") {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = data.audioBase64;
+    audio.style.marginTop = "10px";
+    audio.className = "audio-message";
+    msgDiv.appendChild(audio);
+} else {
+    const textSpan = document.createElement("span");
     textSpan.className = "msg-text flou";
     textSpan.textContent = data.message;
-
+    msgDiv.appendChild(textSpan);
+}
     var timeDiv = document.createElement("div");
     timeDiv.className = "timestamp";
     timeDiv.style.fontSize = "0.8rem";
@@ -946,6 +974,7 @@ function toggleRecording() {
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
 
             mediaRecorder.ondataavailable = event => {
                 audioChunks.push(event.data);
@@ -953,16 +982,25 @@ function toggleRecording() {
 
             mediaRecorder.onstop = () => {
                 recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                audioChunks = [];
-
-                // Aperçu
                 const audioURL = URL.createObjectURL(recordedBlob);
+
                 document.getElementById('audio-player').src = audioURL;
                 document.getElementById('audio-preview').style.display = "block";
+                recordBtn.textContent = "🎙️";
+                recordBtn.classList.remove("recording");
             };
 
             mediaRecorder.start();
             recordBtn.textContent = "⏹️ Stop";
+            recordBtn.classList.add("recording");
+
+            // Limite d’enregistrement à 30s
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                    alert("Durée maximale atteinte (30s)");
+                }
+            }, 30000);
 
         }).catch(error => {
             console.error("Erreur micro :", error);
@@ -971,24 +1009,30 @@ function toggleRecording() {
     } else {
         mediaRecorder.stop();
         recordBtn.textContent = "🎙️";
+        recordBtn.classList.remove("recording");
     }
 }
+
 function uploadAudio() {
     if (!recordedBlob) {
         alert("Aucun enregistrement à envoyer.");
         return;
     }
 
-    const timestamp = new Date().getTime();
-    const storageRef = firebase.storage().ref(`audio_messages/${roomName}_${username}_${timestamp}.webm`);
+    const reader = new FileReader();
+    reader.onloadend = function () {
+        const base64Audio = reader.result;
 
-    storageRef.put(recordedBlob).then(snapshot => {
-        return snapshot.ref.getDownloadURL();
-    }).then(downloadURL => {
+        // Limite de poids (environ 300Ko)
+        if (base64Audio.length > 400000) {
+            alert("Message trop long ou lourd. Réenregistre un message plus court (max 30s).");
+            return;
+        }
+
         const audioMessage = {
             user: username,
             type: "audio",
-            audioURL: downloadURL,
+            audioBase64: base64Audio,
             timestamp: new Date().toLocaleTimeString()
         };
 
@@ -1000,11 +1044,11 @@ function uploadAudio() {
         recordedBlob = null;
 
         alert("Message vocal envoyé !");
-    }).catch(error => {
-        console.error("Erreur lors de l’envoi :", error);
-        alert("Erreur lors de l’envoi du message vocal.");
-    });
+    };
+
+    reader.readAsDataURL(recordedBlob); // transforme le blob en base64
 }
+
 function cancelAudio() {
     recordedBlob = null;
     document.getElementById('audio-preview').style.display = "none";
