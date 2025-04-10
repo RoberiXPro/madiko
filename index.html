@@ -1111,31 +1111,34 @@ function openImagePopup(src) {
 }
 
 // Fermer popup en cliquant dehors ou sur ESC
-// Gestion complète de la fermeture du popup image
-window.onload = function () {
+document.addEventListener("DOMContentLoaded", function () {
     const popup = document.getElementById("image-popup");
     const popupImg = document.getElementById("popup-img");
     const closeBtn = document.getElementById("close-popup-btn");
 
+    // Fermer avec le bouton ✖
     if (closeBtn) {
-        closeBtn.onclick = function () {
+        closeBtn.addEventListener("click", function () {
             popup.style.display = "none";
-        };
+        });
     }
 
-    popup.addEventListener("click", function (e) {
-        if (!popupImg.contains(e.target)) {
-            popup.style.display = "none";
-        }
-    });
+    // Fermer en cliquant en dehors de l’image
+    if (popup) {
+        popup.addEventListener("click", function (e) {
+            if (!popupImg.contains(e.target)) {
+                popup.style.display = "none";
+            }
+        });
+    }
 
+    // Fermer avec la touche Échap
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
             popup.style.display = "none";
         }
     });
-};
-
+});
 
 
 </script>
