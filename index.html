@@ -6,6 +6,7 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
 <style>
     body {
         display: flex;
@@ -397,10 +398,16 @@
         </div>
 
         <div id="messages"></div>
+        <div id="audio-preview" style="display:none; margin-top:10px;">
+  <audio id="audio-player" controls></audio>
+  <button onclick="uploadAudio()">Envoyer le vocal</button>
+</div>
+
         <div id="input-section">
             <button onclick="toggleEmojiPicker()">😊</button>
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
+            <button onclick="toggleRecording()" id="record-btn">🎙️</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
@@ -926,6 +933,44 @@ function toggleEmojiPickerMessage(key) {
         document.title = 'Votre Chat';
     }
 });
+let mediaRecorder;
+let audioChunks = [];
+let recordedBlob;
+
+// 🎙️ Démarre ou arrête l’enregistrement
+function toggleRecording() {
+    const recordBtn = document.getElementById('record-btn');
+
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioChunks = [];
+
+                // Aperçu
+                const audioURL = URL.createObjectURL(recordedBlob);
+                document.getElementById('audio-player').src = audioURL;
+                document.getElementById('audio-preview').style.display = "block";
+            };
+
+            mediaRecorder.start();
+            recordBtn.textContent = "⏹️ Stop";
+
+        }).catch(error => {
+            console.error("Erreur micro :", error);
+            alert("Erreur : accès au micro refusé !");
+        });
+    } else {
+        mediaRecorder.stop();
+        recordBtn.textContent = "🎙️";
+    }
+}
 
 </script>
 
