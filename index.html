@@ -739,7 +739,7 @@ function quitRoom() {
     location.reload();
 }
 
-   function displayMessage(key, data) {
+function displayMessage(key, data) {
     var msgDiv = document.createElement("div");
     msgDiv.id = key;
     msgDiv.className = (data.user === username ? "message user1" : "message user2");
@@ -748,19 +748,22 @@ function quitRoom() {
     usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
     usernameDiv.textContent = data.user;
 
+    let textSpan = null;
+
     if (data.type === "audio") {
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.src = data.audioBase64;
-    audio.style.marginTop = "10px";
-    audio.className = "audio-message";
-    msgDiv.appendChild(audio);
-} else {
-    const textSpan = document.createElement("span");
-    textSpan.className = "msg-text flou";
-    textSpan.textContent = data.message;
-    msgDiv.appendChild(textSpan);
-}
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = data.audioBase64;
+        audio.style.marginTop = "10px";
+        audio.className = "audio-message";
+        msgDiv.appendChild(audio);
+    } else {
+        textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
+        textSpan.textContent = data.message;
+        msgDiv.appendChild(textSpan);
+    }
+
     var timeDiv = document.createElement("div");
     timeDiv.className = "timestamp";
     timeDiv.style.fontSize = "0.8rem";
@@ -772,16 +775,14 @@ function quitRoom() {
 
     msgDiv.appendChild(usernameDiv);
     msgDiv.appendChild(timeDiv);
-    msgDiv.appendChild(textSpan);
 
     // Reaction container
     var reactionContainer = document.createElement("div");
     reactionContainer.className = "reaction-container";
     msgDiv.appendChild(reactionContainer);
 
-     // Correction du chemin Firebase pour les réactions
     db.child("rooms/" + roomName + "/messages/" + key + "/reactions").on("value", function(snapshot) {
-        reactionContainer.innerHTML = ""; // Reset the content
+        reactionContainer.innerHTML = "";
         if (snapshot.exists()) {
             var reactionLabel = document.createElement("span");
             reactionLabel.className = "reaction-label";
@@ -796,51 +797,38 @@ function quitRoom() {
         }
     });
 
-       // Fonction pour démarrer un compte à rebours avant suppression (10 secondes)
     function startDeletionTimer(msgDiv, key) {
         setTimeout(function() {
-            deleteMessage(msgDiv, key); // Supprimer le message après 10 minutes
-        }, 600000); // 10 minutes
+            deleteMessage(msgDiv, key);
+        }, 600000);
     }
 
-    // Fonction de suppression du message
     function deleteMessage(msgDiv, key) {
-        msgDiv.classList.add("fondu"); // Effet de fondu pour la suppression
+        msgDiv.classList.add("fondu");
         setTimeout(function() {
-            msgDiv.remove(); // Suppression de l'élément du DOM
-            db.child("rooms/" + roomName + "/messages/" + key).remove(); // Suppression du message dans Firebase
-        }, 1000); // Délai pour l'animation visuelle de suppression (1 seconde)
+            msgDiv.remove();
+            db.child("rooms/" + roomName + "/messages/" + key).remove();
+        }, 1000);
     }
 
-   // L'événement pour démarrer la suppression après survol
-msgDiv.onmouseover = function() {
-    if (data.user !== username) { // Condition pour ne supprimer que les messages reçus
-        textSpan.classList.remove("flou"); // Annule l'effet flou
-        startDeletionTimer(msgDiv, key); // Démarre le compte à rebours pour supprimer le message après 10 secondes
-    }
-};
+    msgDiv.onmouseover = function () {
+        if (data.user !== username) {
+            if (textSpan) textSpan.classList.remove("flou");
+            startDeletionTimer(msgDiv, key);
+        }
+    };
 
- // Réappliquer l'effet flou lorsqu'on quitte le message (optionnel)
-    msgDiv.onmouseleave = function() {
-        textSpan.classList.add("flou");
+    msgDiv.onmouseleave = function () {
+        if (textSpan) textSpan.classList.add("flou");
     };
 
     if (data.replyTo) {
         var replyDiv = document.createElement("div");
         replyDiv.className = "citation flou";
-        replyDiv.style.backgroundColor = "#444";
-        replyDiv.style.padding = "5px";
-        replyDiv.style.marginBottom = "5px";
-        replyDiv.style.borderRadius = "5px";
         replyDiv.textContent = "Réponse du : " + data.replyTo;
         msgDiv.appendChild(replyDiv);
-
-        setTimeout(function() {
-            replyDiv.classList.add("flou");
-        }, 15000);
     }
 
-    // Emoji picker toggle button
     var emojiBtn = document.createElement("button");
     emojiBtn.className = "emoji-btn";
     emojiBtn.textContent = "😀";
@@ -849,22 +837,20 @@ msgDiv.onmouseover = function() {
     };
     msgDiv.appendChild(emojiBtn);
 
-    // Emoji picker container for each message
     var emojiPickerMessage = document.createElement("div");
     emojiPickerMessage.className = "emoji-picker-message";
-    emojiPickerMessage.id = `emoji-picker-${key}`; // Unique ID for each picker
-
+    emojiPickerMessage.id = `emoji-picker-${key}`;
     emojis.forEach((emoji) => {
         const emojiSpan = document.createElement("span");
         emojiSpan.textContent = emoji;
         emojiSpan.className = "emoji";
         emojiSpan.onclick = function () {
-            addReactionEmoji(key, emoji); // Attach emoji reaction
-            emojiPickerMessage.style.display = "none"; // Hide after selecting
+            addReactionEmoji(key, emoji);
+            emojiPickerMessage.style.display = "none";
         };
         emojiPickerMessage.appendChild(emojiSpan);
     });
-    msgDiv.appendChild(emojiPickerMessage); // Append picker to message div
+    msgDiv.appendChild(emojiPickerMessage);
 
     var actionButtons = document.createElement("div");
     actionButtons.className = "action-buttons";
@@ -889,19 +875,20 @@ msgDiv.onmouseover = function() {
 
     document.getElementById("messages").appendChild(msgDiv);
 
-    // Effet de flou et affichage au survol
-    setTimeout(function() {
-        textSpan.classList.add("flou");
-    }, 15000);
+    if (textSpan) {
+        setTimeout(function () {
+            textSpan.classList.add("flou");
+        }, 15000);
+    }
 
     scrollToBottom();
 
-    // Notifications pour nouveaux messages
     if (data.user !== username && document.visibilityState === 'hidden') {
         document.title = '💬 Nouveau message!';
-        notificationSound.play().catch(error => console.log("Erreur de lecture de la notification sonore :", error));
+        notificationSound.play().catch(error => console.log("Erreur de notification :", error));
     }
 }
+
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
