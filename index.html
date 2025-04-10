@@ -398,9 +398,11 @@
         </div>
 
         <div id="messages"></div>
-        <div id="audio-preview" style="display:none; margin-top:10px;">
+<div id="audio-preview" style="display:none; margin-top:10px;">
   <audio id="audio-player" controls></audio>
-  <button onclick="uploadAudio()">Envoyer le vocal</button>
+  <br>
+  <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
+  <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
 </div>
 
         <div id="input-section">
@@ -970,6 +972,43 @@ function toggleRecording() {
         mediaRecorder.stop();
         recordBtn.textContent = "🎙️";
     }
+}
+function uploadAudio() {
+    if (!recordedBlob) {
+        alert("Aucun enregistrement à envoyer.");
+        return;
+    }
+
+    const timestamp = new Date().getTime();
+    const storageRef = firebase.storage().ref(`audio_messages/${roomName}_${username}_${timestamp}.webm`);
+
+    storageRef.put(recordedBlob).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+    }).then(downloadURL => {
+        const audioMessage = {
+            user: username,
+            type: "audio",
+            audioURL: downloadURL,
+            timestamp: new Date().toLocaleTimeString()
+        };
+
+        db.child("rooms/" + roomName + "/messages").push(audioMessage);
+
+        // Réinitialiser l’interface
+        document.getElementById('audio-preview').style.display = "none";
+        document.getElementById('audio-player').src = "";
+        recordedBlob = null;
+
+        alert("Message vocal envoyé !");
+    }).catch(error => {
+        console.error("Erreur lors de l’envoi :", error);
+        alert("Erreur lors de l’envoi du message vocal.");
+    });
+}
+function cancelAudio() {
+    recordedBlob = null;
+    document.getElementById('audio-preview').style.display = "none";
+    document.getElementById('audio-player').src = "";
 }
 
 </script>
