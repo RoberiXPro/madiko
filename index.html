@@ -394,10 +394,6 @@
     <h1>RS-Villa</h1>
 
     <!-- Section de connexion -->
-    <div id="notification" style="display:none; padding: 10px; background: #ffd700; color: #000; font-weight: bold; text-align: center;">
-    Connexion en cours...
-</div>
-
     <div id="login-container">
         <input type="text" id="username" placeholder="Votre pseudo" required><br>
         <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
@@ -433,8 +429,6 @@
             <input type="text" id="message-input" placeholder="Écrivez un message">
             <button onclick="sendMessage()">Envoyer</button>
             <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-            <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-            <button onclick="document.getElementById('image-input').click()">🖼️</button>
             <button onclick="toggleAllMessages()">Afficher tous</button>
             <button onclick="quitRoom()">Quitter</button>
         </div>
@@ -466,6 +460,18 @@
     var messageListener = null;
 
 // Fonction pour afficher la notification
+        function showNotification() {
+            const notification = document.getElementById("notification");
+            notification.style.display = "block";
+
+            // Cacher la notification après quelques secondes
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 5000); // La notification reste affichée 10 secondes
+        }
+
+        // Affiche la notification au chargement de la page
+        document.addEventListener("DOMContentLoaded", showNotification);
 
     function joinRoom() {
     username = document.getElementById("username").value;
@@ -741,8 +747,24 @@ function displayMessage(key, data) {
     var usernameDiv = document.createElement("div");
     usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
     usernameDiv.textContent = data.user;
-    
- var timeDiv = document.createElement("div");
+
+    let textSpan = null;
+
+    if (data.type === "audio") {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = data.audioBase64;
+        audio.style.marginTop = "10px";
+        audio.className = "audio-message";
+        msgDiv.appendChild(audio);
+    } else {
+        textSpan = document.createElement("span");
+        textSpan.className = "msg-text flou";
+        textSpan.textContent = data.message;
+        msgDiv.appendChild(textSpan);
+    }
+
+    var timeDiv = document.createElement("div");
     timeDiv.className = "timestamp";
     timeDiv.style.fontSize = "0.8rem";
     timeDiv.style.color = "#ccc";
@@ -753,54 +775,7 @@ function displayMessage(key, data) {
 
     msgDiv.appendChild(usernameDiv);
     msgDiv.appendChild(timeDiv);
-    
-let textSpan = null;
 
-if (data.type === "audio") {
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.src = data.audioBase64;
-    audio.style.marginTop = "10px";
-    audio.className = "audio-message";
-    msgDiv.appendChild(audio);
-
-} else if (data.type === "image") {
-    const img = document.createElement("img");
-    img.src = data.imageBase64;
-    img.style.maxWidth = "250px";
-    img.style.borderRadius = "8px";
-    img.style.marginTop = "10px";
-    img.className = "image-message";
-    msgDiv.appendChild(img);
-
-} else {
-textSpan = document.createElement("span");
-textSpan.className = "msg-text flou";
-
-// Détection et lien cliquable pour les images
-const messageText = data.message;
-const imageRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/gi;
-const matches = messageText.match(imageRegex) || [];
-
-// Remplace les URLs d’image par des liens cliquables
-textSpan.innerHTML = messageText.replace(imageRegex, function (url) {
-    return `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`;
-});
-msgDiv.appendChild(textSpan);
-
-// Affiche les aperçus d’image
-if (matches) {
-    matches.forEach(url => {
-        const imgPreview = document.createElement("img");
-        imgPreview.src = url;
-        imgPreview.style.maxWidth = "250px";
-        imgPreview.style.borderRadius = "8px";
-        imgPreview.style.marginTop = "10px";
-        imgPreview.className = "image-preview";
-        msgDiv.appendChild(imgPreview);
-    });
-}
-  
     // Reaction container
     var reactionContainer = document.createElement("div");
     reactionContainer.className = "reaction-container";
@@ -1065,31 +1040,6 @@ function cancelAudio() {
     recordedBlob = null;
     document.getElementById('audio-preview').style.display = "none";// transforme le blob en base64 cool
     document.getElementById('audio-player').src = "";
-}
-    //FUNCTION MANDEFA SARY
-function handleImageUpload(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = function () {
-            const base64Image = reader.result;
-
-            const imageMessage = {
-                user: username,
-                type: "image",
-                imageBase64: base64Image,
-                timestamp: new Date().toLocaleTimeString()
-            };
-
-            db.child("rooms/" + roomName + "/messages").push(imageMessage);
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // Reset le champ pour permettre un nouvel upload du même fichier
-    event.target.value = "";
 }
 
 </script>
