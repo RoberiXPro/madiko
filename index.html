@@ -1110,29 +1110,30 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
-// Fermer popup en cliquant dehors ou sur ESC
 document.addEventListener("DOMContentLoaded", function () {
     const popup = document.getElementById("image-popup");
     const popupImg = document.getElementById("popup-img");
     const closeBtn = document.getElementById("close-popup-btn");
+    const popupInner = document.getElementById("popup-inner");
 
-    // Fermer avec le bouton ✖
-    if (closeBtn) {
-        closeBtn.addEventListener("click", function () {
+    // ✖ Fermer avec le bouton
+    closeBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    // 🖱️ Fermer en cliquant à l’extérieur de l’image
+    popup.addEventListener("click", (e) => {
+        if (e.target === popup) {
             popup.style.display = "none";
-        });
-    }
+        }
+    });
 
-    // Fermer en cliquant en dehors de l’image
-    if (popup) {
-        popup.addEventListener("click", function (e) {
-            if (!popupImg.contains(e.target)) {
-                popup.style.display = "none";
-            }
-        });
-    }
+    // Bloquer les clics sur l'image elle-même
+    popupInner.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
 
-    // Fermer avec la touche Échap
+    // ⌨️ Fermer avec la touche Échap
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
             popup.style.display = "none";
@@ -1141,16 +1142,18 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+
 </script>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2025
     </footer>
 <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-  <div style="position: relative;">
+  <div id="popup-inner" style="position: relative;">
     <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
     <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
   </div>
 </div>
+
 
 </body>
 </html>
