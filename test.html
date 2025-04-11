@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <!-- HTML refondu : Interface chat + messages modernisés + boutons stylés -->
  <style>
-    /* Ajouté pour styliser tout le contenu proprement */
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #1f1f2e;
@@ -150,6 +149,25 @@
       background: #444;
     }
 
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .username {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .timestamp {
+      font-size: 0.7rem;
+      color: #aaa;
+      text-align: right;
+    }
+
     .user1 {
       align-self: flex-end;
       background: #2c84ff;
@@ -160,26 +178,12 @@
       background: #3a3a3a;
     }
 
-    .username {
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #ffd700;
-      margin-bottom: 4px;
-    }
-
-    .timestamp {
-      font-size: 0.7rem;
-      color: #aaa;
-      text-align: right;
-      margin-top: 4px;
-    }
-
     .citation {
       background-color: #2e2e3d;
       padding: 6px 10px;
       border-left: 3px solid #ffd700;
       font-size: 0.8rem;
-      margin-bottom: 5px;
+      margin-bottom: 6px;
       border-radius: 6px;
       color: #ddd;
     }
@@ -260,8 +264,7 @@
       position: relative;
     }
 
-    .btn-delete,
-    .reply-btn {
+    .btn-delete {
       background: #ff4c4c;
       border: none;
       color: white;
@@ -271,9 +274,22 @@
       cursor: pointer;
     }
 
-    .btn-delete:hover,
-    .reply-btn:hover {
+    .btn-delete:hover {
       background: #ff1a1a;
+    }
+
+    .reply-btn {
+      background: #3498db;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .reply-btn:hover {
+      background: #2980b9;
     }
 
     @keyframes fadeInUp {
