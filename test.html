@@ -7,207 +7,201 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <!-- HTML refondu : Interface chat + messages modernisés + boutons stylés -->
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #1f1f2e;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #1f1f2e;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+  }
 
-    #chat-header {
-      position: sticky;
-      top: 0;
-      background: #2a2a3a;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      z-index: 100;
-      border-bottom: 1px solid #444;
-    }
+  #chat-container {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
 
-    #chat-header h2 {
-      margin: 0;
-      font-size: 1.3rem;
-      color: #ffd700;
-      flex: 1;
-      text-align: center;
-    }
+  #chat-header {
+    position: sticky;
+    top: 0;
+    background: #2a2a3a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    z-index: 100;
+    border-bottom: 1px solid #444;
+  }
 
-    #logout-btn {
-      background: #ff4c4c;
-      border: none;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.85rem;
-    }
+  #chat-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #ffd700;
+    flex: 1;
+    text-align: center;
+  }
 
-    #logout-btn:hover {
-      background: #ff1a1a;
-    }
+  #logout-btn {
+    background: #ff4c4c;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.85rem;
+  }
 
-    #chat-container {
-      display: none;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0;
-    }
+  #logout-btn:hover {
+    background: #ff1a1a;
+  }
 
-    #user-list {
-      background-color: #2a2a3a;
-      border-radius: 10px;
-      padding: 10px;
-      margin: 20px;
-    }
+  #messages {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #1c1c28;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
 
-    #user-list h2 {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
+  .message-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
 
-    #online-users li {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9rem;
-      list-style: none;
-      padding: 6px;
-      background: #3a3a3a;
-      margin-bottom: 4px;
-      border-radius: 6px;
-    }
+  .user1 .message-container {
+    align-items: flex-end;
+  }
 
-    .status-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: limegreen;
-    }
+  .message-meta {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 6px;
+    font-size: 0.75rem;
+    color: #ccc;
+  }
 
-    .status-offline .status-indicator {
-      background-color: gray;
-    }
+  .meta-username {
+    font-weight: bold;
+    color: #ffd700;
+  }
 
-    #messages {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-height: 400px;
-      overflow-y: auto;
-      padding: 10px 20px;
-      background: #1c1c28;
-      border-radius: 10px;
-      margin: 10px 20px 15px;
-    }
+  .meta-time {
+    color: #aaa;
+  }
 
-    .message-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-    }
+  .message {
+    max-width: 75%;
+    background: #444;
+    padding: 12px 16px;
+    border-radius: 15px;
+    word-wrap: break-word;
+    animation: fadeInUp 0.3s ease-out;
+    position: relative;
+  }
 
-    .user1 .message-container {
-      align-items: flex-end;
-    }
+  .user1 .message {
+    background: #2c84ff;
+    color: white;
+    align-self: flex-end;
+  }
 
-    .message-meta {
-      font-size: 0.75rem;
-      color: #bbb;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 0 4px;
-      width: 100%;
-    }
+  .user2 .message {
+    background: #3a3a3a;
+    color: white;
+    align-self: flex-start;
+  }
 
-    .meta-username {
-      font-weight: bold;
-      color: #ffd700;
-    }
+  .citation {
+    background-color: #2e2e3d;
+    padding: 6px 10px;
+    border-left: 3px solid #ffd700;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    color: #ddd;
+  }
 
-    .meta-time {
-      color: #bbb;
-    }
+  .reaction-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 4px;
+  }
 
-    .message {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 15px;
-      word-wrap: break-word;
-      animation: fadeInUp 0.3s ease-out;
-      background: #444;
-      position: relative;
-    }
+  .reaction-emoji {
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
 
-    .user1 .message {
-      background: #2c84ff;
-      color: white;
-      align-self: flex-end;
-    }
+  .reaction-emoji:hover {
+    transform: scale(1.2);
+  }
 
-    .user2 .message {
-      background: #3a3a3a;
-      color: white;
-      align-self: flex-start;
-    }
+  .emoji-btn,
+  .reply-btn,
+  .btn-delete {
+    margin-right: 4px;
+    background: transparent;
+    border: 1px solid #666;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
 
-    .citation {
-      background-color: #2e2e3d;
-      padding: 6px 10px;
-      border-left: 3px solid #ffd700;
-      font-size: 0.8rem;
-      margin-bottom: 6px;
-      border-radius: 6px;
-      color: #ddd;
-      align-self: stretch;
-    }
+  .reply-btn {
+    background-color: #0066ff;
+    border-color: #0052cc;
+  }
 
-    .reaction-container {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-      justify-content: flex-end;
-      padding: 0 4px;
-    }
+  .btn-delete {
+    background-color: #cc0000;
+    border-color: #990000;
+  }
 
-    .reaction-emoji {
-      font-size: 1.3rem;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
+  .emoji-picker-message {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    background: #2a2a3a;
+    border-radius: 8px;
+    margin-top: 6px;
+  }
 
-    .reaction-emoji:hover {
-      transform: scale(1.2);
-    }
+  .emoji {
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
 
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(15px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+  .emoji:hover {
+    transform: scale(1.2);
+  }
 
-    @media (max-width: 600px) {
-      #messages {
-        max-height: 300px;
-      }
-
-      .message {
-        max-width: 90%;
-      }
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
     }
-  </style>
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
 
 </head>
 <body>
@@ -224,17 +218,17 @@
 
     <div class="input-group">
       <label for="username">👤 Votre pseudo</label>
-      <input type="text" id="username" placeholder="Ex: Roberix">
+      <input type="text" id="username" placeholder="Ex: Roberix" />
     </div>
 
     <div class="input-group">
       <label for="room-name-input">🏠 Nom de la Villa</label>
-      <input type="text" id="room-name-input" placeholder="Ex: DreamHouse">
+      <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
     </div>
 
     <div class="input-group">
       <label for="password-input">🔒 Mot de passe</label>
-      <input type="password" id="password-input" placeholder="*******">
+      <input type="password" id="password-input" placeholder="*******" />
     </div>
 
     <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
@@ -243,89 +237,95 @@
 
 
     <!-- Section de chat -->
-    <div id="chat-container">
-            <div id="chat-header">
+<div id="login-container" class="login-wrapper">
+    <div class="login-card">
+      <h2 class="login-title">Connexion à RS-Villa</h2>
+      <div class="input-group">
+        <label for="username">👤 Votre pseudo</label>
+        <input type="text" id="username" placeholder="Ex: Roberix">
+      </div>
+      <div class="input-group">
+        <label for="room-name-input">🏠 Nom de la Villa</label>
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse">
+      </div>
+      <div class="input-group">
+        <label for="password-input">🔒 Mot de passe</label>
+        <input type="password" id="password-input" placeholder="*******">
+      </div>
+      <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
+    </div>
+  </div>
+
+  <div id="chat-container">
+    <div id="chat-header">
       <h2 id="room-name-display">Villa : ...</h2>
       <button id="logout-btn" onclick="quitRoom()">Quitter</button>
     </div>
-<div id="user-list">
-        <h2>Utilisateurs connectés</h2>
-        <ul id="online-users">
-            <!-- Les utilisateurs et leur statut seront ajoutés ici -->
-        </ul>
+
+    <div id="user-list">
+      <h2>Utilisateurs connectés</h2>
+      <ul id="online-users"></ul>
     </div>
-        <!-- Section pour répondre à un message -->
-        <div id="reply-container">
-            <span id="reply-message"></span>
-            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
-        </div>
 
-        <div id="messages"></div>
-<div id="audio-preview" style="display:none; margin-top:10px;">
-  <audio id="audio-player" controls></audio>
-  <br>
-  <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
-  <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
-</div>
-
-<div id="input-section">
-  <button class="icon-btn" id="emoji-toggle" onclick="toggleEmojiPicker()" title="Emojis">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="gold" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
-  </button>
-
-  <input type="text" id="message-input" placeholder="Message..." />
-
-  <button class="icon-btn" id="send-btn" onclick="sendMessage()" title="Envoyer">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-  </button>
-
-  <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Enregistrer audio">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ff4c4c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mic"><path d="M12 1v14"></path><path d="M5 8a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-  </button>
-
-  <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-  <button class="icon-btn" onclick="document.getElementById('image-input').click()" title="Envoyer image">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#00ccff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10"></path><polyline points="3 17 8 12 13 17 21 9"></polyline></svg>
-  </button>
-
-  <button class="icon-btn" onclick="toggleAllMessages()" title="Tout afficher/masquer">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-  </button>
-</div>
-
-<div id="emoji-picker" style="display: none;"></div>
-
+    <div id="reply-container" style="display:none">
+      <span id="reply-message"></span>
+      <button onclick="cancelReply()" style="float:right; background:#e74c3c; color:white; border:none; border-radius:5px; padding:5px">Annuler</button>
     </div>
+
+    <div id="messages"></div>
+
+    <div id="audio-preview" style="display:none; margin-top:10px;">
+      <audio id="audio-player" controls></audio><br>
+      <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
+      <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
+    </div>
+
+    <div id="input-section">
+      <button class="icon-btn" onclick="toggleEmojiPicker()" title="Emojis">😀</button>
+      <input type="text" id="message-input" placeholder="Message...">
+      <button class="icon-btn" onclick="sendMessage()" title="Envoyer">📤</button>
+      <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Audio">🎙️</button>
+      <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+      <button class="icon-btn" onclick="document.getElementById('image-input').click()" title="Image">🖼️</button>
+      <button class="icon-btn" onclick="toggleAllMessages()" title="Voir tout">👁️</button>
+    </div>
+
+    <div id="emoji-picker" style="display:none;"></div>
+  </div>
+
+  <footer style="margin-top:20px; font-size:0.8rem; color:#999; text-align:center;">&copy; RoberiX 2025</footer>
+
+  <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
+    <div id="popup-inner" style="position:relative;">
+      <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
+      <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
+    </div>
+  </div>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2025
     </footer>
-<div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-  <div id="popup-inner" style="position: relative;">
-    <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
-    <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
-  </div>
-</div>
+
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
-    var firebaseConfig = {
-        apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
-        authDomain: "madiko-rs.firebaseapp.com",
-        databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
-        projectId: "madiko-rs",
-        storageBucket: "madiko-rs.appspot.com",
-        messagingSenderId: "746083664475",
-        appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
-        measurementId: "G-EBWFWCMWFT"
-    };
-    firebase.initializeApp(firebaseConfig);
+const firebaseConfig = {
+  apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
+  authDomain: "madiko-rs.firebaseapp.com",
+  databaseURL: "https://madiko-rs-default-rtdb.firebaseio.com",
+  projectId: "madiko-rs",
+  storageBucket: "madiko-rs.appspot.com",
+  messagingSenderId: "746083664475",
+  appId: "1:746083664475:web:fe2d5628d20e385d06b57e",
+  measurementId: "G-EBWFWCMWFT"
+};
+firebase.initializeApp(firebaseConfig);
 
-       var db;
-    var username;
-    var roomName;
-    var replyMessageId = null;
-    var replyMessageText = "";
-    var allMessagesVisible = false;
-    var messageListener = null;
+let db;
+let username;
+let roomName;
+let replyMessageId = null;
+let replyMessageText = "";
+let messageListener = null;
+let allMessagesVisible = false;
 
 // Fonction pour afficher la notification
         function showNotification() {
@@ -341,51 +341,40 @@
         // Affiche la notification au chargement de la page
         document.addEventListener("DOMContentLoaded", showNotification);
 
-    function joinRoom() {
-    username = document.getElementById("username").value;
-    roomName = document.getElementById("room-name-input").value;
-    var password = document.getElementById("password-input").value;
+// Connexion et création de salle
+function joinRoom() {
+  username = document.getElementById("username").value.trim();
+  roomName = document.getElementById("room-name-input").value.trim();
+  const password = document.getElementById("password-input").value.trim();
 
-    // Référence au room dans Firebase
-    db = firebase.database().ref("rooms/" + roomName);
+  if (!username || !roomName || !password) return alert("Veuillez remplir tous les champs");
 
-    // Vérifie l'existence et le mot de passe du room
-    db.once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-            var dbPassword = snapshot.child("password").val();
-            if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
+  db = firebase.database().ref("rooms/" + roomName);
 
-                // Initialiser les listeners pour afficher les utilisateurs connectés
-                initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
-                setOnlineStatus();
-            } else {
-                alert("Mot de passe incorrect !");
-            }
-        } else {
-            // Créer le room si inexistant
-            db.set({
-                password: password,
-                messages: {}
-            }).then(() => {
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-
-                // Initialiser les listeners pour afficher les utilisateurs connectés
-                initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
-                setOnlineStatus();
-            });
-        }
-    });
+  db.once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      const dbPassword = snapshot.child("password").val();
+      if (dbPassword === password) {
+        startChat();
+      } else {
+        alert("Mot de passe incorrect !");
+      }
+    } else {
+      db.set({ password, messages: {} }).then(() => {
+        startChat();
+      });
+    }
+  });
 }
-
+function startChat() {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  document.getElementById("login-container").style.display = "none";
+  document.getElementById("chat-container").style.display = "block";
+  initializeUserListeners();
+  setOnlineStatus();
+  loadMessages();
+}
+    
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
     var data = snapshot.val();
@@ -590,21 +579,17 @@ function loadMessages() {
     });
 //Bouton Quitter
 function quitRoom() {
-    // Supprime l'utilisateur de Firebase
-    firebase.database().ref("users/" + username).remove();
+  firebase.database().ref("users/" + username).remove();
 
-    // Supprime le listener de messages pour éviter les doublons
-    if (messageListener) {
-        db.child("rooms/" + roomName + "/messages").off("child_added", messageListener);
-        messageListener = null;
-    }
+  if (messageListener) {
+    db.child("rooms/" + roomName + "/messages").off("child_added", messageListener);
+    messageListener = null;
+  }
 
-    // Cache la section de chat et affiche la section de connexion
-    document.getElementById("chat-container").style.display = "none";
-    document.getElementById("login-container").style.display = "block";
+  document.getElementById("chat-container").style.display = "none";
+  document.getElementById("login-container").style.display = "flex";
 
-    // Force l'actualisation de l'onglet
-    location.reload();
+  location.reload();
 }
 
 function displayMessage(key, data) {
