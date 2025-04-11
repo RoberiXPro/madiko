@@ -119,40 +119,43 @@
     .message-meta {
       font-size: 0.75rem;
       color: #bbb;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
       display: flex;
       justify-content: space-between;
       gap: 8px;
       padding: 0 4px;
+      width: 100%;
     }
 
-    .message-meta .meta-username {
+    .meta-username {
       font-weight: bold;
       color: #ffd700;
     }
 
-    .message-meta .meta-time {
+    .meta-time {
       color: #bbb;
     }
 
     .message {
-      width: fit-content;
       max-width: 75%;
       padding: 12px 16px;
       border-radius: 15px;
       word-wrap: break-word;
       animation: fadeInUp 0.3s ease-out;
       background: #444;
+      position: relative;
     }
 
     .user1 .message {
       background: #2c84ff;
       color: white;
+      align-self: flex-end;
     }
 
     .user2 .message {
       background: #3a3a3a;
       color: white;
+      align-self: flex-start;
     }
 
     .citation {
@@ -163,6 +166,7 @@
       margin-bottom: 6px;
       border-radius: 6px;
       color: #ddd;
+      align-self: stretch;
     }
 
     .reaction-container {
@@ -181,10 +185,6 @@
 
     .reaction-emoji:hover {
       transform: scale(1.2);
-    }
-
-    .message-header {
-      display: none;
     }
 
     @keyframes fadeInUp {
@@ -608,169 +608,123 @@ function quitRoom() {
 }
 
 function displayMessage(key, data) {
-    var msgDiv = document.createElement("div");
-    msgDiv.id = key;
-    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+  const msgContainer = document.createElement("div");
+  msgContainer.className = "message-container " + (data.user === username ? "user1" : "user2");
+  msgContainer.id = key;
 
-    var usernameDiv = document.createElement("div");
-    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-    usernameDiv.textContent = data.user;
+  // Meta informations : nom d'utilisateur + heure
+  const metaDiv = document.createElement("div");
+  metaDiv.className = "message-meta";
 
-    let textSpan = null;
+  const usernameSpan = document.createElement("span");
+  usernameSpan.className = "meta-username";
+  usernameSpan.textContent = data.user;
 
-    if (data.type === "audio") {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.src = data.audioBase64;
-        audio.style.marginTop = "10px";
-        audio.className = "audio-message";
-        msgDiv.appendChild(audio);
+  const timeSpan = document.createElement("span");
+  timeSpan.className = "meta-time";
+  timeSpan.textContent = data.timestamp;
 
-    } else if (data.type === "image") {
-        const img = document.createElement("img");
-        img.src = data.imageBase64;
-        img.style.maxWidth = "250px";
-        img.style.borderRadius = "8px";
-        img.style.marginTop = "10px";
-        img.className = "image-message";
-        img.style.cursor = "pointer";
-        img.onclick = () => openImagePopup(img.src);
-        msgDiv.appendChild(img);
+  metaDiv.appendChild(usernameSpan);
+  metaDiv.appendChild(timeSpan);
+  msgContainer.appendChild(metaDiv);
 
-    } else {
-        textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
+  // Bloc message principal
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "message";
 
-        const messageText = data.message || "";
-        const imageRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/gi;
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  if (data.replyTo) {
+    const replyDiv = document.createElement("div");
+    replyDiv.className = "citation";
+    replyDiv.textContent = "📎 " + data.replyTo;
+    msgDiv.appendChild(replyDiv);
+  }
 
-        // Remplacer les URL par des liens cliquables
-        let formattedText = messageText.replace(urlRegex, function (url) {
-            return `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`;
-        });
+  if (data.type === "audio") {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = data.audioBase64;
+    audio.className = "audio-message";
+    msgDiv.appendChild(audio);
+  } else if (data.type === "image") {
+    const img = document.createElement("img");
+    img.src = data.imageBase64;
+    img.style.maxWidth = "250px";
+    img.style.borderRadius = "8px";
+    img.className = "image-message";
+    img.onclick = () => openImagePopup(img.src);
+    msgDiv.appendChild(img);
+  } else {
+    const textSpan = document.createElement("span");
+    textSpan.className = "msg-text";
 
-        textSpan.innerHTML = formattedText;
-        msgDiv.appendChild(textSpan);
+    const messageText = data.message || "";
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const formattedText = messageText.replace(urlRegex, (url) => `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`);
 
-        // Affiche les aperçus d’images détectées dans le texte
-        const matches = messageText.match(imageRegex) || [];
-        matches.forEach(url => {
-            const imgPreview = document.createElement("img");
-            imgPreview.src = url;
-            imgPreview.style.maxWidth = "250px";
-            imgPreview.style.borderRadius = "8px";
-            imgPreview.style.marginTop = "10px";
-            imgPreview.className = "image-preview";
-            imgPreview.style.cursor = "pointer";
-            imgPreview.onclick = () => openImagePopup(url);
-            msgDiv.appendChild(imgPreview);
-        });
+    textSpan.innerHTML = formattedText;
+    msgDiv.appendChild(textSpan);
+  }
+
+  // Réactions
+  const reactionContainer = document.createElement("div");
+  reactionContainer.className = "reaction-container";
+  db.child("rooms/" + roomName + "/messages/" + key + "/reactions").on("value", function (snapshot) {
+    reactionContainer.innerHTML = "";
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const reactionEmoji = document.createElement("span");
+        reactionEmoji.className = "reaction-emoji";
+        reactionEmoji.textContent = childSnapshot.val();
+        reactionContainer.appendChild(reactionEmoji);
+      });
     }
+  });
+  msgDiv.appendChild(reactionContainer);
 
-    const timeDiv = document.createElement("div");
-    timeDiv.className = "timestamp";
-    timeDiv.style.fontSize = "0.8rem";
-    timeDiv.style.color = "#ccc";
-    timeDiv.style.position = "absolute";
-    timeDiv.style.top = "5px";
-    timeDiv.style.right = "10px";
-    timeDiv.textContent = data.timestamp;
-    msgDiv.appendChild(usernameDiv);
-    msgDiv.appendChild(timeDiv);
+  // Actions
+  const emojiBtn = document.createElement("button");
+  emojiBtn.className = "emoji-btn";
+  emojiBtn.textContent = "😀";
+  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
+  msgDiv.appendChild(emojiBtn);
 
-    if (data.replyTo) {
-        const replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.textContent = "📎 " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
-    }
-
-    const reactionContainer = document.createElement("div");
-    reactionContainer.className = "reaction-container";
-    msgDiv.appendChild(reactionContainer);
-
-    db.child("rooms/" + roomName + "/messages/" + key + "/reactions").on("value", function(snapshot) {
-        reactionContainer.innerHTML = "";
-        if (snapshot.exists()) {
-                snapshot.forEach(function(childSnapshot) {
-                const reactionEmoji = document.createElement("span");
-                reactionEmoji.className = "reaction-emoji";
-                reactionEmoji.textContent = childSnapshot.val();
-                reactionContainer.appendChild(reactionEmoji);
-            });
-        }
-    });
-
-    const emojiBtn = document.createElement("button");
-    emojiBtn.className = "emoji-btn";
-    emojiBtn.textContent = "😀";
-    emojiBtn.onclick = function () {
-        toggleEmojiPickerMessage(key);
+  const emojiPickerMessage = document.createElement("div");
+  emojiPickerMessage.className = "emoji-picker-message";
+  emojiPickerMessage.id = `emoji-picker-${key}`;
+  emojis.forEach((emoji) => {
+    const emojiSpan = document.createElement("span");
+    emojiSpan.textContent = emoji;
+    emojiSpan.className = "emoji";
+    emojiSpan.onclick = () => {
+      addReactionEmoji(key, emoji);
+      emojiPickerMessage.style.display = "none";
     };
-    msgDiv.appendChild(emojiBtn);
+    emojiPickerMessage.appendChild(emojiSpan);
+  });
+  msgDiv.appendChild(emojiPickerMessage);
 
-    const emojiPickerMessage = document.createElement("div");
-    emojiPickerMessage.className = "emoji-picker-message";
-    emojiPickerMessage.id = `emoji-picker-${key}`;
-    emojis.forEach((emoji) => {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.textContent = emoji;
-        emojiSpan.className = "emoji";
-        emojiSpan.onclick = function () {
-            addReactionEmoji(key, emoji);
-            emojiPickerMessage.style.display = "none";
-        };
-        emojiPickerMessage.appendChild(emojiSpan);
-    });
-    msgDiv.appendChild(emojiPickerMessage);
+  const actionButtons = document.createElement("div");
+  actionButtons.className = "action-buttons";
 
-    const actionButtons = document.createElement("div");
-    actionButtons.className = "action-buttons";
+  const replyBtn = document.createElement("button");
+  replyBtn.textContent = "Répondre";
+  replyBtn.className = "reply-btn";
+  replyBtn.onclick = () => prepareReply(key, data.message);
 
-    const replyBtn = document.createElement("button");
-    replyBtn.textContent = "Répondre";
-    replyBtn.className = "reply-btn";
-    replyBtn.onclick = function () {
-        prepareReply(key, data.message);
-    };
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Supprimer";
+  deleteBtn.className = "btn-delete";
+  deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Supprimer";
-    deleteBtn.className = "btn-delete";
-    deleteBtn.onclick = function () {
-        db.child("rooms/" + roomName + "/messages/" + key).remove();
-    };
+  actionButtons.appendChild(replyBtn);
+  actionButtons.appendChild(deleteBtn);
+  msgDiv.appendChild(actionButtons);
 
-    actionButtons.appendChild(replyBtn);
-    actionButtons.appendChild(deleteBtn);
-    msgDiv.appendChild(actionButtons);
+  msgContainer.appendChild(msgDiv);
+  document.getElementById("messages").appendChild(msgContainer);
 
-    document.getElementById("messages").appendChild(msgDiv);
-
-    if (textSpan) {
-        setTimeout(() => textSpan.classList.add("flou"), 15000);
-    }
-
-    msgDiv.onmouseover = function () {
-        if (data.user !== username) {
-            if (textSpan) textSpan.classList.remove("flou");
-        }
-    };
-    msgDiv.onmouseleave = function () {
-        if (textSpan) textSpan.classList.add("flou");
-    };
-
-    scrollToBottom();
-
-    if (data.user !== username && document.visibilityState === 'hidden') {
-        document.title = '💬 Nouveau message!';
-        notificationSound.play().catch(error => console.log("Erreur de notification :", error));
-    }
+  scrollToBottom();
 }
-
-
-
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
 function toggleEmojiPickerMessage(key) {
