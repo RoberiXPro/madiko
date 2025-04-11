@@ -16,7 +16,6 @@
       padding: 0;
     }
 
-    /* === En-tête sticky moderne === */
     #chat-header {
       position: sticky;
       top: 0;
@@ -50,65 +49,6 @@
 
     #logout-btn:hover {
       background: #ff1a1a;
-    }
-
-    .login-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 80vh;
-    }
-
-    .login-card {
-      background: #2a2a3a;
-      padding: 30px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      animation: fadeIn 0.4s ease-out;
-    }
-
-    .login-title {
-      color: #ffd700;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .input-group {
-      margin-bottom: 15px;
-    }
-
-    .input-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-      color: #eee;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-    }
-
-    .login-button {
-      width: 100%;
-      background: #4caf50;
-      color: white;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .login-button:hover {
-      background: #45a049;
     }
 
     #chat-container {
@@ -169,37 +109,50 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
+      width: 100%;
     }
 
-    .message-header {
+    .user1 .message-container {
+      align-items: flex-end;
+    }
+
+    .message-meta {
+      font-size: 0.75rem;
+      color: #bbb;
+      margin-bottom: 2px;
       display: flex;
       justify-content: space-between;
-      width: 100%;
-      font-size: 0.75rem;
-      color: #ccc;
-      margin-bottom: 4px;
+      gap: 8px;
       padding: 0 4px;
     }
 
+    .message-meta .meta-username {
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .message-meta .meta-time {
+      color: #bbb;
+    }
+
     .message {
-      min-width: 200px;
+      width: fit-content;
       max-width: 75%;
       padding: 12px 16px;
       border-radius: 15px;
       word-wrap: break-word;
-      position: relative;
       animation: fadeInUp 0.3s ease-out;
       background: #444;
     }
 
     .user1 .message {
-      align-self: flex-end;
       background: #2c84ff;
+      color: white;
     }
 
     .user2 .message {
-      align-self: flex-start;
       background: #3a3a3a;
+      color: white;
     }
 
     .citation {
@@ -230,91 +183,8 @@
       transform: scale(1.2);
     }
 
-    #input-section {
-      display: flex;
-      gap: 8px;
-      margin: 10px 20px;
-      flex-wrap: wrap;
-    }
-
-    #input-section input[type="text"] {
-      flex-grow: 1;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-    }
-
-    .icon-btn {
-      background: #2a2a3a;
-      color: #fff;
-      border: none;
-      padding: 8px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-    }
-
-    .icon-btn:hover {
-      background: #3a3a3a;
-    }
-
-    .emoji-picker-message,
-    #emoji-picker {
+    .message-header {
       display: none;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 10px;
-      background: #2a2a3a;
-      border-radius: 10px;
-      max-width: 100%;
-      z-index: 10;
-    }
-
-    .emoji {
-      font-size: 1.3rem;
-      cursor: pointer;
-    }
-
-    #reply-container {
-      display: none;
-      background-color: #2a2a3a;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 10px 20px;
-      color: #fff;
-      position: relative;
-    }
-
-    .btn-delete {
-      background: #ff4c4c;
-      border: none;
-      color: white;
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .btn-delete:hover {
-      background: #ff1a1a;
-    }
-
-    .reply-btn {
-      background: #3498db;
-      border: none;
-      color: white;
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .reply-btn:hover {
-      background: #2980b9;
     }
 
     @keyframes fadeInUp {
@@ -374,7 +244,10 @@
 
     <!-- Section de chat -->
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+            <div id="chat-header">
+      <h2 id="room-name-display">Villa : ...</h2>
+      <button id="logout-btn" onclick="quitRoom()">Quitter</button>
+    </div>
 <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -417,10 +290,6 @@
 
   <button class="icon-btn" onclick="toggleAllMessages()" title="Tout afficher/masquer">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-  </button>
-
-  <button class="icon-btn" onclick="quitRoom()" title="Quitter la Villa">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
   </button>
 </div>
 
