@@ -1,262 +1,168 @@
 <!DOCTYPE html>
-<html>
-<head>    <!-- mandeha rehetra : fonction flou, vocale, envoie image sans clique
-
-    <title>RS-Villa - Room sécurisé</title>
-    <!-- Inclure Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-<!-- HTML refondu : Interface chat + messages modernisés + boutons stylés -->
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #1f1f2e;
-    color: #fff;
-    margin: 0;
-    padding: 0;
-  }
-
-  #chat-container {
-    display: none;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-
-  #chat-header {
-    position: sticky;
-    top: 0;
-    background: #2a2a3a;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    z-index: 100;
-    border-bottom: 1px solid #444;
-  }
-
-  #chat-header h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: #ffd700;
-    flex: 1;
-    text-align: center;
-  }
-
-  #logout-btn {
-    background: #ff4c4c;
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.85rem;
-  }
-
-  #logout-btn:hover {
-    background: #ff1a1a;
-  }
-
-  #messages {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: 400px;
-    overflow-y: auto;
-    background: #1c1c28;
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 10px;
-  }
-
-  .message-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-  }
-
-  .user1 .message-container {
-    align-items: flex-end;
-  }
-
-  .message-meta {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    padding: 0 6px;
-    font-size: 0.75rem;
-    color: #ccc;
-  }
-
-  .meta-username {
-    font-weight: bold;
-    color: #ffd700;
-  }
-
-  .meta-time {
-    color: #aaa;
-  }
-
-  .message {
-    max-width: 75%;
-    background: #444;
-    padding: 12px 16px;
-    border-radius: 15px;
-    word-wrap: break-word;
-    animation: fadeInUp 0.3s ease-out;
-    position: relative;
-  }
-
-  .user1 .message {
-    background: #2c84ff;
-    color: white;
-    align-self: flex-end;
-  }
-
-  .user2 .message {
-    background: #3a3a3a;
-    color: white;
-    align-self: flex-start;
-  }
-
-  .citation {
-    background-color: #2e2e3d;
-    padding: 6px 10px;
-    border-left: 3px solid #ffd700;
-    font-size: 0.8rem;
-    margin-bottom: 6px;
-    border-radius: 6px;
-    color: #ddd;
-  }
-
-  .reaction-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 4px;
-  }
-
-  .reaction-emoji {
-    font-size: 1.3rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-
-  .reaction-emoji:hover {
-    transform: scale(1.2);
-  }
-
-  .emoji-btn,
-  .reply-btn,
-  .btn-delete {
-    margin-right: 4px;
-    background: transparent;
-    border: 1px solid #666;
-    padding: 4px 8px;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 0.75rem;
-  }
-
-  .reply-btn {
-    background-color: #0066ff;
-    border-color: #0052cc;
-  }
-
-  .btn-delete {
-    background-color: #cc0000;
-    border-color: #990000;
-  }
-
-  .emoji-picker-message {
-    display: none;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px;
-    background: #2a2a3a;
-    border-radius: 8px;
-    margin-top: 6px;
-  }
-
-  .emoji {
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-
-  .emoji:hover {
-    transform: scale(1.2);
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(15px);
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RS-Villa - Chat Sécurisé</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1f1f2e;
+      color: #fff;
+      margin: 0;
+      padding: 0;
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+    .login-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #1f1f2e;
+      padding: 20px;
     }
-  }
-</style>
-
+    .login-card {
+      background: #2a2a3a;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.4s ease-out;
+    }
+    .login-title {
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .input-group {
+      margin-bottom: 15px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #eee;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    .login-button {
+      width: 100%;
+      background: #ffd700;
+      color: #1f1f2e;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .login-button:hover {
+      background: #ffc400;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #999;
+      text-align: center;
+    }
+    #chat-header {
+      position: sticky;
+      top: 0;
+      background: #2a2a3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 100;
+      border-bottom: 1px solid #444;
+    }
+    #room-name-display {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #ffd700;
+      flex: 1;
+      text-align: center;
+    }
+    #logout-btn {
+      background: #ff4c4c;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+    #logout-btn:hover {
+      background: #ff1a1a;
+    }
+    #image-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #popup-inner {
+      position: relative;
+    }
+    #popup-img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #000;
+    }
+    #close-popup-btn {
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      font-size: 1.5rem;
+      padding: 5px 10px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <h1>TEST-Villa</h1>
-
-    <!-- Section de connexion -->
-    <div id="notification" style="display:none; background-color:#444; padding:10px; color:#fff; margin:10px 0; border-radius:5px; text-align:center;">
-    ✅ Connexion réussie
-</div>
-<!-- Fidirana modernisé -->
-<div id="login-container" class="login-wrapper">
-  <div class="login-card">
-    <h2 class="login-title">Connexion à RS-Villa</h2>
-
-    <div class="input-group">
-      <label for="username">👤 Votre pseudo</label>
-      <input type="text" id="username" placeholder="Ex: Roberix" />
-    </div>
-
-    <div class="input-group">
-      <label for="room-name-input">🏠 Nom de la Villa</label>
-      <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
-    </div>
-
-    <div class="input-group">
-      <label for="password-input">🔒 Mot de passe</label>
-      <input type="password" id="password-input" placeholder="*******" />
-    </div>
-
-    <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
-  </div>
-</div>
-
-
-    <!-- Section de chat -->
-<div id="login-container" class="login-wrapper">
+  <!-- Page d'accueil de connexion -->
+  <div id="login-container" class="login-wrapper">
     <div class="login-card">
       <h2 class="login-title">Connexion à RS-Villa</h2>
       <div class="input-group">
         <label for="username">👤 Votre pseudo</label>
-        <input type="text" id="username" placeholder="Ex: Roberix">
+        <input type="text" id="username" placeholder="Ex: Roberix" />
       </div>
       <div class="input-group">
         <label for="room-name-input">🏠 Nom de la Villa</label>
-        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse">
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
       </div>
       <div class="input-group">
         <label for="password-input">🔒 Mot de passe</label>
-        <input type="password" id="password-input" placeholder="*******">
+        <input type="password" id="password-input" placeholder="*******" />
       </div>
       <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
     </div>
   </div>
 
-  <div id="chat-container">
+  <!-- Interface principale de chat -->
+  <div id="chat-container" style="display:none;">
     <div id="chat-header">
       <h2 id="room-name-display">Villa : ...</h2>
       <button id="logout-btn" onclick="quitRoom()">Quitter</button>
@@ -269,20 +175,20 @@
 
     <div id="reply-container" style="display:none">
       <span id="reply-message"></span>
-      <button onclick="cancelReply()" style="float:right; background:#e74c3c; color:white; border:none; border-radius:5px; padding:5px">Annuler</button>
+      <button onclick="cancelReply()" class="btn-cancel-reply">Annuler</button>
     </div>
 
     <div id="messages"></div>
 
-    <div id="audio-preview" style="display:none; margin-top:10px;">
+    <div id="audio-preview" style="display:none;">
       <audio id="audio-player" controls></audio><br>
       <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
-      <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
+      <button onclick="cancelAudio()" class="btn-cancel-audio">❌ Annuler</button>
     </div>
 
     <div id="input-section">
       <button class="icon-btn" onclick="toggleEmojiPicker()" title="Emojis">😀</button>
-      <input type="text" id="message-input" placeholder="Message...">
+      <input type="text" id="message-input" placeholder="Message..." />
       <button class="icon-btn" onclick="sendMessage()" title="Envoyer">📤</button>
       <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Audio">🎙️</button>
       <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
@@ -293,18 +199,15 @@
     <div id="emoji-picker" style="display:none;"></div>
   </div>
 
-  <footer style="margin-top:20px; font-size:0.8rem; color:#999; text-align:center;">&copy; RoberiX 2025</footer>
+  <footer class="footer">&copy; RoberiX 2025</footer>
 
-  <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-    <div id="popup-inner" style="position:relative;">
-      <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
-      <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
+  <div id="image-popup">
+    <div id="popup-inner">
+      <img id="popup-img" />
+      <button id="close-popup-btn">✖</button>
     </div>
   </div>
-    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiX 2025
-    </footer>
-
+<script>
 // === Initialisation Firebase
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
 firebase.initializeApp({
