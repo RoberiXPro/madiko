@@ -195,6 +195,24 @@
       max-width: 90%;
     }
   }
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s ease;
+}
+.icon-btn:hover svg {
+  transform: scale(1.2);
+}
 </style>
 
 </head>
@@ -250,17 +268,32 @@
 </div>
 
 <div id="input-section">
-    <button onclick="toggleEmojiPicker()">😊</button>
-    <input type="text" id="message-input" placeholder="Écrivez un message">
-    <button onclick="sendMessage()">Envoyer</button>
-    <button onclick="toggleRecording()" id="record-btn">🎙️</button>
+  <button class="icon-btn" id="emoji-toggle" onclick="toggleEmojiPicker()" title="Emojis">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="gold" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+  </button>
 
-    <!-- BOUTON IMAGE -->
-    <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-    <button onclick="document.getElementById('image-input').click()">🖼️</button>
+  <input type="text" id="message-input" placeholder="Message..." />
 
-    <button onclick="toggleAllMessages()">Afficher tous</button>
-    <button onclick="quitRoom()">Quitter</button>
+  <button class="icon-btn" id="send-btn" onclick="sendMessage()" title="Envoyer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+  </button>
+
+  <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Enregistrer audio">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ff4c4c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mic"><path d="M12 1v14"></path><path d="M5 8a7 7 0 0 0 14 0"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+  </button>
+
+  <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+  <button class="icon-btn" onclick="document.getElementById('image-input').click()" title="Envoyer image">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#00ccff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10"></path><polyline points="3 17 8 12 13 17 21 9"></polyline></svg>
+  </button>
+
+  <button class="icon-btn" onclick="toggleAllMessages()" title="Tout afficher/masquer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+  </button>
+
+  <button class="icon-btn" onclick="quitRoom()" title="Quitter la Villa">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="#ff0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+  </button>
 </div>
 
 <div id="emoji-picker" style="display: none;"></div>
