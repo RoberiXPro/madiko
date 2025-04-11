@@ -6,233 +6,196 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+<!-- HTML refondu : Interface chat + messages modernisés + boutons stylés -->
 <style>
-/* === GLOBAL === */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #111, #1e1e1e);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-/* === LOGIN CONTAINER === */
-#login-container {
-  background-color: #2b2b2b;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
-  width: 90%;
-  max-width: 400px;
-  animation: fadeIn 0.6s ease-out;
-}
-
-.login-title {
-  text-align: center;
-  font-size: 1.8rem;
-  color: #ffd700;
-  margin-bottom: 20px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-}
-
-.input-group label {
-  font-size: 0.95rem;
-  color: #ccc;
-  margin-bottom: 5px;
-}
-
-.input-group input {
-  background: #1a1a1a;
-  color: #fff;
-  padding: 10px;
-  border: 1px solid #444;
-  border-radius: 8px;
-  transition: border 0.3s ease, box-shadow 0.3s ease;
-}
-
-.input-group input:focus {
-  border-color: #ffd700;
-  box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
-}
-
-.login-button {
-  background: linear-gradient(to right, #ff9900, #ffd700);
-  color: #000;
-  font-weight: bold;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  width: 100%;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: transform 0.2s ease;
-}
-.login-button:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
-}
-
-/* === CHAT === */
-#chat-container {
-  display: none;
-  width: 100%;
-  max-width: 700px;
-  padding: 20px;
-  background-color: #2c2c2c;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
-  animation: fadeIn 0.6s ease-out;
-}
-
-#room-name-display {
-  font-size: 1.4rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #ffd700;
-  text-align: center;
-}
-
-#messages {
-  display: flex;
-  flex-direction: column;
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 10px;
-  background-color: #1f1f1f;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-
-/* === MESSAGE BUBBLES === */
-.message {
-  max-width: 75%;
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  border-radius: 15px;
-  word-wrap: break-word;
-  position: relative;
-  font-size: 0.95rem;
-}
-
-.message.user1 {
-  align-self: flex-end;
-  background: linear-gradient(135deg, #4f46e5, #6d28d9);
-  color: white;
-  border-bottom-right-radius: 5px;
-}
-
-.message.user2 {
-  align-self: flex-start;
-  background-color: #3a3a3a;
-  color: #fff;
-  border-bottom-left-radius: 5px;
-}
-
-.message .timestamp {
-  font-size: 0.75rem;
-  color: #aaa;
-  margin-top: 6px;
-  text-align: right;
-}
-
-/* === EMOJI PICKER === */
-#emoji-picker {
-  display: none;
-  flex-wrap: wrap;
-  gap: 8px;
-  background: #222;
-  border-radius: 10px;
-  padding: 10px;
-  position: absolute;
-  bottom: 70px;
-  left: 10px;
-  max-width: 220px;
-  z-index: 10;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-}
-
-.emoji {
-  cursor: pointer;
-  font-size: 1.4rem;
-  padding: 5px;
-  border-radius: 6px;
-  transition: transform 0.2s ease;
-}
-.emoji:hover {
-  transform: scale(1.2);
-}
-
-/* === INPUT SECTION === */
-#input-section {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-#message-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #444;
-  background: #1a1a1a;
-  color: white;
-}
-
-#input-section button {
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #333;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-#input-section button:hover {
-  background: #444;
-}
-
-/* === ANIMATIONS === */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px);}
-  to { opacity: 1; transform: translateY(0);}
-}
-
-/* === RESPONSIVE === */
-@media (max-width: 600px) {
-  #login-container, #chat-container {
-    width: 90%;
-    padding: 15px;
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #1f1f2e;
+    color: #fff;
+    margin: 0;
+    padding: 0;
   }
-  #messages {
-    max-height: 300px;
+
+  #chat-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
   }
-  .message {
-    max-width: 85%;
+
+  #room-name-display {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #ffd700;
+    margin-bottom: 1rem;
+  }
+
+  #user-list {
+    background-color: #2a2a3a;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+
+  #user-list h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  #online-users li {
+    margin: 4px 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 0.9rem;
   }
-}
-    .emoji {
-  font-size: 1.5rem;
-  margin: 4px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
 
-.emoji:hover {
-  transform: scale(1.3);
-}
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: limegreen;
+  }
 
+  .status-offline .status-indicator {
+    background-color: gray;
+  }
+
+  #messages {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #1c1c28;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+
+  .message {
+    max-width: 70%;
+    padding: 12px;
+    border-radius: 15px;
+    position: relative;
+    word-wrap: break-word;
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  .user1 {
+    background: #2c84ff;
+    align-self: flex-end;
+    text-align: right;
+  }
+
+  .user2 {
+    background: #444;
+    align-self: flex-start;
+  }
+
+  .username {
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+
+  .timestamp {
+    font-size: 0.7rem;
+    color: #bbb;
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  .emoji-picker-message,
+  #emoji-picker {
+    display: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    background: #2a2a3a;
+    border-radius: 10px;
+    max-width: 100%;
+    z-index: 10;
+  }
+
+  .emoji {
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .emoji:hover {
+    transform: scale(1.3);
+  }
+
+  #input-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  #input-section input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+  }
+
+  #input-section button {
+    background: #ffd700;
+    color: #1f1f2e;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+  }
+
+  #input-section button:hover {
+    background: #ffc400;
+  }
+
+  .action-buttons button,
+  .reply-btn,
+  .btn-delete,
+  .emoji-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .action-buttons button:hover {
+    background: #555;
+  }
+
+  @keyframes scaleIn {
+    0% {
+      transform: scale(1.15);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 600px) {
+    #messages {
+      max-height: 300px;
+    }
+    .message {
+      max-width: 90%;
+    }
+  }
 </style>
-
 
 </head>
 <body>
