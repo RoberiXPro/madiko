@@ -213,6 +213,70 @@
 .icon-btn:hover svg {
   transform: scale(1.2);
 }
+    .login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.login-card {
+  background: #2a2a3a;
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  animation: fadeIn 0.4s ease-out;
+}
+
+.login-title {
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #eee;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+.login-button {
+  width: 100%;
+  background: #ffd700;
+  color: #1f1f2e;
+  padding: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login-button:hover {
+  background: #ffc400;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 </style>
 
 </head>
@@ -224,25 +288,29 @@
     ✅ Connexion réussie
 </div>
 <!-- Fidirana modernisé -->
-<div id="login-container">
-  <h2 class="login-title">Connexion à RS-Villa</h2>
-  <div class="input-group">
-    <label for="username">Votre pseudo</label>
-    <input type="text" id="username" placeholder="Ex: Roberix">
-  </div>
+<div id="login-container" class="login-wrapper">
+  <div class="login-card">
+    <h2 class="login-title">Connexion à RS-Villa</h2>
 
-  <div class="input-group">
-    <label for="room-name-input">Nom de la Villa</label>
-    <input type="text" id="room-name-input" placeholder="Ex: DreamHouse">
-  </div>
+    <div class="input-group">
+      <label for="username">👤 Votre pseudo</label>
+      <input type="text" id="username" placeholder="Ex: Roberix">
+    </div>
 
-  <div class="input-group">
-    <label for="password-input">Mot de passe</label>
-    <input type="password" id="password-input" placeholder="*******">
-  </div>
+    <div class="input-group">
+      <label for="room-name-input">🏠 Nom de la Villa</label>
+      <input type="text" id="room-name-input" placeholder="Ex: DreamHouse">
+    </div>
 
-  <button class="login-button" onclick="joinRoom()">Entrer dans la Villa</button>
+    <div class="input-group">
+      <label for="password-input">🔒 Mot de passe</label>
+      <input type="password" id="password-input" placeholder="*******">
+    </div>
+
+    <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
+  </div>
 </div>
+
 
     <!-- Section de chat -->
     <div id="chat-container">
