@@ -9,288 +9,230 @@
 <style>
 /* === GLOBAL === */
 body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #111, #1e1e1e);
+  color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
-  font-family: 'Arial', sans-serif;
-  color: #ffffff;
-  margin: 0;
 }
 
-/* === CONTAINERS === */
-#login-container, #chat-container {
-  width: 70%;
-  max-width: 800px;
-  background: rgba(60, 60, 60, 0.9);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-  display: none;
-}
+/* === LOGIN CONTAINER === */
 #login-container {
-  display: block;
-  animation: fadeIn 0.5s ease;
+  background-color: #2b2b2b;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* === LOGIN FORM MODERN === */
 .login-title {
-  font-size: 2rem;
   text-align: center;
-  margin-bottom: 20px;
+  font-size: 1.8rem;
   color: #ffd700;
-  font-weight: bold;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
 }
+
 .input-group {
-  margin-bottom: 15px;
   display: flex;
   flex-direction: column;
+  margin-bottom: 15px;
 }
+
 .input-group label {
   font-size: 0.95rem;
-  margin-bottom: 6px;
   color: #ccc;
-  font-weight: 600;
+  margin-bottom: 5px;
 }
+
 .input-group input {
-  background-color: #222;
+  background: #1a1a1a;
   color: #fff;
+  padding: 10px;
   border: 1px solid #444;
   border-radius: 8px;
-  padding: 10px;
-  font-size: 1rem;
-  transition: border 0.3s, box-shadow 0.3s;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
 }
+
 .input-group input:focus {
   border-color: #ffd700;
-  box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
 }
+
 .login-button {
-  background: linear-gradient(135deg, #ff8c00, #ffcc00);
+  background: linear-gradient(to right, #ff9900, #ffd700);
   color: #000;
   font-weight: bold;
   padding: 12px;
-  border-radius: 8px;
   border: none;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 8px;
   width: 100%;
+  cursor: pointer;
   margin-top: 10px;
+  transition: transform 0.2s ease;
 }
 .login-button:hover {
   transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(255, 204, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
 }
 
 /* === CHAT === */
-#messages {
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-  background-color: #2e2e2e;
-  border-radius: 5px;
-  margin-bottom: 10px;
+#chat-container {
+  display: none;
+  width: 100%;
+  max-width: 700px;
+  padding: 20px;
+  background-color: #2c2c2c;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  animation: fadeIn 0.6s ease-out;
 }
-.message {
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 5px;
-  word-wrap: break-word;
-  max-width: 70%;
-  color: #fff;
+
+#room-name-display {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ffd700;
+  text-align: center;
+}
+
+#messages {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-}
-.message.user1 {
-  background: linear-gradient(to right, #8e44ad, #3498db);
-  align-self: flex-end;
-  border-radius: 10px 10px 0 10px;
-}
-.message.user2 {
-  background: linear-gradient(to right, #95a5a6, #7f8c8d);
-  align-self: flex-start;
-  border-radius: 10px 10px 10px 0;
-}
-
-.username.user1,
-.username.user2 {
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: #fff;
-  padding: 5px 8px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-}
-.username.user1 {
-  background: linear-gradient(135deg, #3498db, #8e44ad);
-}
-.username.user2 {
-  background: linear-gradient(135deg, #f39c12, #e74c3c);
-}
-
-.timestamp {
-  font-size: 0.8rem;
-  color: #ccc;
-  position: absolute;
-  top: 5px;
-  right: 10px;
-}
-
-.reaction-container {
-  margin-top: 5px;
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-  color: #ffd700;
-}
-.reaction-label {
-  margin-right: 5px;
-  font-style: italic;
-}
-.reaction-emoji {
-  font-size: 1.5rem;
-  margin-right: 5px;
-  cursor: default;
-}
-
-/* === IMAGE POPUP === */
-#image-popup {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.85);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-#image-popup img {
-  transform: scale(0.8);
-  transition: transform 0.3s ease;
-}
-#image-popup[style*="display: flex"] img {
-  transform: scale(1);
-}
-
-/* === AUDIO === */
-.audio-message {
-  width: 100%;
-  max-width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background-color: #1f1f1f;
   border-radius: 10px;
-  background-color: #222;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
-}
-.recording {
-  animation: pulse 1.5s infinite;
-  background-color: #e74c3c !important;
-  color: #fff;
-  border: 2px solid #fff;
-}
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+  margin-bottom: 10px;
 }
 
-/* === RESPONSIVE === */
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
-  }
-  #login-container, #chat-container {
-    width: 100%;
-    padding: 15px;
-  }
-  input, button {
-    font-size: 0.9rem;
-    padding: 8px;
-  }
-  #messages {
-    max-height: 50vh;
-  }
-  h1 {
-    font-size: 2em;
-  }
-}
-
-@media (min-width: 600px) and (max-width: 900px) {
-  #login-container, #chat-container {
-    width: 80%;
-  }
-  h1 {
-    font-size: 2.5em;
-  }
-}
-/* =========== NOUVELLE BULLE DE CHAT ========== */
-
+/* === MESSAGE BUBBLES === */
 .message {
-  max-width: 85%;
-  margin-bottom: 14px;
-  padding: 12px 16px;
-  border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  font-size: 1rem;
-  position: relative;
+  max-width: 75%;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 15px;
   word-wrap: break-word;
-  line-height: 1.5;
+  position: relative;
+  font-size: 0.95rem;
 }
 
 .message.user1 {
   align-self: flex-end;
   background: linear-gradient(135deg, #4f46e5, #6d28d9);
-  color: #fff;
-  border-bottom-right-radius: 4px;
+  color: white;
+  border-bottom-right-radius: 5px;
 }
 
 .message.user2 {
   align-self: flex-start;
-  background-color: #333;
+  background-color: #3a3a3a;
   color: #fff;
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 5px;
 }
 
-/* ========== TIMESTAMP MODERNE ========== */
 .message .timestamp {
   font-size: 0.75rem;
-  color: #bbb;
-  text-align: right;
+  color: #aaa;
   margin-top: 6px;
+  text-align: right;
 }
 
-/* ========== USERNAME MODERNE ========== */
-.username {
-  font-size: 0.8rem;
-  font-weight: 500;
-  margin-bottom: 4px;
-  opacity: 0.8;
-  color: #ffd700;
+/* === EMOJI PICKER === */
+#emoji-picker {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #222;
+  border-radius: 10px;
+  padding: 10px;
+  position: absolute;
+  bottom: 70px;
+  left: 10px;
+  max-width: 220px;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 
-/* ========== REACTION MODERNE ========== */
-.reaction-emoji {
+.emoji {
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 5px;
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+.emoji:hover {
+  transform: scale(1.2);
+}
+
+/* === INPUT SECTION === */
+#input-section {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#message-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: white;
+}
+
+#input-section button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #333;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+#input-section button:hover {
+  background: #444;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 600px) {
+  #login-container, #chat-container {
+    width: 90%;
+    padding: 15px;
+  }
+  #messages {
+    max-height: 300px;
+  }
+  .message {
+    max-width: 85%;
+    font-size: 0.9rem;
+  }
+}
+    .emoji {
   font-size: 1.5rem;
-  animation: floatUp 0.4s ease;
+  margin: 4px;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-@keyframes floatUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.emoji:hover {
+  transform: scale(1.3);
 }
 
 </style>
+
 
 </head>
 <body>
@@ -358,9 +300,8 @@ body {
     <button onclick="quitRoom()">Quitter</button>
 </div>
 
-        <div id="emoji-picker" style="display: none;">
-    <!-- Emoji Picker Content -->
-</div>
+<div id="emoji-picker" style="display: none;"></div>
+
     </div>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
         &copy; RoberiX 2025
