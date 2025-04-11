@@ -7,13 +7,49 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <!-- HTML refondu : Interface chat + messages modernisés + boutons stylés -->
- <style>
+  <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #1f1f2e;
       color: #fff;
       margin: 0;
       padding: 0;
+    }
+
+    /* === En-tête sticky moderne === */
+    #chat-header {
+      position: sticky;
+      top: 0;
+      background: #2a2a3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 100;
+      border-bottom: 1px solid #444;
+    }
+
+    #chat-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      color: #ffd700;
+      flex: 1;
+      text-align: center;
+    }
+
+    #logout-btn {
+      background: #ff4c4c;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    #logout-btn:hover {
+      background: #ff1a1a;
     }
 
     .login-wrapper {
@@ -79,21 +115,14 @@
       display: none;
       max-width: 900px;
       margin: 0 auto;
-      padding: 1rem;
-    }
-
-    #room-name-display {
-      text-align: center;
-      font-size: 1.5rem;
-      color: #ffd700;
-      margin-bottom: 1rem;
+      padding: 0;
     }
 
     #user-list {
       background-color: #2a2a3a;
       border-radius: 10px;
       padding: 10px;
-      margin-bottom: 20px;
+      margin: 20px;
     }
 
     #user-list h2 {
@@ -130,10 +159,26 @@
       gap: 12px;
       max-height: 400px;
       overflow-y: auto;
-      padding: 10px;
+      padding: 10px 20px;
       background: #1c1c28;
       border-radius: 10px;
-      margin-bottom: 15px;
+      margin: 10px 20px 15px;
+    }
+
+    .message-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.75rem;
+      color: #ccc;
+      margin-bottom: 4px;
+      padding: 0 4px;
     }
 
     .message {
@@ -144,36 +189,15 @@
       word-wrap: break-word;
       position: relative;
       animation: fadeInUp 0.3s ease-out;
-      display: flex;
-      flex-direction: column;
       background: #444;
     }
 
-    .message-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .username {
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #ffd700;
-    }
-
-    .timestamp {
-      font-size: 0.7rem;
-      color: #aaa;
-      text-align: right;
-    }
-
-    .user1 {
+    .user1 .message {
       align-self: flex-end;
       background: #2c84ff;
     }
 
-    .user2 {
+    .user2 .message {
       align-self: flex-start;
       background: #3a3a3a;
     }
@@ -193,6 +217,7 @@
       gap: 6px;
       margin-top: 4px;
       justify-content: flex-end;
+      padding: 0 4px;
     }
 
     .reaction-emoji {
@@ -208,7 +233,7 @@
     #input-section {
       display: flex;
       gap: 8px;
-      margin-top: 10px;
+      margin: 10px 20px;
       flex-wrap: wrap;
     }
 
@@ -259,7 +284,7 @@
       background-color: #2a2a3a;
       padding: 10px;
       border-radius: 8px;
-      margin-bottom: 10px;
+      margin: 10px 20px;
       color: #fff;
       position: relative;
     }
