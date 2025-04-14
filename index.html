@@ -393,6 +393,15 @@
 #image-popup[style*="display: flex"] img {
     transform: scale(1);
 }
+.container-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+}
 
 </style>
 
@@ -413,6 +422,7 @@
     </div>
 
     <!-- Section de chat -->
+ <div class="container container-chat">  
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
 <div id="user-list">
@@ -462,6 +472,7 @@
     <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
   </div>
 </div>
+     </div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
     var firebaseConfig = {
