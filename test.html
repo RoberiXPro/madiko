@@ -141,17 +141,17 @@
   </style>
 </head>
 <body>
-  <!-- Page d'accueil de connexion -->
+   <!-- Page d'accueil de connexion -->
   <div id="login-container" class="login-wrapper">
     <div class="login-card">
       <h2 class="login-title">Connexion à RS-Villa</h2>
       <div class="input-group">
         <label for="username">👤 Votre pseudo</label>
-        <input type="text" id="username"/>
+        <input type="text" id="username" placeholder="Ex: Roberix" />
       </div>
       <div class="input-group">
         <label for="room-name-input">🏠 Nom de la Villa</label>
-        <input type="text" id="room-name-input" />
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
       </div>
       <div class="input-group">
         <label for="password-input">🔒 Mot de passe</label>
@@ -181,7 +181,7 @@
     <div id="messages"></div>
 
     <div id="audio-preview" style="display:none;">
-      <audio id="audio-player" controls></audio><br>
+      <audio id="audio-player" controls></audio><br />
       <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
       <button onclick="cancelAudio()" class="btn-cancel-audio">❌ Annuler</button>
     </div>
@@ -191,7 +191,7 @@
       <input type="text" id="message-input" placeholder="Message..." />
       <button class="icon-btn" onclick="sendMessage()" title="Envoyer">📤</button>
       <button class="icon-btn" id="record-btn" onclick="toggleRecording()" title="Audio">🎙️</button>
-      <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+      <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)" />
       <button class="icon-btn" onclick="document.getElementById('image-input').click()" title="Image">🖼️</button>
       <button class="icon-btn" onclick="toggleAllMessages()" title="Voir tout">👁️</button>
     </div>
