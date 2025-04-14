@@ -6,8 +6,8 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-<style>
-  body {
+  <style>
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -185,14 +185,31 @@
       border-radius: 8px;
       color: #fff;
       max-width: 70%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
     }
     .message.user1 {
       background: linear-gradient(to right, #8e44ad, #3498db);
       align-self: flex-end;
+      border-radius: 10px 10px 0 10px;
     }
     .message.user2 {
       background: linear-gradient(to right, #95a5a6, #7f8c8d);
       align-self: flex-start;
+      border-radius: 10px 10px 10px 0;
+    }
+    .msg-text {
+      margin-bottom: 5px;
+    }
+    .citation {
+      background-color: #444;
+      padding: 5px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      font-style: italic;
+      color: #ccc;
     }
     #input-container {
       display: flex;
@@ -218,7 +235,7 @@
     #input-container button:hover {
       background-color: #ffc400;
     }
-</style>
+  </style>
 
 </head>
 <body>
@@ -250,57 +267,43 @@
 
 
     <!-- Section de chat -->
- <div class="container container-chat">  
-    <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
-<div id="user-list">
-        <h2>Utilisateurs connectés</h2>
-        <ul id="online-users">
-            <!-- Les utilisateurs et leur statut seront ajoutés ici -->
-        </ul>
+  <div id="chat-container">
+    <div id="room-name-display"></div>
+    <div id="user-list">
+      <h2>Utilisateurs connectés</h2>
+      <ul id="online-users"></ul>
     </div>
-        <!-- Section pour répondre à un message -->
-        <div id="reply-container">
-            <span id="reply-message"></span>
-            <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
-        </div>
-
-        <div id="messages"></div>
-<div id="audio-preview" style="display:none; margin-top:10px;">
-  <audio id="audio-player" controls></audio>
-  <br>
-  <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
-  <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
-</div>
-
-<div id="input-section">
-    <button onclick="toggleEmojiPicker()">😊</button>
-    <input type="text" id="message-input" placeholder="Écrivez un message">
-    <button onclick="sendMessage()">Envoyer</button>
-    <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-
-    <!-- BOUTON IMAGE -->
-    <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-    <button onclick="document.getElementById('image-input').click()">🖼️</button>
-
-    <button onclick="toggleAllMessages()">Afficher tous</button>
-    <button onclick="quitRoom()">Quitter</button>
-</div>
-
-        <div id="emoji-picker" style="display: none;">
-    <!-- Emoji Picker Content -->
-</div>
+    <div id="reply-container" style="display:none; background-color:#444; padding:5px; border-radius:5px; margin-bottom:10px; color:#fff;">
+      <span id="reply-message"></span>
+      <button onclick="cancelReply()" style="float:right; background-color:#e74c3c; color:white; border:none; border-radius:5px; padding:5px;">Annuler</button>
+    </div>
+    <div id="messages"></div>
+    <div id="input-section">
+      <button onclick="toggleEmojiPicker()">😊</button>
+      <input type="text" id="message-input" placeholder="Écrivez un message">
+      <button onclick="sendMessage()">Envoyer</button>
+      <button onclick="toggleRecording()" id="record-btn">🎙️</button>
+      <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+      <button onclick="document.getElementById('image-input').click()">🖼️</button>
+      <button onclick="toggleAllMessages()">Afficher tous</button>
+      <button onclick="quitRoom()">Quitter</button>
+    </div>
+    <div id="emoji-picker" style="display:none;"></div>
+    <div id="audio-preview" style="display:none; margin-top:10px;">
+      <audio id="audio-player" controls></audio><br>
+      <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
+      <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
     </div>
     <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-        &copy; RoberiX 2025
+      &copy; RoberiX 2025
     </footer>
-<div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-  <div id="popup-inner" style="position: relative;">
-    <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
-    <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
+    <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
+      <div id="popup-inner" style="position: relative;">
+        <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
+        <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
+      </div>
+    </div>
   </div>
-</div>
-     </div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
     var firebaseConfig = {
