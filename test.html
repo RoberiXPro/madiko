@@ -1,376 +1,303 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RS-Villa - Room sécurisé</title>
-    <!-- Inclure Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-    <!-- Inclure Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Variables pour les thèmes */
-        :root {
-            --bg-color: #1f1f1f;
-            --text-color: #ffffff;
-            --accent-color: #3498db;
-            --secondary-color: rgba(46, 46, 46, 0.9);
-            --glass-bg: rgba(60, 60, 60, 0.5);
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .theme-light {
-            --bg-color: #f5f5f5;
-            --text-color: #333333;
-            --accent-color: #2980b9;
-            --secondary-color: rgba(240, 240, 240, 0.9);
-            --glass-bg: rgba(255, 255, 255, 0.5);
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            animation: fadeIn 0.5s ease;
-        }
-
-        .glass-effect {
-            background: var(--glass-bg);
-            box-shadow: var(--shadow);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1, h2, h3 {
-            color: var(--accent-color);
-            margin: 0 0 20px;
-        }
-
-        .input-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .input-group i {
-            margin-right: 10px;
-            color: var(--accent-color);
-        }
-
-        input, button {
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        input {
-            flex: 1;
-            background: var(--secondary-color);
-            color: var(--text-color);
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-cancel {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-cancel:hover {
-            background: #c0392b;
-        }
-
-        .btn-icon {
-            background: var(--secondary-color);
-            color: var(--text-color);
-            padding: 10px;
-            font-size: 1.2rem;
-        }
-
-        .btn-icon:hover {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-        }
-
-        .user-list {
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--secondary-color);
-            border-radius: 10px;
-        }
-
-        .user-list ul {
-            list-style: none;
-            padding: 0;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .user-list li {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            margin-bottom: 5px;
-            background: var(--glass-bg);
-            border-radius: 5px;
-        }
-
-        .user-list li i {
-            margin-right: 10px;
-        }
-
-        .		 {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 15px;
-            background: var(--secondary-color);
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .message {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 10px;
-            max-width: 70%;
-            position: relative;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.user1 {
-            align-self: flex-end;
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .message.user2 {
-            align-self: flex-start;
-            background: var(--glass-bg);
-            color: var(--text-color);
-        }
-
-        .message .username {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .message .timestamp {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
-            align-self: flex-end;
-        }
-
-        .reply-box {
-            background: var(--secondary-color);
-            padding: 10px;
-            border-left: 3px solid var(--accent-color);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .input-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .emoji-picker {
-            position: absolute;
-            bottom: 70px;
-            left: 20px;
-            background: var(--secondary-color);
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-        }
-
-        .emoji {
-            font-size: 1.5rem;
-            cursor: pointer;
-            margin: 5px;
-            transition: transform 0.2s;
-        }
-
-        .emoji:hover {
-            transform: scale(1.2);
-        }
-
-        #image-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        #popup-inner {
-            position: relative;
-        }
-
-        #popup-img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 10px;
-        }
-
-        #close-popup-btn {
-            position: absolute;
-            top: -15px;
-            right: -15px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        @media (max-width: 600px) {
-            .container { width: 95%; padding: 15px; }
-            .messages { max-height: 50vh; }
-            .input-section { flex-wrap: wrap; }
-        }
-
-        /* Animation pour l'enregistrement */
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
-
-        .recording {
-            animation: pulse 1.5s infinite;
-            background: #e74c3c;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RS-Villa - Room sécurisé</title>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Tous les styles combinés ici : Login, Chat, Thèmes */
+    :root {
+      --bg-color: #1f1f1f;
+      --text-color: #ffffff;
+      --accent-color: #3498db;
+      --secondary-color: rgba(46, 46, 46, 0.9);
+      --glass-bg: rgba(60, 60, 60, 0.5);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .theme-light {
+      --bg-color: #f5f5f5;
+      --text-color: #333333;
+      --accent-color: #2980b9;
+      --secondary-color: rgba(240, 240, 240, 0.9);
+      --glass-bg: rgba(255, 255, 255, 0.5);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      padding: 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.5s ease;
+      background: var(--glass-bg);
+      box-shadow: var(--shadow);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1, h2, h3 {
+      color: var(--accent-color);
+      margin: 0 0 20px;
+    }
+    .input-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .input-group i {
+      margin-right: 10px;
+      color: var(--accent-color);
+    }
+    input, button {
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    input {
+      flex: 1;
+      background: var(--secondary-color);
+      color: var(--text-color);
+    }
+    button { cursor: pointer; }
+    .btn-primary { background: var(--accent-color); color: white; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-cancel { background: #e74c3c; color: white; }
+    .btn-cancel:hover { background: #c0392b; }
+    .btn-icon {
+      background: var(--secondary-color);
+      color: var(--text-color);
+      padding: 10px;
+      font-size: 1.2rem;
+    }
+    .btn-icon:hover { background: var(--accent-color); color: white; }
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .theme-toggle { background: none; border: none; font-size: 1.5rem; }
+    .user-list {
+      margin-bottom: 20px;
+      padding: 10px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+    }
+    .user-list ul {
+      list-style: none;
+      padding: 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .user-list li {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      margin-bottom: 5px;
+      background: var(--glass-bg);
+      border-radius: 5px;
+    }
+    .user-list li i[data-lucide="circle"] { color: green; margin-right: 5px; }
+    .user-list li i[data-lucide="circle-off"] { color: gray; margin-right: 5px; }
+    .messages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 15px;
+      background: var(--secondary-color);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 70%;
+      position: relative;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message.user1 {
+      align-self: flex-end;
+      background: var(--accent-color);
+      color: white;
+    }
+    .message.user2 {
+      align-self: flex-start;
+      background: var(--glass-bg);
+      color: var(--text-color);
+    }
+    .message .username {
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+    .message .timestamp {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-left: 10px;
+    }
+    .reply-box {
+      background: var(--secondary-color);
+      padding: 10px;
+      border-left: 3px solid var(--accent-color);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .input-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .emoji-picker {
+      position: absolute;
+      bottom: 70px;
+      left: 20px;
+      background: var(--secondary-color);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      display: none;
+      flex-wrap: wrap;
+    }
+    .emoji {
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+    .emoji:hover { transform: scale(1.2); }
+    #image-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #popup-inner { position: relative; }
+    #popup-img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 10px;
+    }
+    #close-popup-btn {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .container { width: 95%; padding: 15px; }
+      .messages { max-height: 50vh; }
+      .input-section { flex-wrap: wrap; }
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+    .recording {
+      animation: pulse 1.5s infinite;
+      background: #e74c3c;
+      color: white;
+    }
+  </style>
 </head>
 <body class="theme-dark">
-    <div class="app-container">
-        <!-- Page de login -->
-        <div id="login-container" class="container glass-effect">
-            <h1>RS-Villa</h1>
-            <div class="input-group">
-                <i data-lucide="user"></i>
-                <input type="text" id="username" placeholder="Votre pseudo" required aria-label="Pseudo">
-            </div>
-            <div class="input-group">
-                <i data-lucide="home"></i>
-                <input type="text" id="room-name-input" placeholder="Nom de la Villa" required aria-label="Nom de la Villa">
-            </div>
-            <div class="input-group">
-                <i data-lucide="lock"></i>
-                <input type="password" id="password-input" placeholder="Mot de passe" required aria-label="Mot de passe">
-            </div>
-            <button onclick="joinRoom()" class="btn-primary">Entrez dans la Villa</button>
-        </div>
-
-        <!-- Interface de chat -->
-        <div id="chat-container" class="container glass-effect" style="display: none;">
-            <header class="chat-header">
-                <h2 id="room-name-display"></h2>
-                <button class="theme-toggle" aria-label="Changer de thème" onclick="toggleTheme()">
-                    <i data-lucide="moon"></i>
-                </button>
-            </header>
-            <div class="user-list">
-                <h3>Utilisateurs connectés</h3>
-                <ul id="online-users"></ul>
-            </div>
-            <div id="messages" class="messages"></div>
-            <div id="reply-container" class="reply-box" style="display: none;">
-                <span id="reply-message"></span>
-                <button onclick="cancelReply()" class="btn-cancel">✖</button>
-            </div>
-            <div id="audio-preview" style="display: none; margin-top: 10px;">
-                <audio id="audio-player" controls></audio>
-                <button onclick="uploadAudio()" class="btn-primary">✅ Envoyer</button>
-                <button onclick="cancelAudio()" class="btn-cancel">❌ Annuler</button>
-            </div>
-            <div id="input-section" class="input-section">
-                <button class="btn-icon" onclick="toggleEmojiPicker()" aria-label="Ouvrir le sélecteur d'emojis">😊</button>
-                <input type="text" id="message-input" placeholder="Écrivez un message" aria-label="Message">
-                <button onclick="sendMessage()" class="btn-primary">Envoyer</button>
-                <button id="record-btn" onclick="toggleRecording()" class="btn-icon" aria-label="Enregistrer un message vocal">🎙️</button>
-                <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-                <button onclick="document.getElementById('image-input').click()" class="btn-icon" aria-label="Envoyer une image">🖼️</button>
-                <button onclick="quitRoom()" class="btn-cancel">Quitter</button>
-            </div>
-            <div id="emoji-picker" class="emoji-picker" style="display: none;"></div>
-            <div id="image-popup" style="display: none;">
-                <div id="popup-inner">
-                    <img id="popup-img" alt="Image agrandie">
-                    <button id="close-popup-btn" aria-label="Fermer l'image">✖</button>
-                </div>
-            </div>
-        </div>
+  <div class="app-container">
+    <div id="login-container" class="container">
+      <h1>RS-Villa</h1>
+      <div class="input-group">
+        <i data-lucide="user"></i>
+        <input type="text" id="username" placeholder="Votre pseudo" required aria-label="Pseudo">
+      </div>
+      <div class="input-group">
+        <i data-lucide="home"></i>
+        <input type="text" id="room-name-input" placeholder="Nom de la Villa" required aria-label="Nom de la Villa">
+      </div>
+      <div class="input-group">
+        <i data-lucide="lock"></i>
+        <input type="password" id="password-input" placeholder="Mot de passe" required aria-label="Mot de passe">
+      </div>
+      <button onclick="joinRoom()" class="btn-primary">Entrez dans la Villa</button>
     </div>
+    <div id="chat-container" class="container" style="display: none;">
+      <header class="chat-header">
+        <h2 id="room-name-display"></h2>
+        <button class="theme-toggle" aria-label="Changer de thème" onclick="toggleTheme()">
+          <i data-lucide="moon"></i>
+        </button>
+      </header>
+      <div class="user-list">
+        <h3>Utilisateurs connectés</h3>
+        <ul id="online-users"></ul>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div id="reply-container" class="reply-box" style="display: none;">
+        <span id="reply-message"></span>
+        <button onclick="cancelReply()" class="btn-cancel">✖</button>
+      </div>
+      <div id="audio-preview" style="display: none; margin-top: 10px;">
+        <audio id="audio-player" controls></audio>
+        <button onclick="uploadAudio()" class="btn-primary">✅ Envoyer</button>
+        <button onclick="cancelAudio()" class="btn-cancel">❌ Annuler</button>
+      </div>
+      <div id="input-section" class="input-section">
+        <button class="btn-icon" onclick="toggleEmojiPicker()" aria-label="Ouvrir le sélecteur d'emojis">😊</button>
+        <input type="text" id="message-input" placeholder="Écrivez un message" aria-label="Message">
+        <button onclick="sendMessage()" class="btn-primary">Envoyer</button>
+        <button id="record-btn" onclick="toggleRecording()" class="btn-icon" aria-label="Enregistrer un message vocal">🎙️</button>
+        <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+        <button onclick="document.getElementById('image-input').click()" class="btn-icon" aria-label="Envoyer une image">🖼️</button>
+        <button onclick="quitRoom()" class="btn-cancel">Quitter</button>
+      </div>
+      <div id="emoji-picker" class="emoji-picker"></div>
+      <div id="image-popup">
+        <div id="popup-inner">
+          <img id="popup-img" alt="Image agrandie">
+          <button id="close-popup-btn" aria-label="Fermer l'image">✖</button>
+        </div>
+      </div>
+    </div>
+  </div>
     <script>
         // Configuration Firebase
         var firebaseConfig = {
@@ -424,7 +351,20 @@
             initializeUserListeners();
             setOnlineStatus();
         }
+// Afficher la popup au clic
+msgDiv.innerHTML = `<img src="${data.imageUrl}" class="image-message" onclick="showPopup('${data.imageUrl}')">`;
+function showPopup(imageUrl) {
+    const popup = document.getElementById("image-popup");
+    popup.innerHTML = `<img src="${imageUrl}"> <button onclick="popup.style.display='none'">X</button>`;
+    popup.style.display = "block";
+}
 
+// Fermer avec Échap
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        document.getElementById("image-popup").style.display = "none";
+    }
+});
         // Gestion des utilisateurs connectés
         function initializeUserListeners() {
             var usersRef = db.child("onlineUsers");
@@ -479,7 +419,17 @@
             db.child("messages").push(msgData);
             input.value = "";
         }
-
+function updateUserStatusUI(user, status) {
+    let li = document.getElementById("user-" + user);
+    if (!li) {
+        li = document.createElement("li");
+        li.id = "user-" + user;
+        li.innerHTML = `<i data-lucide="${status === 'en ligne' ? 'circle' : 'circle-off'}"></i> ${user}`;
+        document.getElementById("online-users").appendChild(li);
+    }
+    li.querySelector("i").setAttribute("data-lucide", status === "en ligne" ? "circle" : "circle-off");
+    lucide.createIcons(); // Mise à jour des icônes
+}
         // Chargement des messages
         function loadMessages() {
             db.child("messages").on("child_added", snapshot => displayMessage(snapshot.key, snapshot.val()));
@@ -533,7 +483,27 @@
             }
             picker.style.display = picker.style.display === "none" ? "flex" : "none";
         }
+// Ajouter un bouton emoji dans l’affichage des messages
+msgDiv.innerHTML += `<button class="btn-icon" onclick="toggleReactionPicker('${messageId}')"><i data-lucide="smile"></i></button>`;
 
+// Afficher/masquer le sélecteur d’emojis
+function toggleReactionPicker(messageId) {
+    const picker = document.getElementById(`reaction-picker-${messageId}`);
+    picker.style.display = picker.style.display === "none" ? "block" : "none";
+}
+
+// Créer un sélecteur d’emojis
+const emojis = ["😊", "👍", "❤️", "😂"];
+const reactionPicker = document.createElement("div");
+reactionPicker.id = `reaction-picker-${messageId}`;
+reactionPicker.className = "reaction-picker";
+emojis.forEach(emoji => {
+    const span = document.createElement("span");
+    span.textContent = emoji;
+    span.onclick = () => addReaction(messageId, emoji);
+    reactionPicker.appendChild(span);
+});
+msgDiv.appendChild(reactionPicker);
         // Enregistrement vocal
         function toggleRecording() {
             var btn = document.getElementById("record-btn");
@@ -568,7 +538,12 @@
             reader.readAsDataURL(new Blob(audioChunks));
             document.getElementById("audio-preview").style.display = "none";
         }
-
+if (data.type === "audio") {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = data.audioUrl; // Assurez-vous que c’est une URL valide ou utilisez URL.createObjectURL pour les blobs
+    msgDiv.appendChild(audio);
+}
         function cancelAudio() {
             document.getElementById("audio-preview").style.display = "none";
         }
