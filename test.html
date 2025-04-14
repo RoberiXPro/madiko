@@ -6,52 +6,28 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
+      height: 100%; margin: 0; padding: 0;
       font-family: 'Arial', sans-serif;
       background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
       color: #ffffff;
     }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      width: 100%;
-      padding: 20px;
-    }
-
-    #login-container, #chat-container {
-      width: 100%;
-      max-width: 800px;
-      background: rgba(60, 60, 60, 0.95);
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-      display: none;
-    }
-
+    /************ LOGIN ************/
     #login-container {
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: fadeIn 0.5s ease;
+      min-height: 100vh;
     }
 
     .login-card {
-      width: 100%;
-      max-width: 400px;
-      padding: 30px;
       background: #2a2a3a;
+      padding: 30px;
       border-radius: 12px;
+      width: 100%; max-width: 400px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
 
@@ -69,44 +45,45 @@
       margin-bottom: 25px;
     }
 
-    .input-group {
-      margin-bottom: 15px;
-    }
+    .input-group { margin-bottom: 15px; }
 
     .input-group label {
-      display: block;
-      margin-bottom: 5px;
-      color: #ccc;
+      display: block; margin-bottom: 5px; color: #ccc;
     }
 
     .input-group input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      background: #444;
-      color: #fff;
+      width: 100%; padding: 10px;
+      border-radius: 6px; border: none;
+      background: #444; color: #fff;
     }
 
     .login-button {
-      width: 100%;
-      background: #ffd700;
-      color: #1f1f2e;
-      padding: 12px;
-      font-weight: bold;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      width: 100%; background: #ffd700; color: #1f1f2e;
+      padding: 12px; font-weight: bold;
+      font-size: 1rem; border: none;
+      border-radius: 8px; cursor: pointer;
       transition: background 0.2s ease;
     }
 
-    .login-button:hover {
-      background: #ffc400;
+    .login-button:hover { background: #ffc400; }
+
+    /************ CHAT ************/
+    .container-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
     }
 
     #chat-container {
-      flex-direction: column;
+      width: 70%;
+      max-width: 800px;
+      background: rgba(60, 60, 60, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
       display: none;
     }
 
@@ -114,25 +91,107 @@
       font-size: 1.5em;
       font-weight: bold;
       color: #ffd700;
+      margin-bottom: 10px;
       text-align: center;
-      margin-bottom: 20px;
     }
 
     #user-list {
+      margin-top: 15px;
+      padding: 10px;
       background-color: #333;
       border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 20px;
       color: #ffd700;
+      width: 100%;
+      max-width: 350px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      text-align: left;
     }
 
     #messages {
-      background: #2e2e2e;
-      padding: 10px;
-      border-radius: 8px;
       max-height: 300px;
       overflow-y: auto;
+      padding: 10px;
+      background-color: #2e2e2e;
+      border-radius: 5px;
       margin-bottom: 10px;
+    }
+
+    .message {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      word-wrap: break-word;
+      max-width: 70%;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .message.user1 {
+      background: linear-gradient(to right, #8e44ad, #3498db);
+      align-self: flex-end;
+      border-radius: 10px 10px 0 10px;
+    }
+
+    .message.user2 {
+      background: linear-gradient(to right, #95a5a6, #7f8c8d);
+      align-self: flex-start;
+      border-radius: 10px 10px 10px 0;
+    }
+
+    .username.user1, .username.user2 {
+      display: inline-block;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #fff;
+      padding: 5px 8px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
+
+    .username.user1 {
+      background: linear-gradient(135deg, #3498db, #8e44ad);
+    }
+
+    .username.user2 {
+      background: linear-gradient(135deg, #f39c12, #e74c3c);
+    }
+
+    .reaction-container {
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #ffd700;
+    }
+
+    .emoji-btn {
+      font-size: 1rem;
+      background: transparent;
+      border: none;
+      color: #ffd700;
+      cursor: pointer;
+    }
+
+    .emoji-picker-message {
+      display: none;
+      position: absolute;
+      bottom: 25px;
+      right: 5px;
+      background-color: #333;
+      border-radius: 10px;
+      padding: 10px;
+      max-width: 200px;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .emoji {
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 5px;
     }
 
     #input-section {
@@ -172,49 +231,40 @@
       color: #999;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .flou { filter: blur(4px); transition: filter 0.3s ease; }
+    .message:hover .flou { filter: none; }
 
     @media (max-width: 600px) {
-      .container {
+      .container-chat {
         padding: 10px;
       }
-
-      #login-container, #chat-container {
-        padding: 15px;
-      }
-
-      h1 {
-        font-size: 1.8em;
+      #chat-container {
+        width: 100%;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <!-- Page login -->
-    <div id="login-container">
-      <div class="login-card">
-        <h1>RS-Villa</h1>
-        <h2 class="login-title">Connexion à RS-Villa</h2>
-        <div class="input-group">
-          <label for="username">👤 Votre pseudo</label>
-          <input type="text" id="username" placeholder="Ex: Roberix" />
-        </div>
-        <div class="input-group">
-          <label for="room-name-input">🏠 Nom de la Villa</label>
-          <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
-        </div>
-        <div class="input-group">
-          <label for="password-input">🔒 Mot de passe</label>
-          <input type="password" id="password-input" placeholder="*******" />
-        </div>
-        <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
+<div id="login-container">
+    <div class="login-card">
+      <h1>RS-Villa</h1>
+      <h2 class="login-title">Connexion à RS-Villa</h2>
+      <div class="input-group">
+        <label for="username">👤 Votre pseudo</label>
+        <input type="text" id="username" placeholder="Ex: Roberix" />
       </div>
+      <div class="input-group">
+        <label for="room-name-input">🏠 Nom de la Villa</label>
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" />
+      </div>
+      <div class="input-group">
+        <label for="password-input">🔒 Mot de passe</label>
+        <input type="password" id="password-input" placeholder="*******" />
+      </div>
+      <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
     </div>
+  </div>
 
     <!-- Chat container -->
     <div id="chat-container">
@@ -252,7 +302,6 @@
     </div>
 
     <footer>&copy; RoberiX 2025</footer>
-  </div>
 </body>
 
 <script>
