@@ -8,255 +8,110 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   
   <!-- CSS COMPLET avec LOGIN MODERNE + CHAT CENTRÉ & FIX UTILISATEURS -->
+ <!-- CSS restauré intégralement -->
   <style>
-    * { box-sizing: border-box; }
-
-    html, body {
-      height: 100%; margin: 0; padding: 0;
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
-      color: #ffffff;
-    }
-
-    /************ LOGIN ************/
-    #login-container {
+    body {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
+      font-family: 'Arial', sans-serif;
+      color: #ffffff;
+      margin: 0;
     }
-
+    #login-container, #chat-container {
+      width: 70%;
+      max-width: 800px;
+      background: rgba(60, 60, 60, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+      display: none;
+    }
+    #login-container {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
     .login-card {
       background: #2a2a3a;
       padding: 30px;
       border-radius: 12px;
-      width: 100%; max-width: 400px;
+      width: 100%;
+      max-width: 400px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     }
-
-    h1 {
-      font-size: 2.5em;
-      text-align: center;
-      color: #ffd700;
-      margin-bottom: 10px;
-    }
-
     .login-title {
       font-size: 1.2em;
       text-align: center;
       color: #eee;
       margin-bottom: 25px;
     }
-
-    .input-group { margin-bottom: 15px; }
-
-    .input-group label {
-      display: block; margin-bottom: 5px; color: #ccc;
-    }
-
-    .input-group input {
-      width: 100%; padding: 10px;
-      border-radius: 6px; border: none;
-      background: #444; color: #fff;
-    }
-
-    .login-button {
-      width: 100%; background: #ffd700; color: #1f1f2e;
-      padding: 12px; font-weight: bold;
-      font-size: 1rem; border: none;
-      border-radius: 8px; cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .login-button:hover { background: #ffc400; }
-
-    /************ CHAT ************/
-    .container-chat {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    #chat-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      max-width: 800px;
-      background: rgba(60, 60, 60, 0.95);
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-
-    #room-name-display {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: #ffd700;
+    .input-group {
       margin-bottom: 15px;
-      text-align: center;
     }
-
-    #user-list {
-      width: 100%;
-      background-color: #333;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 20px;
-      color: #ffd700;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    #user-list h2 {
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      color: #ffd700;
-      text-align: center;
-      text-shadow: 0 2px 5px rgba(255, 215, 0, 0.6);
-    }
-
-    #online-users {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    #online-users li {
-      display: flex;
-      align-items: center;
-      padding: 8px 12px;
-      border-radius: 5px;
-      background-color: #444;
-      margin-bottom: 6px;
-    }
-
-    .status-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 10px;
-      background-color: green;
-    }
-
-    .status-offline .status-indicator {
-      background-color: gray;
-    }
-
-    .user-status {
-      font-weight: 500;
-      color: #fff;
-      font-size: 1rem;
-    }
-
-    #messages {
-      max-height: 300px;
-      overflow-y: auto;
-      background-color: #2e2e2e;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
-      margin-bottom: 10px;
-    }
-
-    .message {
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 5px;
-      word-wrap: break-word;
-      max-width: 70%;
-      color: #fff;
-      position: relative;
-    }
-
-    .message.user1 {
-      background: linear-gradient(to right, #8e44ad, #3498db);
-      align-self: flex-end;
-      border-radius: 10px 10px 0 10px;
-    }
-
-    .message.user2 {
-      background: linear-gradient(to right, #95a5a6, #7f8c8d);
-      align-self: flex-start;
-      border-radius: 10px 10px 10px 0;
-    }
-
-    .username.user1, .username.user2 {
-      display: inline-block;
-      font-size: 0.9rem;
-      font-weight: bold;
-      color: #fff;
-      padding: 5px 8px;
-      border-radius: 6px;
+    .input-group label {
+      display: block;
       margin-bottom: 5px;
+      color: #ccc;
     }
-
-    .username.user1 {
-      background: linear-gradient(135deg, #3498db, #8e44ad);
-    }
-
-    .username.user2 {
-      background: linear-gradient(135deg, #f39c12, #e74c3c);
-    }
-
-    #input-section {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
+    .input-group input {
       width: 100%;
-    }
-
-    #input-section input[type="text"] {
-      flex: 1;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
       border: none;
-      background-color: #444;
+      background: #444;
       color: #fff;
     }
-
-    #input-section button {
-      padding: 10px 15px;
+    .login-button {
+      width: 100%;
+      background: #ffd700;
+      color: #1f1f2e;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 1rem;
       border: none;
-      border-radius: 5px;
-      background-color: #5a5a5a;
-      color: white;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s ease;
     }
-
-    #input-section button:hover {
-      background-color: #4c4c4c;
+    .login-button:hover {
+      background: #ffc400;
     }
-
-    .flou { filter: blur(4px); transition: filter 0.3s ease; }
-    .message:hover .flou { filter: none; }
-
-    footer {
-      margin-top: 30px;
+    h1 {
+      font-size: 3em;
+      color: #ffd700;
+      margin-bottom: 20px;
+      padding: 20px 40px;
+      border-radius: 15px;
       text-align: center;
-      font-size: 0.8em;
-      color: #999;
+      background: linear-gradient(135deg, #8800ff, #ff6600, #ffcc00, #ffd700);
+      background-size: 200% 200%;
+      animation: gradientBackground 4s ease infinite;
+      text-shadow: 0 0 10px #ffcc00, 0 0 20px #ff9900, 0 0 30px #ff6600, 0 0 40px #ff3300, 0 0 50px #ff0000;
+      border: 2px solid transparent;
+      border-image: linear-gradient(45deg, #ffd700, #ff6600, #ff3300, #8800ff);
+      border-image-slice: 1;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 165, 0, 0.5), 0 0 45px rgba(255, 99, 71, 0.4);
+      transition: transform 0.3s ease;
     }
-
-    @media (max-width: 600px) {
-      .container-chat {
-        padding: 10px;
-      }
-      #chat-container {
-        width: 100%;
-      }
+    @keyframes gradientBackground {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    h1:hover {
+      transform: scale(1.05);
+      text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
     }
   </style>
 </head>
-
 <body>
+  <h1>RS-Villa</h1>
+
   <div id="login-container">
     <div class="login-card">
-      <h1>RS-Villa</h1>
       <h2 class="login-title">Connexion à RS-Villa</h2>
       <div class="input-group">
         <label for="username">👤 Votre pseudo</label>
@@ -274,29 +129,24 @@
     </div>
   </div>
 
-  <div class="container-chat">
+  <div class="container container-chat">
     <div id="chat-container">
       <div id="room-name-display"></div>
-
       <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users"></ul>
       </div>
-
-      <div id="reply-container" style="display:none; margin-bottom:10px; width:100%;">
-        <span id="reply-message" style="font-style:italic; color:#ffd700;"></span>
-        <button onclick="cancelReply()" style="float:right; background-color:#e74c3c; color:white; border:none; border-radius:5px; padding:5px;">Annuler</button>
+      <div id="reply-container">
+        <span id="reply-message"></span>
+        <button onclick="cancelReply()">Annuler</button>
       </div>
-
       <div id="messages"></div>
-
-      <div id="audio-preview" style="display:none; margin-top:10px;">
+      <div id="audio-preview" style="display:none;">
         <audio id="audio-player" controls></audio>
         <br />
         <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
-        <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
+        <button onclick="cancelAudio()" style="background-color:#e74c3c;">❌ Annuler</button>
       </div>
-
       <div id="input-section">
         <button onclick="toggleEmojiPicker()">😊</button>
         <input type="text" id="message-input" placeholder="Écrivez un message" />
@@ -307,10 +157,9 @@
         <button onclick="toggleAllMessages()">Afficher tous</button>
         <button onclick="quitRoom()">Quitter</button>
       </div>
-
       <div id="emoji-picker" style="display:none;"></div>
     </div>
-    <footer>&copy; RoberiX 2025</footer>
+    <footer style="margin-top:20px; font-size:0.8rem; color:#999; text-align:center;">&copy; RoberiX 2025</footer>
   </div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
