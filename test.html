@@ -8,8 +8,8 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
   
   <!-- CSS COMPLET avec LOGIN MODERNE + CHAT CENTRÉ & FIX UTILISATEURS -->
- <!-- CSS restauré intégralement -->
   <style>
+    /* LOGIN CSS (code A) */
     body {
       display: flex;
       flex-direction: column;
@@ -21,18 +21,12 @@
       color: #ffffff;
       margin: 0;
     }
-    #login-container, #chat-container {
-      width: 70%;
-      max-width: 800px;
-      background: rgba(60, 60, 60, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-      display: none;
-    }
     #login-container {
-      display: block;
-      animation: fadeIn 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100vh;
     }
     .login-card {
       background: #2a2a3a;
@@ -105,6 +99,25 @@
       transform: scale(1.05);
       text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
     }
+
+    /* CHAT CSS (code B) */
+    .container-chat {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    #chat-container {
+      width: 70%;
+      max-width: 800px;
+      background: rgba(60, 60, 60, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -129,9 +142,10 @@
     </div>
   </div>
 
-  <div class="container container-chat">
+ <div class="container container-chat">
     <div id="chat-container">
-      <div id="room-name-display"></div>
+      <!-- ✅ Code HTML complet du chat (structure + contenu dynamique) à insérer ici -->
+      <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
       <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users"></ul>
@@ -142,8 +156,7 @@
       </div>
       <div id="messages"></div>
       <div id="audio-preview" style="display:none;">
-        <audio id="audio-player" controls></audio>
-        <br />
+        <audio id="audio-player" controls></audio><br />
         <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
         <button onclick="cancelAudio()" style="background-color:#e74c3c;">❌ Annuler</button>
       </div>
@@ -159,7 +172,9 @@
       </div>
       <div id="emoji-picker" style="display:none;"></div>
     </div>
-    <footer style="margin-top:20px; font-size:0.8rem; color:#999; text-align:center;">&copy; RoberiX 2025</footer>
+    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
+      &copy; RoberiX 2025
+    </footer>
   </div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
