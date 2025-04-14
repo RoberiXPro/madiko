@@ -7,6 +7,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 <style>
+    html, body {
+  height: 100%;
+}
     body {
         display: flex;
         flex-direction: column;
@@ -450,15 +453,10 @@
 
 </head>
 <body>
-    <h1>RS-Villa</h1>
-
-    <!-- Section de connexion -->
-    <div id="notification" style="display:none; background-color:#444; padding:10px; color:#fff; margin:10px 0; border-radius:5px; text-align:center;">
-    ✅ Connexion réussie
-</div>
    <!-- Page login moderne -->
 <div id="login-container" class="login-wrapper">
   <div class="login-card">
+          <h1>RS-Villa</h1>
     <h2 class="login-title">Connexion à RS-Villa</h2>
     <div class="input-group">
       <label for="username">👤 Votre pseudo</label>
