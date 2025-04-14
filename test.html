@@ -100,7 +100,96 @@
     #chat-container {
   display: none;
 }
-
+  #chat-container {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 960px;
+    height: 90vh;
+    background: rgba(30, 30, 40, 0.85);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    margin-top: 30px;
+  }
+  #user-list {
+    background: #222;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  #user-list h2 {
+    font-size: 1.2rem;
+    color: #ffd700;
+    margin-bottom: 10px;
+  }
+  #online-users li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    color: #fff;
+  }
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: green;
+  }
+  .status-offline .status-indicator {
+    background-color: gray;
+  }
+  #messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    background: #1c1c1c;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .message {
+    max-width: 60%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    position: relative;
+    background: #333;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .message.user1 {
+    align-self: flex-end;
+    background: linear-gradient(to right, #4a00e0, #8e2de2);
+    border-bottom-right-radius: 0;
+  }
+  .message.user2 {
+    align-self: flex-start;
+    background: linear-gradient(to right, #ff9966, #ff5e62);
+    border-bottom-left-radius: 0;
+  }
+  .message-header {
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .citation {
+    font-style: italic;
+    background: #444;
+    padding: 6px 10px;
+    border-left: 4px solid #3498db;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: #ccc;
+  }
+  .msg-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
   </style>
 </head>
 <body>
