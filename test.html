@@ -6,18 +6,17 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-  <style>
+<style>
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       font-family: 'Arial', sans-serif;
       color: #ffffff;
       margin: 0;
       padding: 0;
       background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     h1 {
       font-size: 3em;
@@ -98,18 +97,20 @@
     .login-button:hover {
       background: #ffc400;
     }
+
+    /* Chat Container CSS */
     #chat-container {
       display: none;
       flex-direction: column;
       justify-content: space-between;
-      width: 70%;
+      width: 100%;
       max-width: 900px;
       height: 90vh;
-      background: rgba(60, 60, 60, 0.9);
+      background: #1f1f1f;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       padding: 20px;
-      margin: 0 auto;
+      margin: 20px auto;
     }
     #room-name-display {
       font-size: 1.5em;
@@ -118,58 +119,20 @@
       margin-bottom: 10px;
     }
     #user-list {
-      margin-top: 15px;
       padding: 10px;
       background-color: #333;
       border-radius: 10px;
       color: #ffd700;
-      width: 100%;
-      max-width: 350px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      text-align: left;
-    }
-    #user-list h2 {
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      color: #ffd700;
-      text-align: center;
-      text-shadow: 0 2px 5px rgba(255, 215, 0, 0.6);
+      margin-bottom: 15px;
     }
     #online-users {
       list-style-type: none;
       padding: 0;
       margin: 0;
-      max-height: 200px;
-      overflow-y: auto;
     }
     #online-users li {
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      margin-bottom: 5px;
-      border-radius: 5px;
-      background-color: #444;
-      transition: background-color 0.3s ease;
-    }
-    #online-users li:hover {
-      background-color: #555;
-    }
-    .user-status {
-      font-weight: bold;
+      margin: 5px 0;
       color: #fff;
-      font-size: 1em;
-      margin-left: 10px;
-    }
-    .status-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 10px;
-      background-color: green;
-      transition: background-color 0.3s ease;
-    }
-    .status-offline .status-indicator {
-      background-color: gray;
     }
     #messages {
       flex-grow: 1;
@@ -178,44 +141,49 @@
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 250px;
     }
     .message {
-      margin-bottom: 10px;
       padding: 10px;
       border-radius: 8px;
       color: #fff;
       max-width: 70%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
       position: relative;
+      display: inline-block;
+      word-wrap: break-word;
     }
     .message.user1 {
       background: linear-gradient(to right, #8e44ad, #3498db);
       align-self: flex-end;
-      border-radius: 10px 10px 0 10px;
     }
     .message.user2 {
       background: linear-gradient(to right, #95a5a6, #7f8c8d);
       align-self: flex-start;
-      border-radius: 10px 10px 10px 0;
     }
-    .msg-text {
+    .username {
+      font-weight: bold;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
       margin-bottom: 5px;
     }
     .citation {
-      background-color: #444;
-      padding: 5px;
-      margin-bottom: 5px;
-      border-radius: 5px;
       font-style: italic;
-      color: #ccc;
+      background: #444;
+      padding: 5px;
+      border-left: 3px solid #3498db;
+      border-radius: 5px;
+      margin-bottom: 5px;
     }
-    #input-container {
+    #input-section {
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      align-items: center;
     }
-    #input-container input {
+    #message-input {
       flex: 1;
       padding: 10px;
       border-radius: 6px;
@@ -223,86 +191,74 @@
       background: #444;
       color: #fff;
     }
-    #input-container button {
-      background-color: #ffd700;
+    #input-section button {
+      background: #ffd700;
       color: #1f1f2e;
-      font-weight: bold;
       border: none;
       border-radius: 6px;
-      padding: 10px 20px;
+      padding: 10px;
+      font-weight: bold;
       cursor: pointer;
+      transition: background 0.2s ease;
     }
-    #input-container button:hover {
-      background-color: #ffc400;
+    #input-section button:hover {
+      background: #ffc400;
+    }
+    .emoji-picker-message {
+      position: absolute;
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: none;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .emoji {
+      cursor: pointer;
+      font-size: 1.4rem;
     }
   </style>
-
 </head>
 <body>
-
-    <!-- Section de connexion -->
-    <div id="notification" style="display:none; background-color:#444; padding:10px; color:#fff; margin:10px 0; border-radius:5px; text-align:center;">
-    ✅ Connexion réussie
-</div>
-
-<div id="login-container">
-        <h1>RS-Villa</h1>
-  <div class="login-card">
-    <h2 class="login-title">Connexion à RS-Villa</h2>
-    <div class="input-group">
-      <label for="username">👤 Votre pseudo</label>
-      <input type="text" id="username" placeholder="Ex: Roberix" required />
+  <div id="login-container">
+    <h1>RS-Villa</h1>
+    <div class="login-card">
+      <h2 class="login-title">Connexion à RS-Villa</h2>
+      <div class="input-group">
+        <label for="username">🕤 Votre pseudo</label>
+        <input type="text" id="username" placeholder="Ex: Roberix" required />
+      </div>
+      <div class="input-group">
+        <label for="room-name-input">🏠 Nom de la Villa</label>
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" required />
+      </div>
+      <div class="input-group">
+        <label for="password-input">🔐 Mot de passe</label>
+        <input type="password" id="password-input" placeholder="*******" required />
+      </div>
+      <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
     </div>
-    <div class="input-group">
-      <label for="room-name-input">🏠 Nom de la Villa</label>
-      <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" required />
-    </div>
-    <div class="input-group">
-      <label for="password-input">🔒 Mot de passe</label>
-      <input type="password" id="password-input" placeholder="*******" required />
-    </div>
-    <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
   </div>
-</div>
 
-
-    <!-- Section de chat -->
+  <!-- Interface de chat -->
   <div id="chat-container">
     <div id="room-name-display"></div>
     <div id="user-list">
       <h2>Utilisateurs connectés</h2>
       <ul id="online-users"></ul>
     </div>
-    <div id="reply-container" style="display:none; background-color:#444; padding:5px; border-radius:5px; margin-bottom:10px; color:#fff;">
-      <span id="reply-message"></span>
-      <button onclick="cancelReply()" style="float:right; background-color:#e74c3c; color:white; border:none; border-radius:5px; padding:5px;">Annuler</button>
-    </div>
     <div id="messages"></div>
     <div id="input-section">
       <button onclick="toggleEmojiPicker()">😊</button>
       <input type="text" id="message-input" placeholder="Écrivez un message">
       <button onclick="sendMessage()">Envoyer</button>
-      <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-      <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+      <button onclick="toggleRecording()">🎙️</button>
+      <input type="file" id="image-input" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
       <button onclick="document.getElementById('image-input').click()">🖼️</button>
-      <button onclick="toggleAllMessages()">Afficher tous</button>
       <button onclick="quitRoom()">Quitter</button>
     </div>
-    <div id="emoji-picker" style="display:none;"></div>
-    <div id="audio-preview" style="display:none; margin-top:10px;">
-      <audio id="audio-player" controls></audio><br>
-      <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
-      <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
-    </div>
-    <footer style="margin-top: 20px; font-size: 0.8rem; color: #999; text-align: center;">
-      &copy; RoberiX 2025
-    </footer>
-    <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
-      <div id="popup-inner" style="position: relative;">
-        <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
-        <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
-      </div>
-    </div>
+    <div id="emoji-picker" class="emoji-picker-message"></div>
   </div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
