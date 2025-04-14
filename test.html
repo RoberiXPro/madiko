@@ -277,11 +277,38 @@
   <div class="container-chat">
     <div id="chat-container">
       <div id="room-name-display"></div>
+
       <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users"></ul>
       </div>
-      <!-- Le reste de l'interface de chat (reply, messages, input, etc.) à insérer ici -->
+
+      <div id="reply-container" style="display:none; margin-bottom:10px; width:100%;">
+        <span id="reply-message" style="font-style:italic; color:#ffd700;"></span>
+        <button onclick="cancelReply()" style="float:right; background-color:#e74c3c; color:white; border:none; border-radius:5px; padding:5px;">Annuler</button>
+      </div>
+
+      <div id="messages"></div>
+
+      <div id="audio-preview" style="display:none; margin-top:10px;">
+        <audio id="audio-player" controls></audio>
+        <br />
+        <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
+        <button onclick="cancelAudio()" style="background-color:#e74c3c; color:white;">❌ Annuler</button>
+      </div>
+
+      <div id="input-section">
+        <button onclick="toggleEmojiPicker()">😊</button>
+        <input type="text" id="message-input" placeholder="Écrivez un message" />
+        <button onclick="sendMessage()">Envoyer</button>
+        <button onclick="toggleRecording()" id="record-btn">🎙️</button>
+        <input type="file" id="image-input" accept="image/*" multiple style="display:none;" onchange="handleImageUpload(event)">
+        <button onclick="document.getElementById('image-input').click()">🖼️</button>
+        <button onclick="toggleAllMessages()">Afficher tous</button>
+        <button onclick="quitRoom()">Quitter</button>
+      </div>
+
+      <div id="emoji-picker" style="display:none;"></div>
     </div>
     <footer>&copy; RoberiX 2025</footer>
   </div>
