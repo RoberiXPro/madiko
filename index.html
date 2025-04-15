@@ -592,9 +592,7 @@
     <!-- Emoji Picker Content -->
 </div>
     </div>
-    <footer>
-        &copy; RoberiX 2025
-    </footer>
+
 <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
   <div id="popup-inner" style="position: relative;">
     <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
@@ -666,50 +664,39 @@
     return `il y a ${diffDay}j`;
   }
     
-    function joinRoom() {
-    username = document.getElementById("username").value;
-    roomName = document.getElementById("room-name-input").value;
-    var password = document.getElementById("password-input").value;
+function joinRoom() {
+  username = document.getElementById("username").value;
+  roomName = document.getElementById("room-name-input").value;
+  var password = document.getElementById("password-input").value;
 
-    // Référence au room dans Firebase
-    db = firebase.database().ref("rooms/" + roomName);
+  db = firebase.database().ref("rooms/" + roomName);
 
-    // Vérifie l'existence et le mot de passe du room
-    db.once('value').then(function(snapshot) {
-        if (snapshot.exists()) {
-            var dbPassword = snapshot.child("password").val();
-            if (dbPassword === password) {
-                alert("Connexion réussie !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-
-                // Initialiser les listeners pour afficher les utilisateurs connectés
-                initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
-                setOnlineStatus();
-            } else {
-                alert("Mot de passe incorrect !");
-            }
-        } else {
-            // Créer le room si inexistant
-            db.set({
-                password: password,
-                messages: {}
-            }).then(() => {
-                alert("Room créé avec succès !");
-                document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-                switchToChat();
-
-                // Initialiser les listeners pour afficher les utilisateurs connectés
-                initializeUserListeners();
-
-                // Mettre à jour le statut de l'utilisateur en ligne
-                setOnlineStatus();
-            });
-        }
-    });
+  db.once('value').then(function(snapshot) {
+    if (snapshot.exists()) {
+      var dbPassword = snapshot.child("password").val();
+      if (dbPassword === password) {
+        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+        switchToChat();
+        initializeUserListeners();
+        setOnlineStatus();
+      } else {
+        alert("Mot de passe incorrect !");
+      }
+    } else {
+      // Room inexistant : on le crée
+      db.set({
+        password: password,
+        messages: {}
+      }).then(() => {
+        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+        switchToChat();
+        initializeUserListeners();
+        setOnlineStatus();
+      });
+    }
+  });
 }
+
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
