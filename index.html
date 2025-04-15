@@ -199,8 +199,14 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         position: absolute;
         bottom: 60px;
-        left: 20px;
+        right: 130px;
     }
+    @media (max-width: 600px) {
+  #emoji-picker {
+    right: 10px; /* ✅ Adapté pour mobile */
+    bottom: 70px; /* 🔁 Légèrement plus haut si besoin */
+  }
+}
 .emoji-picker-message {
   display: none;
   position: absolute;
@@ -858,6 +864,21 @@ function loadMessages() {
         const picker = document.getElementById("emoji-picker");
         picker.style.display = picker.style.display === "none" ? "flex" : "none";
     }
+// ✅ Gère la fermeture de l'emoji picker global
+document.addEventListener("click", function(event) {
+  const picker = document.getElementById("emoji-picker");
+  const emojiButton = document.querySelector("button[onclick='toggleEmojiPicker()']");
+  if (!picker.contains(event.target) && event.target !== emojiButton) {
+    picker.style.display = "none";
+  }
+});
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") {
+    const picker = document.getElementById("emoji-picker");
+    if (picker) picker.style.display = "none";
+  }
+});
 
     function loadEmojis() {
         const picker = document.getElementById("emoji-picker");
