@@ -322,6 +322,10 @@
       margin-bottom: 5px;
       display: inline-block;
     }
+.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
 
     .message.user2 .username-tag {
       background: #555;
@@ -948,11 +952,12 @@ function quitRoom() {
     location.reload();
 }
 // Pour les messages gauche à droite
- function displayMessage(key, data) {
+function displayMessage(key, data) {
   const msgDiv = document.createElement("div");
   msgDiv.id = key;
   msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
+  // 💬 Citation (réponse à un message)
   if (data.replyTo) {
     const replyDiv = document.createElement("div");
     replyDiv.className = "citation flou";
@@ -960,6 +965,7 @@ function quitRoom() {
     msgDiv.appendChild(replyDiv);
   }
 
+  // 🧠 Corps du message (texte / image / audio)
   let content;
   if (data.type === "audio") {
     content = document.createElement("audio");
@@ -986,12 +992,14 @@ function quitRoom() {
   msgDiv.appendChild(userTag);
   msgDiv.appendChild(content);
 
+  // ⏱️ Timestamp
   const time = document.createElement("div");
   time.className = "timestamp";
   time.textContent = formatTime(data.timestamp);
   msgDiv.dataset.timestamp = data.timestamp;
   msgDiv.appendChild(time);
 
+  // ❤️ Réactions live
   const reactionContainer = document.createElement("div");
   reactionContainer.className = "reaction-container";
   db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
@@ -1011,6 +1019,7 @@ function quitRoom() {
   });
   msgDiv.appendChild(reactionContainer);
 
+  // ⚙️ Boutons d'action
   const actions = document.createElement("div");
   actions.className = "action-buttons";
 
@@ -1056,31 +1065,28 @@ function quitRoom() {
   actions.appendChild(btnGroup);
   msgDiv.appendChild(actions);
 
+  // 👁️ Effet de flou dynamique
   if (content && content.classList.contains("flou")) {
     setTimeout(() => content.classList.add("flou"), 15000);
     msgDiv.onmouseover = () => content.classList.remove("flou");
     msgDiv.onmouseleave = () => content.classList.add("flou");
   }
-// ✅ Déclenche la suppression APRÈS que le message a été vu (survol)
-if (data.user !== username && !data.viewed) {
-  msgDiv.addEventListener("mouseenter", () => {
-    const messagePath = `rooms/${roomName}/messages/${key}`;
 
-    // Marque le message comme vu dans Firebase
-    firebase.database().ref(messagePath).update({ viewed: true });
+  // 🧽 Suppression automatique après survol
+  if (data.user !== username) {
+    msgDiv.addEventListener("mouseenter", () => {
+      msgDiv.classList.add("fade-out");
+      setTimeout(() => {
+        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+      }, 2000); // Laisse le temps à l'animation
+    }, { once: true });
+  }
 
-    // Supprime le message 2 minutes après survol
-    setTimeout(() => {
-      firebase.database().ref(messagePath).remove();
-    }, 0 * 60 * 1000); // 2 minutes
-
-  }, { once: true }); // le déclencheur ne se répète qu’une seule fois
-}
-
-
+  // 📥 Ajout final dans le DOM
   document.getElementById("messages").appendChild(msgDiv);
   scrollToBottom();
 
+  // 🔔 Notification visuelle/audio si l’onglet est inactif
   if (data.user !== username && document.visibilityState === 'hidden') {
     document.title = "💬 Nouveau message !";
     notificationSound.play().catch(() => {});
