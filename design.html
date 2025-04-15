@@ -304,6 +304,20 @@
   font-size: 1rem;
   line-height: 1.5;
 }
+.username-tag {
+  font-weight: bold;
+  color: #ffd700;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+    .message.user2 .username-tag {
+  background: #555;
+  color: #f1f1f1;
+}
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -314,12 +328,7 @@
     transform: translateY(0);
   }
 }
-    .username-tag {
-  font-weight: bold;
-  font-size: 0.85rem;
-  margin-bottom: 6px;
-  color: #ffd700;
-}
+
     .timestamp {
   font-size: 0.7rem;
   opacity: 0.6;
@@ -898,12 +907,6 @@ function displayMessage(key, data) {
   msgDiv.id = key;
   msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
-  // Nom de l’utilisateur
-  const userTag = document.createElement("div");
-  userTag.className = "username-tag";
-  userTag.textContent = data.user;
-  msgDiv.appendChild(userTag);
-
   // Si c’est une réponse
   if (data.replyTo) {
     const replyDiv = document.createElement("div");
@@ -911,7 +914,14 @@ function displayMessage(key, data) {
     replyDiv.textContent = "Réponse du : " + data.replyTo;
     msgDiv.appendChild(replyDiv);
   }
-
+// Nom de l’utilisateur (à styliser avec .username-tag)
+const userTag = document.createElement("div");
+userTag.className = "username-tag";
+userTag.textContent = data.user;
+msgDiv.appendChild(userTag);
+ // Message principal (texte, image, audio...)
+msgDiv.appendChild(content);
+    
   // Message principal (texte, image ou audio)
   let content;
   if (data.type === "audio") {
@@ -932,7 +942,6 @@ function displayMessage(key, data) {
     const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
     content.innerHTML = msg;
   }
-  msgDiv.appendChild(content);
 
   // Heure
   const time = document.createElement("div");
