@@ -1026,9 +1026,12 @@ msgDiv.appendChild(time);
     msgDiv.onmouseleave = () => content.classList.add("flou");
   }
     // 🔥 Supprimer automatiquement un message reçu après survol
+// 🔥 Supprimer un message reçu 120s après survol
 if (data.user !== username) {
   msgDiv.addEventListener("mouseenter", () => {
-    db.child(`rooms/${roomName}/messages/${key}`).remove();
+    setTimeout(() => {
+      firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+    }, 120000); // ⏱️ 120000 ms = 2 minutes
   }, { once: true });
 }
   document.getElementById("messages").appendChild(msgDiv);
