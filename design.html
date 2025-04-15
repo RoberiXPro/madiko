@@ -1072,7 +1072,7 @@ if (data.user !== username && !data.viewed) {
     // Supprime le message 2 minutes après survol
     setTimeout(() => {
       firebase.database().ref(messagePath).remove();
-    }, 2 * 60 * 1000); // 2 minutes
+    }, 0 * 60 * 1000); // 2 minutes
 
   }, { once: true }); // le déclencheur ne se répète qu’une seule fois
 }
