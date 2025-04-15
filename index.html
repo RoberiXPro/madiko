@@ -18,7 +18,7 @@
         color: #ffffff;
         margin: 0;
     }
-    #login-container, #chat-container {
+    #chat-container {
         width: 70%;
         max-width: 800px;
         background: rgba(60, 60, 60, 0.9);
@@ -27,10 +27,60 @@
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
         display: none;
     }
-    #login-container {
-        display: block;
-        animation: fadeIn 0.5s ease;
+ #login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 100vh;
     }
+    .login-card {
+      background: #2a2a3a;
+      padding: 30px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    }
+.login-title {
+      font-size: 1.2em;
+      text-align: center;
+      color: #eee;
+      margin-bottom: 25px;
+    }
+  .input-group {
+      margin-bottom: 15px;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #444;
+      color: #fff;
+    }
+    .login-button {
+      width: 100%;
+      background: #ffd700;
+      color: #1f1f2e;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .login-button:hover {
+      background: #ffc400;
+    }
+
     #reply-container {
         display: none;
         background-color: #444;
@@ -404,22 +454,27 @@
 }
 
 </style>
-
 </head>
 <body>
+   <div id="login-container">
     <h1>RS-Villa</h1>
-
-    <!-- Section de connexion -->
-    <div id="notification" style="display:none; background-color:#444; padding:10px; color:#fff; margin:10px 0; border-radius:5px; text-align:center;">
-    ✅ Connexion réussie
-</div>
-
-    <div id="login-container">
-        <input type="text" id="username" placeholder="Votre pseudo" required><br>
-        <input type="text" id="room-name-input" placeholder="Nom de la Villa" required><br>
-        <input type="password" id="password-input" placeholder="Mot de passe" required><br>
-        <button onclick="joinRoom()">Entrez dans la Villa</button>
+    <div class="login-card">
+      <h2 class="login-title">Connexion à RS-Villa</h2>
+      <div class="input-group">
+        <label for="username">🕤 Votre pseudo</label>
+        <input type="text" id="username" placeholder="Ex: Roberix" required />
+      </div>
+      <div class="input-group">
+        <label for="room-name-input">🏠 Nom de la Villa</label>
+        <input type="text" id="room-name-input" placeholder="Ex: DreamHouse" required />
+      </div>
+      <div class="input-group">
+        <label for="password-input">🔐 Mot de passe</label>
+        <input type="password" id="password-input" placeholder="*******" required />
+      </div>
+      <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
     </div>
+  </div>
 
     <!-- Section de chat -->
  <div class="container container-chat">  
