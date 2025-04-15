@@ -1078,7 +1078,7 @@ function displayMessage(key, data) {
       msgDiv.classList.add("fade-out");
       setTimeout(() => {
         firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-      }, 2000); // Laisse le temps à l'animation
+      }, 12000); // Laisse le temps à l'animation
     }, { once: true });
   }
 
