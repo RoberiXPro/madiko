@@ -426,13 +426,12 @@
         transform: scale(1.05);
         text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
     }
- .action-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 5px;
-      margin-top: 8px;
-      padding-right: 26px;
-    }
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 8px;
+}
     .action-buttons button {
         background-color: #5a5a5a;
         color: #fff;
@@ -531,8 +530,8 @@
 </style>
 </head>
 <body>
-        <h1>RS-Villa</h1>
    <div id="login-container">
+    <h1>RS-Villa</h1>
     <div class="login-card">
       <h2 class="login-title">Connexion</h2>
       <div class="input-group">
@@ -650,7 +649,21 @@
   }
 });
 
-   
+//mampiseho anle delais msg
+ function formatTime(timestamp) {
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffSec < 60) return "À l'instant";
+    if (diffMin < 60) return `il y a ${diffMin} min`;
+    if (diffHr < 24) return `il y a ${diffHr}h`;
+    return `il y a ${diffDay}j`;
+  }
+    
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
@@ -1019,13 +1032,6 @@ msgDiv.appendChild(time);
 
   msgDiv.appendChild(actions);
 
-    // 🔥 Supprimer automatiquement un message reçu après survol
-if (data.user !== username) {
-  msgDiv.addEventListener("mouseenter", () => {
-    db.child(`rooms/${roomName}/messages/${key}`).remove();
-  }, { once: true });
-}
-
   // Gestion flou
   if (content && content.classList.contains("flou")) {
     setTimeout(() => content.classList.add("flou"), 15000);
@@ -1174,7 +1180,7 @@ function uploadAudio() {
             user: username,
             type: "audio",
             audioBase64: base64Audio,
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: Date.now()
         };
 
         db.child("rooms/" + roomName + "/messages").push(audioMessage);
@@ -1208,7 +1214,7 @@ function handleImageUpload(event) {
                 user: username,
                 type: "image",
                 imageBase64: base64Image,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: Date.now()
             };
 
             db.child("rooms/" + roomName + "/messages").push(imageMessage);
