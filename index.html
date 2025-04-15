@@ -216,13 +216,14 @@
         gap: 5px;
     }
 .emoji-btn {
-  position: relative;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  color: #ffd700;
-}
+      position: relative;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #ffd700;
+      margin-right: auto; /* ✅ décale le bouton emoji à gauche */
+    }
 
 
     .emoji-btn:hover {
@@ -425,13 +426,13 @@
         transform: scale(1.05);
         text-shadow: 0 0 15px #ffcc00, 0 0 25px #ff9900, 0 0 35px #ff6600, 0 0 45px #ff3300, 0 0 60px #ff0000;
     }
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 5px;
-  margin-top: 8px;
-  padding-right: 26px;
-}
+ .action-buttons {
+      display: flex;
+      justify-content: space-between; /* ✅ espace entre emoji à gauche et autres boutons à droite */
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
 
     .action-buttons button {
         background-color: #5a5a5a;
@@ -922,142 +923,114 @@ function quitRoom() {
 }
 // Pour les messages gauche à droite
 function displayMessage(key, data) {
-  const msgDiv = document.createElement("div");
-  msgDiv.id = key;
-  msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
+      const msgDiv = document.createElement("div");
+      msgDiv.id = key;
+      msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
-  // Si c’est une réponse
-  if (data.replyTo) {
-    const replyDiv = document.createElement("div");
-    replyDiv.className = "citation flou";
-    replyDiv.textContent = "Réponse du : " + data.replyTo;
-    msgDiv.appendChild(replyDiv);
-  }
-    
-  // Message principal (texte, image ou audio)
-  let content;
-  if (data.type === "audio") {
-    content = document.createElement("audio");
-    content.controls = true;
-    content.src = data.audioBase64;
-    content.className = "audio-message";
-  } else if (data.type === "image") {
-    content = document.createElement("img");
-    content.src = data.imageBase64;
-    content.className = "image-message";
-    content.style.maxWidth = "220px";
-    content.onclick = () => openImagePopup(data.imageBase64);
-  } else {
-    content = document.createElement("div");
-    content.className = "msg-text flou";
-    const urlRegex = /(https?:\/\/[^\s]+)/gi;
-    const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-    content.innerHTML = msg;
-  }
+      if (data.replyTo) {
+        const replyDiv = document.createElement("div");
+        replyDiv.className = "citation flou";
+        replyDiv.textContent = "Réponse du : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+      }
 
-// Nom de l’utilisateur (à styliser avec .username-tag)
-const userTag = document.createElement("div");
-userTag.className = "username-tag";
-userTag.textContent = data.user;
-msgDiv.appendChild(userTag);
- // Message principal (texte, image, audio...)
-msgDiv.appendChild(content);
-    
-  // Heure
-const time = document.createElement("div");
-time.className = "timestamp";
-time.textContent = formatTime(data.timestamp);
-msgDiv.dataset.timestamp = data.timestamp; // pour rafraîchissement dynamique
-msgDiv.appendChild(time);
+      let content;
+      if (data.type === "audio") {
+        content = document.createElement("audio");
+        content.controls = true;
+        content.src = data.audioBase64;
+        content.className = "audio-message";
+      } else if (data.type === "image") {
+        content = document.createElement("img");
+        content.src = data.imageBase64;
+        content.className = "image-message";
+        content.style.maxWidth = "220px";
+        content.onclick = () => openImagePopup(data.imageBase64);
+      } else {
+        content = document.createElement("div");
+        content.className = "msg-text flou";
+        const urlRegex = /(https?:\/\/[^\s]+)/gi;
+        const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+        content.innerHTML = msg;
+      }
 
-  // Réactions emoji
-  const reactionContainer = document.createElement("div");
-  reactionContainer.className = "reaction-container";
-  db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
-    reactionContainer.innerHTML = "";
-    if (snap.exists()) {
-      const label = document.createElement("span");
-      label.className = "reaction-label";
-      label.textContent = "Réaction :";
-      reactionContainer.appendChild(label);
-      snap.forEach(child => {
-        const emoji = document.createElement("span");
-        emoji.textContent = child.val();
-        emoji.className = "reaction-emoji";
-        reactionContainer.appendChild(emoji);
+      const userTag = document.createElement("div");
+      userTag.className = "username-tag";
+      userTag.textContent = data.user;
+      msgDiv.appendChild(userTag);
+      msgDiv.appendChild(content);
+
+      const time = document.createElement("div");
+      time.className = "timestamp";
+      time.textContent = formatTime(data.timestamp);
+      msgDiv.dataset.timestamp = data.timestamp;
+      msgDiv.appendChild(time);
+
+      const reactionContainer = document.createElement("div");
+      reactionContainer.className = "reaction-container";
+      db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
+        reactionContainer.innerHTML = "";
+        if (snap.exists()) {
+          const label = document.createElement("span");
+          label.className = "reaction-label";
+          label.textContent = "Réaction :";
+          reactionContainer.appendChild(label);
+          snap.forEach(child => {
+            const emoji = document.createElement("span");
+            emoji.textContent = child.val();
+            emoji.className = "reaction-emoji";
+            reactionContainer.appendChild(emoji);
+          });
+        }
       });
+      msgDiv.appendChild(reactionContainer);
+
+      // ✅ NOUVELLE STRUCTURE AVEC ESPACEMENT ADAPTÉ
+      const actions = document.createElement("div");
+      actions.className = "action-buttons";
+
+      const emojiBtn = document.createElement("button");
+      emojiBtn.className = "emoji-btn";
+      emojiBtn.textContent = "😀";
+      emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
+      actions.appendChild(emojiBtn);
+
+      const btnGroup = document.createElement("div");
+      btnGroup.style.display = "flex";
+      btnGroup.style.gap = "5px";
+
+      const replyBtn = document.createElement("button");
+      replyBtn.className = "reply-btn";
+      replyBtn.textContent = "Répondre";
+      replyBtn.onclick = () => prepareReply(key, data.message);
+      btnGroup.appendChild(replyBtn);
+
+      if (data.user === username) {
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-delete";
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+        btnGroup.appendChild(deleteBtn);
+      }
+
+      actions.appendChild(btnGroup);
+      msgDiv.appendChild(actions);
+
+      // 🔄 Gestion flou
+      if (content && content.classList.contains("flou")) {
+        setTimeout(() => content.classList.add("flou"), 15000);
+        msgDiv.onmouseover = () => content.classList.remove("flou");
+        msgDiv.onmouseleave = () => content.classList.add("flou");
+      }
+
+      document.getElementById("messages").appendChild(msgDiv);
+      scrollToBottom();
+
+      if (data.user !== username && document.visibilityState === 'hidden') {
+        document.title = "💬 Nouveau message !";
+        notificationSound.play().catch(() => {});
+      }
     }
-  });
-  msgDiv.appendChild(reactionContainer);
-
-  // Bouton emoji
-  const emojiBtn = document.createElement("button");
-  emojiBtn.className = "emoji-btn";
-  emojiBtn.textContent = "😀";
-  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
-  msgDiv.appendChild(emojiBtn);
-
-  // Emoji picker
-  const picker = document.createElement("div");
-  picker.className = "emoji-picker-message";
-  picker.id = `emoji-picker-${key}`;
-  emojis.forEach(emoji => {
-    const span = document.createElement("span");
-    span.className = "emoji";
-    span.textContent = emoji;
-    span.onclick = () => {
-      addReactionEmoji(key, emoji);
-      picker.style.display = "none";
-    };
-    picker.appendChild(span);
-  });
-  msgDiv.appendChild(picker);
-
-  // Boutons répondre / supprimer
-   const actions = document.createElement("div");
-  actions.className = "action-buttons";
-
-  // 👍 Bouton emoji à gauche
-  const emojiBtn = document.createElement("button");
-  emojiBtn.className = "emoji-btn";
-  emojiBtn.textContent = "😀";
-  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
-  actions.appendChild(emojiBtn);
-
-  // 🔄 Bouton Répondre
-  const replyBtn = document.createElement("button");
-  replyBtn.className = "reply-btn";
-  replyBtn.textContent = "Répondre";
-  replyBtn.onclick = () => prepareReply(key, data.message);
-  actions.appendChild(replyBtn);
-
-  // 🗑️ Bouton Supprimer (si l'utilisateur est l'auteur)
-  if (data.user === username) {
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn-delete";
-    deleteBtn.textContent = "Supprimer";
-    deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
-    actions.appendChild(deleteBtn);
-  }
-  msgDiv.appendChild(actions);
-
-  // Gestion flou
-  if (content && content.classList.contains("flou")) {
-    setTimeout(() => content.classList.add("flou"), 15000);
-    msgDiv.onmouseover = () => content.classList.remove("flou");
-    msgDiv.onmouseleave = () => content.classList.add("flou");
-  }
-
-  document.getElementById("messages").appendChild(msgDiv);
-  scrollToBottom();
-
-  // 🔔 Notif sonore si l’onglet est caché
-  if (data.user !== username && document.visibilityState === 'hidden') {
-    document.title = "💬 Nouveau message !";
-    notificationSound.play().catch(() => {});
-  }
-}
-
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
