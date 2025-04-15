@@ -199,8 +199,14 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         position: absolute;
         bottom: 60px;
-        left: 20px;
+        right: 130px;
     }
+    @media (max-width: 600px) {
+  #emoji-picker {
+    right: 10px; /* ✅ Adapté pour mobile */
+    bottom: 70px; /* 🔁 Légèrement plus haut si besoin */
+  }
+}
 .emoji-picker-message {
   display: none;
   position: absolute;
@@ -534,7 +540,7 @@
 </head>
 <body>
    <div id="login-container">
-    <h1>RS-Villa</h1>
+    <h1>DESIGN</h1>
     <div class="login-card">
       <h2 class="login-title">Connexion</h2>
       <div class="input-group">
@@ -605,7 +611,7 @@
      </div>
 
 <script>
-    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2574/2574-preview.mp3');
+    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -858,6 +864,21 @@ function loadMessages() {
         const picker = document.getElementById("emoji-picker");
         picker.style.display = picker.style.display === "none" ? "flex" : "none";
     }
+// ✅ Gère la fermeture de l'emoji picker global
+document.addEventListener("click", function(event) {
+  const picker = document.getElementById("emoji-picker");
+  const emojiButton = document.querySelector("button[onclick='toggleEmojiPicker()']");
+  if (!picker.contains(event.target) && event.target !== emojiButton) {
+    picker.style.display = "none";
+  }
+});
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") {
+    const picker = document.getElementById("emoji-picker");
+    if (picker) picker.style.display = "none";
+  }
+});
 
     function loadEmojis() {
         const picker = document.getElementById("emoji-picker");
@@ -923,128 +944,143 @@ function quitRoom() {
     location.reload();
 }
 // Pour les messages gauche à droite
-   function displayMessage(key, data) {
-      const msgDiv = document.createElement("div");
-      msgDiv.id = key;
-      msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
+ function displayMessage(key, data) {
+  const msgDiv = document.createElement("div");
+  msgDiv.id = key;
+  msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
-      if (data.replyTo) {
-        const replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.textContent = "Réponse du : " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
-      }
+  if (data.replyTo) {
+    const replyDiv = document.createElement("div");
+    replyDiv.className = "citation flou";
+    replyDiv.textContent = "Réponse du : " + data.replyTo;
+    msgDiv.appendChild(replyDiv);
+  }
 
-      let content;
-      if (data.type === "audio") {
-        content = document.createElement("audio");
-        content.controls = true;
-        content.src = data.audioBase64;
-        content.className = "audio-message";
-      } else if (data.type === "image") {
-        content = document.createElement("img");
-        content.src = data.imageBase64;
-        content.className = "image-message";
-        content.style.maxWidth = "220px";
-        content.onclick = () => openImagePopup(data.imageBase64);
-      } else {
-        content = document.createElement("div");
-        content.className = "msg-text flou";
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
-        const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-        content.innerHTML = msg;
-      }
+  let content;
+  if (data.type === "audio") {
+    content = document.createElement("audio");
+    content.controls = true;
+    content.src = data.audioBase64;
+    content.className = "audio-message";
+  } else if (data.type === "image") {
+    content = document.createElement("img");
+    content.src = data.imageBase64;
+    content.className = "image-message";
+    content.style.maxWidth = "220px";
+    content.onclick = () => openImagePopup(data.imageBase64);
+  } else {
+    content = document.createElement("div");
+    content.className = "msg-text flou";
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+    content.innerHTML = msg;
+  }
 
-      const userTag = document.createElement("div");
-      userTag.className = "username-tag";
-      userTag.textContent = data.user;
-      msgDiv.appendChild(userTag);
-      msgDiv.appendChild(content);
+  const userTag = document.createElement("div");
+  userTag.className = "username-tag";
+  userTag.textContent = data.user;
+  msgDiv.appendChild(userTag);
+  msgDiv.appendChild(content);
 
-      const time = document.createElement("div");
-      time.className = "timestamp";
-      time.textContent = formatTime(data.timestamp);
-      msgDiv.dataset.timestamp = data.timestamp;
-      msgDiv.appendChild(time);
+  const time = document.createElement("div");
+  time.className = "timestamp";
+  time.textContent = formatTime(data.timestamp);
+  msgDiv.dataset.timestamp = data.timestamp;
+  msgDiv.appendChild(time);
 
-      const reactionContainer = document.createElement("div");
-      reactionContainer.className = "reaction-container";
-      db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
-        reactionContainer.innerHTML = "";
-        if (snap.exists()) {
-          const label = document.createElement("span");
-          label.className = "reaction-label";
-          label.textContent = "Réaction :";
-          reactionContainer.appendChild(label);
-          snap.forEach(child => {
-            const emoji = document.createElement("span");
-            emoji.textContent = child.val();
-            emoji.className = "reaction-emoji";
-            reactionContainer.appendChild(emoji);
-          });
-        }
+  const reactionContainer = document.createElement("div");
+  reactionContainer.className = "reaction-container";
+  db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
+    reactionContainer.innerHTML = "";
+    if (snap.exists()) {
+      const label = document.createElement("span");
+      label.className = "reaction-label";
+      label.textContent = "Réaction :";
+      reactionContainer.appendChild(label);
+      snap.forEach(child => {
+        const emoji = document.createElement("span");
+        emoji.textContent = child.val();
+        emoji.className = "reaction-emoji";
+        reactionContainer.appendChild(emoji);
       });
-      msgDiv.appendChild(reactionContainer);
-
-      const actions = document.createElement("div");
-      actions.className = "action-buttons";
-
-      const emojiBtn = document.createElement("button");
-      emojiBtn.className = "emoji-btn";
-      emojiBtn.textContent = "😀";
-      emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
-      actions.appendChild(emojiBtn);
-
-      const emojiPicker = document.createElement("div");
-      emojiPicker.className = "emoji-picker-message";
-      emojiPicker.id = `emoji-picker-${key}`;
-      emojis.forEach(emoji => {
-        const span = document.createElement("span");
-        span.className = "emoji";
-        span.textContent = emoji;
-        span.onclick = () => {
-          addReactionEmoji(key, emoji);
-          emojiPicker.style.display = "none";
-        };
-        emojiPicker.appendChild(span);
-      });
-      msgDiv.appendChild(emojiPicker);
-
-      const btnGroup = document.createElement("div");
-      btnGroup.style.display = "flex";
-      btnGroup.style.gap = "5px";
-
-      const replyBtn = document.createElement("button");
-      replyBtn.className = "reply-btn";
-      replyBtn.textContent = "Répondre";
-      replyBtn.onclick = () => prepareReply(key, data.message);
-      btnGroup.appendChild(replyBtn);
-
-      if (data.user === username) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn-delete";
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
-        btnGroup.appendChild(deleteBtn);
-      }
-
-      actions.appendChild(btnGroup);
-      msgDiv.appendChild(actions);
-
-      if (content && content.classList.contains("flou")) {
-        setTimeout(() => content.classList.add("flou"), 15000);
-        msgDiv.onmouseover = () => content.classList.remove("flou");
-        msgDiv.onmouseleave = () => content.classList.add("flou");
-      }
-
-      document.getElementById("messages").appendChild(msgDiv);
-      scrollToBottom();
-
-      if (data.user !== username && document.visibilityState === 'hidden') {
-        document.title = "💬 Nouveau message !";
-        notificationSound.play().catch(() => {});
-      }
     }
+  });
+  msgDiv.appendChild(reactionContainer);
+
+  const actions = document.createElement("div");
+  actions.className = "action-buttons";
+
+  const emojiBtn = document.createElement("button");
+  emojiBtn.className = "emoji-btn";
+  emojiBtn.textContent = "😀";
+  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
+  actions.appendChild(emojiBtn);
+
+  const emojiPicker = document.createElement("div");
+  emojiPicker.className = "emoji-picker-message";
+  emojiPicker.id = `emoji-picker-${key}`;
+  emojis.forEach(emoji => {
+    const span = document.createElement("span");
+    span.className = "emoji";
+    span.textContent = emoji;
+    span.onclick = () => {
+      addReactionEmoji(key, emoji);
+      emojiPicker.style.display = "none";
+    };
+    emojiPicker.appendChild(span);
+  });
+  msgDiv.appendChild(emojiPicker);
+
+  const btnGroup = document.createElement("div");
+  btnGroup.style.display = "flex";
+  btnGroup.style.gap = "5px";
+
+  const replyBtn = document.createElement("button");
+  replyBtn.className = "reply-btn";
+  replyBtn.textContent = "Répondre";
+  replyBtn.onclick = () => prepareReply(key, data.message);
+  btnGroup.appendChild(replyBtn);
+
+  if (data.user === username) {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn-delete";
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.onclick = () => db.child(`rooms/${roomName}/messages/${key}`).remove();
+    btnGroup.appendChild(deleteBtn);
+  }
+
+  actions.appendChild(btnGroup);
+  msgDiv.appendChild(actions);
+
+  if (content && content.classList.contains("flou")) {
+    setTimeout(() => content.classList.add("flou"), 15000);
+    msgDiv.onmouseover = () => content.classList.remove("flou");
+    msgDiv.onmouseleave = () => content.classList.add("flou");
+  }
+
+  // ✅ SURVOL déclencheur de suppression (pour user2 seulement)
+  if (data.user !== username) {
+    msgDiv.addEventListener("mouseenter", () => {
+      const messagePath = `rooms/${roomName}/messages/${key}`;
+
+      // Indique que le message a été vu
+      firebase.database().ref(messagePath).update({ viewed: true });
+
+      // Supprime le message après 2 minutes
+      setTimeout(() => {
+        firebase.database().ref(messagePath).remove();
+      }, 5000); // 2 minutes
+    }, { once: true });
+  }
+
+  document.getElementById("messages").appendChild(msgDiv);
+  scrollToBottom();
+
+  if (data.user !== username && document.visibilityState === 'hidden') {
+    document.title = "💬 Nouveau message !";
+    notificationSound.play().catch(() => {});
+  }
+}
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
@@ -1096,16 +1132,14 @@ function toggleEmojiPickerMessage(key) {
     window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
-    document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === 'visible') {
-        // Réinitialiser l'icône de notification lorsque l'utilisateur consulte l'onglet
-        const notification = document.getElementById("notification");
-        notification.style.display = "none";  // Masquer la notification
-
-        // Réinitialiser le titre de l'onglet si un nouveau message était arrivé
-        document.title = 'Votre Chat';
-    }
+ document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") {
+    document.title = "Votre Chat";
+    notificationSound.pause();
+    notificationSound.currentTime = 0;
+  }
 });
+
 let mediaRecorder;
 let audioChunks = [];
 let recordedBlob;
