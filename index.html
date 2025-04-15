@@ -1019,20 +1019,18 @@ msgDiv.appendChild(time);
 
   msgDiv.appendChild(actions);
 
-    // 🔥 Supprimer automatiquement un message reçu après survol
-if (data.user !== username) {
-  msgDiv.addEventListener("mouseenter", () => {
-    db.child(`rooms/${roomName}/messages/${key}`).remove();
-  }, { once: true });
-}
-
   // Gestion flou
   if (content && content.classList.contains("flou")) {
     setTimeout(() => content.classList.add("flou"), 15000);
     msgDiv.onmouseover = () => content.classList.remove("flou");
     msgDiv.onmouseleave = () => content.classList.add("flou");
   }
-
+    // 🔥 Supprimer automatiquement un message reçu après survol
+if (data.user !== username) {
+  msgDiv.addEventListener("mouseenter", () => {
+    db.child(`rooms/${roomName}/messages/${key}`).remove();
+  }, { once: true });
+}
   document.getElementById("messages").appendChild(msgDiv);
   scrollToBottom();
 
