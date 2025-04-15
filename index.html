@@ -1057,6 +1057,13 @@ function quitRoom() {
         msgDiv.onmouseover = () => content.classList.remove("flou");
         msgDiv.onmouseleave = () => content.classList.add("flou");
       }
+if (data.user !== username) {
+  msgDiv.addEventListener("mouseenter", () => {
+    setTimeout(() => {
+      firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+    }, 120000); // 2 minutes après survol
+  }, { once: true });
+}
 
       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
@@ -1117,16 +1124,14 @@ function toggleEmojiPickerMessage(key) {
     window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
-    document.addEventListener("visibilitychange", function() {
-    if (document.visibilityState === 'visible') {
-        // Réinitialiser l'icône de notification lorsque l'utilisateur consulte l'onglet
-        const notification = document.getElementById("notification");
-        notification.style.display = "none";  // Masquer la notification
-
-        // Réinitialiser le titre de l'onglet si un nouveau message était arrivé
-        document.title = 'Votre Chat';
-    }
+ document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") {
+    document.title = "Votre Chat";
+    notificationSound.pause();
+    notificationSound.currentTime = 0;
+  }
 });
+
 let mediaRecorder;
 let audioChunks = [];
 let recordedBlob;
