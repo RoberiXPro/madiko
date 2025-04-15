@@ -28,12 +28,12 @@
         display: none;
     }
  #login-container {
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      min-height: 100vh;
+      padding: 20px 0;
     }
     .login-card {
       background: #2a2a3a;
@@ -922,7 +922,7 @@ function quitRoom() {
     location.reload();
 }
 // Pour les messages gauche à droite
-function displayMessage(key, data) {
+   function displayMessage(key, data) {
       const msgDiv = document.createElement("div");
       msgDiv.id = key;
       msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
@@ -985,7 +985,6 @@ function displayMessage(key, data) {
       });
       msgDiv.appendChild(reactionContainer);
 
-      // ✅ NOUVELLE STRUCTURE AVEC ESPACEMENT ADAPTÉ
       const actions = document.createElement("div");
       actions.className = "action-buttons";
 
@@ -994,6 +993,21 @@ function displayMessage(key, data) {
       emojiBtn.textContent = "😀";
       emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
       actions.appendChild(emojiBtn);
+
+      const emojiPicker = document.createElement("div");
+      emojiPicker.className = "emoji-picker-message";
+      emojiPicker.id = `emoji-picker-${key}`;
+      emojis.forEach(emoji => {
+        const span = document.createElement("span");
+        span.className = "emoji";
+        span.textContent = emoji;
+        span.onclick = () => {
+          addReactionEmoji(key, emoji);
+          emojiPicker.style.display = "none";
+        };
+        emojiPicker.appendChild(span);
+      });
+      msgDiv.appendChild(emojiPicker);
 
       const btnGroup = document.createElement("div");
       btnGroup.style.display = "flex";
@@ -1016,7 +1030,6 @@ function displayMessage(key, data) {
       actions.appendChild(btnGroup);
       msgDiv.appendChild(actions);
 
-      // 🔄 Gestion flou
       if (content && content.classList.contains("flou")) {
         setTimeout(() => content.classList.add("flou"), 15000);
         msgDiv.onmouseover = () => content.classList.remove("flou");
