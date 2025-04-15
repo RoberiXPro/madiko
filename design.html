@@ -246,24 +246,25 @@
         border-radius: 5px;
         margin-bottom: 10px;
     }
-  .message {
+.message {
+  display: flex;
+  flex-direction: column;
   max-width: 70%;
-  padding: 10px 14px;
-  position: relative;
+  padding: 12px 16px;
+  margin: 8px 0;
   border-radius: 20px;
-  margin: 10px 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
   word-break: break-word;
-  background: #2d2d2d;
   box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  position: relative;
 }
- /* Utilisateur actuel */
+/* Mes messages : droite */
 .message.user1 {
-  background: linear-gradient(to right, #4e54c8, #8f94fb);
-  color: #fff;
   align-self: flex-end;
-  border-bottom-right-radius: 0;
+  background: linear-gradient(to right, #4e54c8, #8f94fb);
+  color: white;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 20px;
 }
 
 .message.user1::after {
@@ -279,12 +280,13 @@
   border-bottom: 0;
   margin-top: -5px;
 }
-/* Autres utilisateurs */
+/* Messages des autres : gauche */
 .message.user2 {
-  background: #3c3c3c;
-  color: #fff;
   align-self: flex-start;
-  border-bottom-left-radius: 0;
+  background: #2f2f2f;
+  color: white;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 20px;
 }
 
 .message.user2::after {
@@ -300,9 +302,22 @@
   border-bottom: 0;
   margin-top: -5px;
 }
-    .msg-text {
-        margin-bottom: 5px;
-    }
+.msg-text {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+    .username-tag {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: #ffd700;
+}
+    .timestamp {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  align-self: flex-end;
+  margin-top: 4px;
+}
     .citation {
         background-color: #444;
         padding: 5px;
@@ -532,7 +547,7 @@
             <button onclick="cancelReply()" style="float: right; background-color: #e74c3c; color: white; border: none; border-radius: 5px; padding: 5px;">Annuler</button>
         </div>
 
-        <div id="messages"></div>
+        <div id="messages" class="messages"></div>
 <div id="audio-preview" style="display:none; margin-top:10px;">
   <audio id="audio-player" controls></audio>
   <br>
@@ -869,173 +884,133 @@ function quitRoom() {
     // Force l'actualisation de l'onglet
     location.reload();
 }
-
+// Pour les messages gauche à droite
 function displayMessage(key, data) {
-    var msgDiv = document.createElement("div");
-    msgDiv.id = key;
-    msgDiv.className = (data.user === username ? "message user1" : "message user2");
+  const msgDiv = document.createElement("div");
+  msgDiv.id = key;
+  msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
-    var usernameDiv = document.createElement("div");
-    usernameDiv.className = "username " + (data.user === username ? "user1" : "user2");
-    usernameDiv.textContent = data.user;
+  // Nom de l’utilisateur
+  const userTag = document.createElement("div");
+  userTag.className = "username-tag";
+  userTag.textContent = data.user;
+  msgDiv.appendChild(userTag);
 
-    let textSpan = null;
+  // Si c’est une réponse
+  if (data.replyTo) {
+    const replyDiv = document.createElement("div");
+    replyDiv.className = "citation flou";
+    replyDiv.textContent = "Réponse du : " + data.replyTo;
+    msgDiv.appendChild(replyDiv);
+  }
 
-    if (data.type === "audio") {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.src = data.audioBase64;
-        audio.style.marginTop = "10px";
-        audio.className = "audio-message";
-        msgDiv.appendChild(audio);
+  // Message principal (texte, image ou audio)
+  let content;
+  if (data.type === "audio") {
+    content = document.createElement("audio");
+    content.controls = true;
+    content.src = data.audioBase64;
+    content.className = "audio-message";
+  } else if (data.type === "image") {
+    content = document.createElement("img");
+    content.src = data.imageBase64;
+    content.className = "image-message";
+    content.style.maxWidth = "220px";
+    content.onclick = () => openImagePopup(data.imageBase64);
+  } else {
+    content = document.createElement("div");
+    content.className = "msg-text flou";
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+    content.innerHTML = msg;
+  }
+  msgDiv.appendChild(content);
 
-    } else if (data.type === "image") {
-        const img = document.createElement("img");
-        img.src = data.imageBase64;
-        img.style.maxWidth = "250px";
-        img.style.borderRadius = "8px";
-        img.style.marginTop = "10px";
-        img.className = "image-message";
-        img.style.cursor = "pointer";
-        img.onclick = () => openImagePopup(img.src);
-        msgDiv.appendChild(img);
+  // Heure
+  const time = document.createElement("div");
+  time.className = "timestamp";
+  time.textContent = data.timestamp;
+  msgDiv.appendChild(time);
 
-    } else {
-        textSpan = document.createElement("span");
-        textSpan.className = "msg-text flou";
-
-        const messageText = data.message || "";
-        const imageRegex = /(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp))/gi;
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
-
-        // Remplacer les URL par des liens cliquables
-        let formattedText = messageText.replace(urlRegex, function (url) {
-            return `<a href="${url}" target="_blank" style="color: #ffd700;">${url}</a>`;
-        });
-
-        textSpan.innerHTML = formattedText;
-        msgDiv.appendChild(textSpan);
-
-        // Affiche les aperçus d’images détectées dans le texte
-        const matches = messageText.match(imageRegex) || [];
-        matches.forEach(url => {
-            const imgPreview = document.createElement("img");
-            imgPreview.src = url;
-            imgPreview.style.maxWidth = "250px";
-            imgPreview.style.borderRadius = "8px";
-            imgPreview.style.marginTop = "10px";
-            imgPreview.className = "image-preview";
-            imgPreview.style.cursor = "pointer";
-            imgPreview.onclick = () => openImagePopup(url);
-            msgDiv.appendChild(imgPreview);
-        });
+  // Réactions emoji
+  const reactionContainer = document.createElement("div");
+  reactionContainer.className = "reaction-container";
+  db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
+    reactionContainer.innerHTML = "";
+    if (snap.exists()) {
+      const label = document.createElement("span");
+      label.className = "reaction-label";
+      label.textContent = "Réaction :";
+      reactionContainer.appendChild(label);
+      snap.forEach(child => {
+        const emoji = document.createElement("span");
+        emoji.textContent = child.val();
+        emoji.className = "reaction-emoji";
+        reactionContainer.appendChild(emoji);
+      });
     }
+  });
+  msgDiv.appendChild(reactionContainer);
 
-    const timeDiv = document.createElement("div");
-    timeDiv.className = "timestamp";
-    timeDiv.style.fontSize = "0.8rem";
-    timeDiv.style.color = "#ccc";
-    timeDiv.style.position = "absolute";
-    timeDiv.style.top = "5px";
-    timeDiv.style.right = "10px";
-    timeDiv.textContent = data.timestamp;
-    msgDiv.appendChild(usernameDiv);
-    msgDiv.appendChild(timeDiv);
+  // Bouton emoji
+  const emojiBtn = document.createElement("button");
+  emojiBtn.className = "emoji-btn";
+  emojiBtn.textContent = "😀";
+  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
+  msgDiv.appendChild(emojiBtn);
 
-    if (data.replyTo) {
-        const replyDiv = document.createElement("div");
-        replyDiv.className = "citation flou";
-        replyDiv.textContent = "Réponse du : " + data.replyTo;
-        msgDiv.appendChild(replyDiv);
-    }
-
-    const reactionContainer = document.createElement("div");
-    reactionContainer.className = "reaction-container";
-    msgDiv.appendChild(reactionContainer);
-
-    db.child("rooms/" + roomName + "/messages/" + key + "/reactions").on("value", function(snapshot) {
-        reactionContainer.innerHTML = "";
-        if (snapshot.exists()) {
-            const reactionLabel = document.createElement("span");
-            reactionLabel.className = "reaction-label";
-            reactionLabel.textContent = "Réaction : ";
-            reactionContainer.appendChild(reactionLabel);
-            snapshot.forEach(function(childSnapshot) {
-                const reactionEmoji = document.createElement("span");
-                reactionEmoji.className = "reaction-emoji";
-                reactionEmoji.textContent = childSnapshot.val();
-                reactionContainer.appendChild(reactionEmoji);
-            });
-        }
-    });
-
-    const emojiBtn = document.createElement("button");
-    emojiBtn.className = "emoji-btn";
-    emojiBtn.textContent = "😀";
-    emojiBtn.onclick = function () {
-        toggleEmojiPickerMessage(key);
+  // Emoji picker
+  const picker = document.createElement("div");
+  picker.className = "emoji-picker-message";
+  picker.id = `emoji-picker-${key}`;
+  emojis.forEach(emoji => {
+    const span = document.createElement("span");
+    span.className = "emoji";
+    span.textContent = emoji;
+    span.onclick = () => {
+      addReactionEmoji(key, emoji);
+      picker.style.display = "none";
     };
-    msgDiv.appendChild(emojiBtn);
+    picker.appendChild(span);
+  });
+  msgDiv.appendChild(picker);
 
-    const emojiPickerMessage = document.createElement("div");
-    emojiPickerMessage.className = "emoji-picker-message";
-    emojiPickerMessage.id = `emoji-picker-${key}`;
-    emojis.forEach((emoji) => {
-        const emojiSpan = document.createElement("span");
-        emojiSpan.textContent = emoji;
-        emojiSpan.className = "emoji";
-        emojiSpan.onclick = function () {
-            addReactionEmoji(key, emoji);
-            emojiPickerMessage.style.display = "none";
-        };
-        emojiPickerMessage.appendChild(emojiSpan);
-    });
-    msgDiv.appendChild(emojiPickerMessage);
+  // Boutons répondre / supprimer
+  const actions = document.createElement("div");
+  actions.className = "action-buttons";
 
-    const actionButtons = document.createElement("div");
-    actionButtons.className = "action-buttons";
+  const replyBtn = document.createElement("button");
+  replyBtn.className = "reply-btn";
+  replyBtn.textContent = "Répondre";
+  replyBtn.onclick = () => prepareReply(key, data.message);
+  actions.appendChild(replyBtn);
 
-    const replyBtn = document.createElement("button");
-    replyBtn.textContent = "Répondre";
-    replyBtn.className = "reply-btn";
-    replyBtn.onclick = function () {
-        prepareReply(key, data.message);
-    };
-
+  if (data.user === username) {
     const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Supprimer";
     deleteBtn.className = "btn-delete";
-    deleteBtn.onclick = function () {
-        db.child("rooms/" + roomName + "/messages/" + key).remove();
-    };
+    deleteBtn.textContent = "Supprimer";
+    deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+    actions.appendChild(deleteBtn);
+  }
 
-    actionButtons.appendChild(replyBtn);
-    actionButtons.appendChild(deleteBtn);
-    msgDiv.appendChild(actionButtons);
+  msgDiv.appendChild(actions);
 
-    document.getElementById("messages").appendChild(msgDiv);
+  // Gestion flou
+  if (content && content.classList.contains("flou")) {
+    setTimeout(() => content.classList.add("flou"), 15000);
+    msgDiv.onmouseover = () => content.classList.remove("flou");
+    msgDiv.onmouseleave = () => content.classList.add("flou");
+  }
 
-    if (textSpan) {
-        setTimeout(() => textSpan.classList.add("flou"), 15000);
-    }
+  document.getElementById("messages").appendChild(msgDiv);
+  scrollToBottom();
 
-    msgDiv.onmouseover = function () {
-        if (data.user !== username) {
-            if (textSpan) textSpan.classList.remove("flou");
-        }
-    };
-    msgDiv.onmouseleave = function () {
-        if (textSpan) textSpan.classList.add("flou");
-    };
-
-    scrollToBottom();
-
-    if (data.user !== username && document.visibilityState === 'hidden') {
-        document.title = '💬 Nouveau message!';
-        notificationSound.play().catch(error => console.log("Erreur de notification :", error));
-    }
+  // 🔔 Notif sonore si l’onglet est caché
+  if (data.user !== username && document.visibilityState === 'hidden') {
+    document.title = "💬 Nouveau message !";
+    notificationSound.play().catch(() => {});
+  }
 }
-
 
 
    
