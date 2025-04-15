@@ -246,28 +246,60 @@
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    .message {
-        padding: 10px;
-        margin-bottom: 8px;
-        border-radius: 5px;
-        word-wrap: break-word;
-        max-width: 70%;
-        color: #fff;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-    }
-    .message.user1 {
-        background: linear-gradient(to right, #8e44ad, #3498db);
-        align-self: flex-end;
-        border-radius: 10px 10px 0 10px;
-    }
-    .message.user2 {
-        background: linear-gradient(to right, #95a5a6, #7f8c8d);
-        align-self: flex-start;
-        border-radius: 10px 10px 10px 0;
-    }
+  .message {
+  max-width: 70%;
+  padding: 10px 14px;
+  position: relative;
+  border-radius: 20px;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  word-break: break-word;
+  background: #2d2d2d;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+ /* Utilisateur actuel */
+.message.user1 {
+  background: linear-gradient(to right, #4e54c8, #8f94fb);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+
+.message.user1::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-left-color: #8f94fb;
+  border-right: 0;
+  border-bottom: 0;
+  margin-top: -5px;
+}
+/* Autres utilisateurs */
+.message.user2 {
+  background: #3c3c3c;
+  color: #fff;
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+
+.message.user2::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-right-color: #3c3c3c;
+  border-left: 0;
+  border-bottom: 0;
+  margin-top: -5px;
+}
     .msg-text {
         margin-bottom: 5px;
     }
