@@ -1193,7 +1193,7 @@ function uploadAudio() {
             user: username,
             type: "audio",
             audioBase64: base64Audio,
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: Date.now()
         };
 
         db.child("rooms/" + roomName + "/messages").push(audioMessage);
@@ -1227,7 +1227,7 @@ function handleImageUpload(event) {
                 user: username,
                 type: "image",
                 imageBase64: base64Image,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: Date.now()
             };
 
             db.child("rooms/" + roomName + "/messages").push(imageMessage);
