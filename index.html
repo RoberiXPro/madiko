@@ -635,8 +635,22 @@
         notification.style.display = "none";
       }, 5000);
     }
+//afaka atao entrée refa mi connecte
+ document.addEventListener("DOMContentLoaded", function () {
+  showNotification();
 
-    document.addEventListener("DOMContentLoaded", showNotification);
+  // ✅ Ajoute le support touche 'Entrée' sur les champs de login
+  const loginContainer = document.getElementById("login-container");
+  if (loginContainer) {
+    loginContainer.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const loginBtn = document.querySelector(".login-button");
+        if (loginBtn) loginBtn.click();
+      }
+    });
+  }
+});
+
 //mampiseho anle delais msg
  function formatTime(timestamp) {
     const now = Date.now();
