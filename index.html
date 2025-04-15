@@ -651,7 +651,21 @@
     }
 
     document.addEventListener("DOMContentLoaded", showNotification);
+//mampiseho anle delais msg
+ function formatTime(timestamp) {
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
 
+    if (diffSec < 60) return "À l'instant";
+    if (diffMin < 60) return `il y a ${diffMin} min`;
+    if (diffHr < 24) return `il y a ${diffHr}h`;
+    return `il y a ${diffDay}j`;
+  }
+    
     function joinRoom() {
     username = document.getElementById("username").value;
     roomName = document.getElementById("room-name-input").value;
@@ -704,6 +718,7 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
     updateUserStatusUI(user, data.status);
 });
+    
 
 function initializeUserListeners() {
     var usersRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers");
@@ -795,7 +810,7 @@ function sendMessage() {
         return;
     }
 
-    var timestamp = new Date().toLocaleTimeString();
+    var timestamp = Date.now(); // stocke l'heure en millisecondes
 
     var msgData = { 
         "user": username, 
@@ -961,10 +976,11 @@ msgDiv.appendChild(userTag);
 msgDiv.appendChild(content);
     
   // Heure
-  const time = document.createElement("div");
-  time.className = "timestamp";
-  time.textContent = data.timestamp;
-  msgDiv.appendChild(time);
+const time = document.createElement("div");
+time.className = "timestamp";
+time.textContent = formatTime(data.timestamp);
+msgDiv.dataset.timestamp = data.timestamp; // pour rafraîchissement dynamique
+msgDiv.appendChild(time);
 
   // Réactions emoji
   const reactionContainer = document.createElement("div");
@@ -1254,6 +1270,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+setInterval(() => {
+  document.querySelectorAll('.message').forEach(msg => {
+    const ts = msg.dataset.timestamp;
+    if (ts) {
+      const time = msg.querySelector('.timestamp');
+      if (time) {
+        time.textContent = formatTime(Number(ts));
+      }
+    }
+  });
+}, 60000); // toutes les 60 secondes
 
 </script>
    </main>
