@@ -741,23 +741,27 @@ function initializeUserListeners() {
 
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
 function setOnlineStatus() {
-    if (!username || !roomName) return;
+  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
+  const connectedRef = firebase.database().ref(".info/connected");
 
-    var userRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username);
+  connectedRef.on("value", (snap) => {
+    if (snap.val() === true) {
+      userRef.set({
+        status: "en ligne",
+        lastSeen: Date.now()
+      });
 
-    firebase.database().ref(".info/connected").on("value", function(snapshot) {
-        if (snapshot.val() === true) {
-            userRef.set({
-                status: "en ligne",
-                lastSeen: new Date().toISOString()
-            });
-            userRef.onDisconnect().remove();
-            setInterval(() => {
-                userRef.update({ lastSeen: new Date().toISOString() });
-            }, 5000);
-        }
-    });
+      userRef.onDisconnect().remove();
+
+      const intervalId = setInterval(() => {
+        userRef.update({ lastSeen: Date.now() });
+      }, 5000);
+
+      window.addEventListener("beforeunload", () => clearInterval(intervalId));
+    }
+  });
 }
+
 
 //Fonction pour Supprimer un Utilisateur de l’Interface (removeUserFromUI)    
 function updateUserStatusUI(user, status) {
@@ -1057,21 +1061,22 @@ function quitRoom() {
     msgDiv.onmouseover = () => content.classList.remove("flou");
     msgDiv.onmouseleave = () => content.classList.add("flou");
   }
+// ✅ Déclenche la suppression APRÈS que le message a été vu (survol)
+if (data.user !== username && !data.viewed) {
+  msgDiv.addEventListener("mouseenter", () => {
+    const messagePath = `rooms/${roomName}/messages/${key}`;
 
-  // ✅ SURVOL déclencheur de suppression (pour user2 seulement)
-  if (data.user !== username) {
-    msgDiv.addEventListener("mouseenter", () => {
-      const messagePath = `rooms/${roomName}/messages/${key}`;
+    // Marque le message comme vu dans Firebase
+    firebase.database().ref(messagePath).update({ viewed: true });
 
-      // Indique que le message a été vu
-      firebase.database().ref(messagePath).update({ viewed: true });
+    // Supprime le message 2 minutes après survol
+    setTimeout(() => {
+      firebase.database().ref(messagePath).remove();
+    }, 2 * 60 * 1000); // 2 minutes
 
-      // Supprime le message après 2 minutes
-      setTimeout(() => {
-        firebase.database().ref(messagePath).remove();
-      }, 5000); // 2 minutes
-    }, { once: true });
-  }
+  }, { once: true }); // le déclencheur ne se répète qu’une seule fois
+}
+
 
   document.getElementById("messages").appendChild(msgDiv);
   scrollToBottom();
