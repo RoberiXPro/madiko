@@ -919,7 +919,7 @@ function displayMessage(key, data) {
     replyDiv.textContent = "Réponse du : " + data.replyTo;
     msgDiv.appendChild(replyDiv);
   }
-    
+
   // Message principal (texte, image ou audio)
   let content;
   if (data.type === "audio") {
@@ -941,20 +941,20 @@ function displayMessage(key, data) {
     content.innerHTML = msg;
   }
 
-// Nom de l’utilisateur (à styliser avec .username-tag)
-const userTag = document.createElement("div");
-userTag.className = "username-tag";
-userTag.textContent = data.user;
-msgDiv.appendChild(userTag);
- // Message principal (texte, image, audio...)
-msgDiv.appendChild(content);
-    
-  // Heure
-const time = document.createElement("div");
-time.className = "timestamp";
-time.textContent = formatTime(data.timestamp);
-msgDiv.dataset.timestamp = data.timestamp; // pour rafraîchissement dynamique
-msgDiv.appendChild(time);
+  // Nom de l’utilisateur
+  const userTag = document.createElement("div");
+  userTag.className = "username-tag";
+  userTag.textContent = data.user;
+  msgDiv.appendChild(userTag);
+
+  msgDiv.appendChild(content);
+
+  // Horodatage
+  const time = document.createElement("div");
+  time.className = "timestamp";
+  time.textContent = formatTime(data.timestamp);
+  msgDiv.dataset.timestamp = data.timestamp;
+  msgDiv.appendChild(time);
 
   // Réactions emoji
   const reactionContainer = document.createElement("div");
@@ -983,7 +983,7 @@ msgDiv.appendChild(time);
   emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
   msgDiv.appendChild(emojiBtn);
 
-  // Emoji picker
+  // Emoji picker pour ce message
   const picker = document.createElement("div");
   picker.className = "emoji-picker-message";
   picker.id = `emoji-picker-${key}`;
@@ -999,7 +999,7 @@ msgDiv.appendChild(time);
   });
   msgDiv.appendChild(picker);
 
-  // Boutons répondre / supprimer
+  // Boutons d'action
   const actions = document.createElement("div");
   actions.className = "action-buttons";
 
@@ -1013,34 +1013,38 @@ msgDiv.appendChild(time);
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "btn-delete";
     deleteBtn.textContent = "Supprimer";
-    deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+    deleteBtn.onclick = () => db.child(`rooms/${roomName}/messages/${key}`).remove();
     actions.appendChild(deleteBtn);
   }
 
   msgDiv.appendChild(actions);
 
-  // Gestion flou
+  // Gestion flou après 15s
   if (content && content.classList.contains("flou")) {
     setTimeout(() => content.classList.add("flou"), 15000);
     msgDiv.onmouseover = () => content.classList.remove("flou");
     msgDiv.onmouseleave = () => content.classList.add("flou");
   }
-    // 🔥 Supprimer automatiquement un message reçu après survol
-if (data.user !== username) {
-  msgDiv.addEventListener("mouseenter", () => {
-    db.child(`rooms/${roomName}/messages/${key}`).remove();
-  }, { once: true });
-}
+
+  // Suppression automatique d’un message reçu après survol + délai
+  if (data.user !== username) {
+    msgDiv.addEventListener("mouseenter", () => {
+      setTimeout(() => {
+        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+      }, 120000); // 120s = 2 minutes
+    }, { once: true });
+  }
+
+  // Ajouter au DOM
   document.getElementById("messages").appendChild(msgDiv);
   scrollToBottom();
 
-  // 🔔 Notif sonore si l’onglet est caché
+  // Notification sonore si onglet inactif
   if (data.user !== username && document.visibilityState === 'hidden') {
     document.title = "💬 Nouveau message !";
     notificationSound.play().catch(() => {});
   }
 }
-
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
