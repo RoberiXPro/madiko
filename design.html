@@ -343,6 +343,14 @@
         transform: translateY(0);
       }
     }
+.fondu {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+.deletion-pending {
+  border-left: 3px solid red;
+  background-color: rgba(255, 0, 0, 0.05);
+}
 
     .timestamp {
   font-size: 0.7rem;
@@ -1031,38 +1039,59 @@ function quitRoom() {
       });
       msgDiv.appendChild(emojiPicker);
 
-      const btnGroup = document.createElement("div");
-      btnGroup.style.display = "flex";
-      btnGroup.style.gap = "5px";
+const btnGroup = document.createElement("div");
+btnGroup.style.display = "flex";
+btnGroup.style.gap = "5px";
 
-      const replyBtn = document.createElement("button");
-      replyBtn.className = "reply-btn";
-      replyBtn.textContent = "Répondre";
-      replyBtn.onclick = () => prepareReply(key, data.message);
-      btnGroup.appendChild(replyBtn);
+const replyBtn = document.createElement("button");
+replyBtn.className = "reply-btn";
+replyBtn.textContent = "Répondre";
+replyBtn.onclick = () => prepareReply(key, data.message);
+btnGroup.appendChild(replyBtn);
 
-      if (data.user === username) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn-delete";
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
-        btnGroup.appendChild(deleteBtn);
-      }
+if (data.user === username) {
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "btn-delete";
+  deleteBtn.textContent = "Supprimer";
+  deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+  btnGroup.appendChild(deleteBtn);
+}
 
-      actions.appendChild(btnGroup);
-      msgDiv.appendChild(actions);
+actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
+msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
-      if (content && content.classList.contains("flou")) {
-        setTimeout(() => content.classList.add("flou"), 15000);
-        msgDiv.onmouseover = () => content.classList.remove("flou");
-        msgDiv.onmouseleave = () => content.classList.add("flou");
-      }
 if (data.user !== username) {
-  msgDiv.addEventListener("mouseenter", () => {
-    setTimeout(() => {
-      firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-    }, 120000); // 2 minutes après survol
-  }, { once: true });
+  msgDiv.addEventListener("mouseover", () => {
+    // ✅ 1. Si l'utilisateur n'a pas encore lu ce message
+    if (!data.readBy || !data.readBy[username]) {
+      // 🔁 On enregistre "lu" dans Firebase
+      db.child(`rooms/${roomName}/messages/${key}/readBy/${username}`).set(true);
+    }
+
+    // ✅ 2. Si aucun timer n'a encore démarré
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true";
+      msgDiv.classList.add("deletion-pending"); // 👉 active la bordure rouge
+
+      setTimeout(() => {
+        msgDiv.classList.add("fondu"); // 👉 animation de disparition
+        setTimeout(() => {
+          if (msgDiv) msgDiv.remove(); // 👉 suppression dans le DOM
+          db.child(`rooms/${roomName}/messages/${key}`).remove(); // 👉 suppression dans Firebase
+        }, 1000);
+      }, 60000); // ⏳ délai avant suppression : 60 secondes
+    }
+  });
+}
+
+       // 👁️ Si ce message a été lu par moi → bordure rouge (chez lecteur)
+if (data.readBy && data.readBy[username]) {
+  msgDiv.classList.add("deletion-pending");
+}
+
+// 👁️ Ou si je suis l’auteur et que quelqu’un d’autre l’a lu → bordure rouge aussi
+if (data.readBy && Object.keys(data.readBy).length > 0 && data.user === username) {
+  msgDiv.classList.add("deletion-pending");
 }
 
       document.getElementById("messages").appendChild(msgDiv);
@@ -1290,6 +1319,8 @@ setInterval(() => {
     }
   });
 }, 60000); // toutes les 60 secondes
+
 </script>
+
 </body>
 </html>
