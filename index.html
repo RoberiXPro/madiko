@@ -1075,7 +1075,7 @@ if (data.user !== username) {
           firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove(); // Firebase
         }, 1000); // effet fondu 1s
 
-      }, 60000); // suppression après 60s
+      }, 600000); // suppression après 60s
     }
   });
 }
