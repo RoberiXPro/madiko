@@ -343,7 +343,14 @@
         transform: translateY(0);
       }
     }
-
+.fondu {
+  opacity: 0;
+  transition: opacity 1s ease-out;
+}
+.deletion-pending {
+  border-left: 3px solid red;
+  background-color: rgba(255, 0, 0, 0.05);
+}
     .timestamp {
   font-size: 0.7rem;
   opacity: 0.6;
@@ -1041,28 +1048,25 @@ function quitRoom() {
       replyBtn.onclick = () => prepareReply(key, data.message);
       btnGroup.appendChild(replyBtn);
 
-      if (data.user === username) {
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn-delete";
-        deleteBtn.textContent = "Supprimer";
-        deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
-        btnGroup.appendChild(deleteBtn);
-      }
-
-      actions.appendChild(btnGroup);
-      msgDiv.appendChild(actions);
-
-      if (content && content.classList.contains("flou")) {
-        setTimeout(() => content.classList.add("flou"), 15000);
-        msgDiv.onmouseover = () => content.classList.remove("flou");
-        msgDiv.onmouseleave = () => content.classList.add("flou");
-      }
 if (data.user !== username) {
-  msgDiv.addEventListener("mouseenter", () => {
-    setTimeout(() => {
-      firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-    }, 120000); // 2 minutes après survol
-  }, { once: true });
+  msgDiv.addEventListener("mouseover", () => {
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true"; // empêche d'activer plusieurs fois
+      msgDiv.classList.add("deletion-pending"); // optionnel : classe visuelle
+
+      setTimeout(() => {
+        // Effet visuel avant suppression
+        msgDiv.classList.add("fondu");
+
+        // Supprime le message visuellement puis depuis Firebase
+        setTimeout(() => {
+          if (msgDiv) msgDiv.remove(); // DOM
+          firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove(); // Firebase
+        }, 1000); // effet fondu 1s
+
+      }, 60000); // suppression après 60s
+    }
+  });
 }
 
       document.getElementById("messages").appendChild(msgDiv);
