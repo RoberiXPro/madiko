@@ -269,7 +269,7 @@
       word-break: break-word;
       position: relative;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-      animation: fadeInUp 0.3s ease;
+      animation: fadeInUp 10.3s ease;
     }
 
     .message.user1 {
@@ -1078,7 +1078,7 @@ function displayMessage(key, data) {
       msgDiv.classList.add("fade-out");
       setTimeout(() => {
         firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-      }, 12000); // Laisse le temps à l'animation
+      }, 30000); // Laisse le temps à l'animation
     }, { once: true });
   }
 
