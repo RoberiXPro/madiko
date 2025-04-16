@@ -686,7 +686,7 @@ function joinRoom() {
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
 
-  db = firebase.database().ref("rooms/" + roomName);
+db = firebase.database().ref();
 
   db.once('value').then(function(snapshot) {
     if (snapshot.exists()) {
