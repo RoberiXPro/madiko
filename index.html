@@ -1061,25 +1061,36 @@ msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
 if (data.user !== username) {
   msgDiv.addEventListener("mouseover", () => {
-    if (!msgDiv.dataset.timerStarted) {
-      msgDiv.dataset.timerStarted = "true"; // empêche d'activer plusieurs fois
-      msgDiv.classList.add("deletion-pending"); // optionnel : classe visuelle
-
-      setTimeout(() => {
-        // Effet visuel avant suppression
-        msgDiv.classList.add("fondu");
-
-        // Supprime le message visuellement puis depuis Firebase
-        setTimeout(() => {
-          if (msgDiv) msgDiv.remove(); // DOM
-          firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove(); // Firebase
-        }, 1000); // effet fondu 1s
-
-      }, 600000); // suppression après 60s
+    if (!msgDiv.dataset.timerStarted && !data.autoDeleteScheduledBy) {
+      msgDiv.dataset.timerStarted = "true";
+      // Indique dans Firebase que ce message doit être supprimé
+      firebase
+        .database()
+        .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
+        .set(username);
     }
   });
 }
+       
+db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
+  const msg = snapshot.val();
+  const key = snapshot.key;
+  const msgDiv = document.getElementById(key);
+  if (!msgDiv || msgDiv.dataset.timerStarted) return;
 
+  if (msg.autoDeleteScheduledBy) {
+    msgDiv.dataset.timerStarted = "true";
+    msgDiv.classList.add("deletion-pending");
+
+    setTimeout(() => {
+      msgDiv.classList.add("fondu");
+      setTimeout(() => {
+        // Supprimer définitivement le message de Firebase
+        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+      }, 1000); // délai visuel pour effet "fondu"
+    }, 60000); // délai avant suppression réelle (60 secondes)
+  }
+});
       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
 
