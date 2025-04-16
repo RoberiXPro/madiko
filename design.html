@@ -351,7 +351,6 @@
   border-left: 3px solid red;
   background-color: rgba(255, 0, 0, 0.05);
 }
-
     .timestamp {
   font-size: 0.7rem;
   opacity: 0.6;
@@ -686,32 +685,34 @@ function joinRoom() {
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
 
-db = firebase.database().ref("rooms/" + roomName);
+  db = firebase.database().ref("rooms/" + roomName);
 
-db.once('value').then(function(snapshot) {
-      if (snapshot.exists()) {
-        var dbPassword = snapshot.child("password").val();
-        if (dbPassword === password) {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-        } else {
-          alert("Mot de passe incorrect !");
-        }
+  db.once('value').then(function(snapshot) {
+    if (snapshot.exists()) {
+      var dbPassword = snapshot.child("password").val();
+      if (dbPassword === password) {
+        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+        switchToChat();
+        initializeUserListeners();
+        setOnlineStatus();
       } else {
-        db.set({
-          password: password,
-          messages: {}
-        }).then(() => {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-        });
+        alert("Mot de passe incorrect !");
       }
-    });
-  }
+    } else {
+      // Room inexistant : on le crée
+      db.set({
+        password: password,
+        messages: {}
+      }).then(() => {
+        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+        switchToChat();
+        initializeUserListeners();
+        setOnlineStatus();
+      });
+    }
+  });
+}
+
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
@@ -746,24 +747,24 @@ function initializeUserListeners() {
 }
 
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
- function setOnlineStatus() {
+function setOnlineStatus() {
     if (!username || !roomName) return;
 
-    var userRef = db.child("onlineUsers/" + username);
+    var userRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username);
 
     firebase.database().ref(".info/connected").on("value", function(snapshot) {
-      if (snapshot.val() === true) {
-        userRef.set({
-          status: "en ligne",
-          lastSeen: new Date().toISOString()
-        });
-        userRef.onDisconnect().remove();
-        setInterval(() => {
-          userRef.update({ lastSeen: new Date().toISOString() });
-        }, 5000);
-      }
+        if (snapshot.val() === true) {
+            userRef.set({
+                status: "en ligne",
+                lastSeen: new Date().toISOString()
+            });
+            userRef.onDisconnect().remove();
+            setInterval(() => {
+                userRef.update({ lastSeen: new Date().toISOString() });
+            }, 5000);
+        }
     });
-  }
+}
 
 //Fonction pour Supprimer un Utilisateur de l’Interface (removeUserFromUI)    
 function updateUserStatusUI(user, status) {
@@ -804,65 +805,65 @@ function removeUserFromUI(user) {
         loadMessages();
     }
 
- function sendMessage() {
+function sendMessage() {
     var messageInput = document.getElementById("message-input");
     var message = messageInput.value;
 
-    if (message.trim() === "") return;
-
-    var timestamp = Date.now();
-
-    var msgData = {
-      user: username,
-      message: message,
-      timestamp: timestamp,
-      reactions: {}
-    };
-
-    if (replyMessageId) {
-      msgData.replyTo = replyMessageText;
-      cancelReply();
+    if (message.trim() === "") {
+        return;
     }
 
-    db.child("messages").push().set(msgData);
+    var timestamp = Date.now(); // stocke l'heure en millisecondes
+
+    var msgData = { 
+        "user": username, 
+        "message": message, 
+        "timestamp": timestamp,
+        "reactions": {}
+    };
+    
+    if (replyMessageId) {
+        msgData.replyTo = replyMessageText;
+        cancelReply();
+    }
+
+    // Correction : Cibler le bon chemin dans Firebase pour le roomName
+    var msgRef = db.child("rooms/" + roomName + "/messages").push();
+    msgRef.set(msgData);
+
     messageInput.value = '';
-  }
+}
 
 
 var childRemovedListenerSet = false;
 
 function loadMessages() {
+    // Écoute les nouveaux messages ajoutés pour les afficher
     if (!messageListener) {
-      messageListener = function(snapshot) {
-        displayMessage(snapshot.key, snapshot.val());
-      };
-      db.child("messages").on("child_added", messageListener);
+        messageListener = function(snapshot) {
+            displayMessage(snapshot.key, snapshot.val());
+        };
+        db.child("rooms/" + roomName + "/messages").on("child_added", messageListener);
     }
+db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
+  const msg = snapshot.val();
+  const key = snapshot.key;
+  const msgDiv = document.getElementById(key);
+ if (!msgDiv || msgDiv.dataset.timerStarted === "true") return;
 
-    db.child("messages").on("child_changed", function(snapshot) {
-      const key = snapshot.key;
-      const data = snapshot.val();
-      const existingMsgDiv = document.getElementById(key);
-      if (!existingMsgDiv) return;
+  if (msg.autoDeleteScheduledBy) {
+    msgDiv.dataset.timerStarted = "true";
+    msgDiv.classList.add("deletion-pending");
 
-      const isReader = data.readBy && data.readBy[username] && data.user !== username;
-      const isSenderSeen = data.user === username && data.readBy && Object.keys(data.readBy).length > 0;
-
-      if (isReader || isSenderSeen) {
-        existingMsgDiv.classList.add("deletion-pending");
-      }
-    });
-
-    if (!childRemovedListenerSet) {
-      db.child("messages").on("child_removed", function(snapshot) {
-        const removedMessage = document.getElementById(snapshot.key);
-        if (removedMessage) removedMessage.remove();
-      });
-      childRemovedListenerSet = true;
-    }
+    setTimeout(() => {
+      msgDiv.classList.add("fondu");
+      setTimeout(() => {
+        // Supprimer définitivement le message de Firebase
+        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+      }, 1000); // délai visuel pour effet "fondu"
+    }, 60000); // délai avant suppression réelle (60 secondes)
   }
-
-
+});
     // Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
         db.child("rooms/" + roomName + "/messages").on("child_removed", function(snapshot) {
@@ -877,9 +878,9 @@ function loadMessages() {
 }
 
     //fonction pour les réactions dans les messages 
-  function addReactionEmoji(messageId, emoji) {
-    db.child("messages/" + messageId + "/reactions/" + username).set(emoji);
-  }
+    function addReactionEmoji(messageId, emoji) {
+    db.child("rooms/" + roomName + "/messages/" + messageId + "/reactions/" + username).set(emoji);
+}
 
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
@@ -951,15 +952,22 @@ document.addEventListener("keydown", function(event) {
     });
 //Bouton Quitter
 function quitRoom() {
+    // Supprime l'utilisateur de Firebase
     firebase.database().ref("users/" + username).remove();
+
+    // Supprime le listener de messages pour éviter les doublons
     if (messageListener) {
-      db.child("messages").off("child_added", messageListener);
-      messageListener = null;
+        db.child("rooms/" + roomName + "/messages").off("child_added", messageListener);
+        messageListener = null;
     }
+
+    // Cache la section de chat et affiche la section de connexion
     document.getElementById("chat-container").style.display = "none";
     document.getElementById("login-container").style.display = "block";
+
+    // Force l'actualisation de l'onglet
     location.reload();
-  }
+}
 // Pour les messages gauche à droite
    function displayMessage(key, data) {
       const msgDiv = document.createElement("div");
@@ -1071,37 +1079,17 @@ msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
 if (data.user !== username) {
   msgDiv.addEventListener("mouseover", () => {
-    // ✅ 1. Si l'utilisateur n'a pas encore lu ce message
-    if (!data.readBy || !data.readBy[username]) {
-      // 🔁 On enregistre "lu" dans Firebase
-      db.child(`rooms/${roomName}/messages/${key}/readBy/${username}`).set(true);
-    }
-
-    // ✅ 2. Si aucun timer n'a encore démarré
-    if (!msgDiv.dataset.timerStarted) {
+    if (!msgDiv.dataset.timerStarted && !data.autoDeleteScheduledBy) {
       msgDiv.dataset.timerStarted = "true";
-      msgDiv.classList.add("deletion-pending"); // 👉 active la bordure rouge
-
-      setTimeout(() => {
-        msgDiv.classList.add("fondu"); // 👉 animation de disparition
-        setTimeout(() => {
-          if (msgDiv) msgDiv.remove(); // 👉 suppression dans le DOM
-          db.child(`rooms/${roomName}/messages/${key}`).remove(); // 👉 suppression dans Firebase
-        }, 1000);
-      }, 60000); // ⏳ délai avant suppression : 60 secondes
+      // Indique dans Firebase que ce message doit être supprimé
+      firebase
+        .database()
+        .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
+        .set(username);
     }
   });
 }
-
-       // 👁️ Si ce message a été lu par moi → bordure rouge (chez lecteur)
-if (data.readBy && data.readBy[username]) {
-  msgDiv.classList.add("deletion-pending");
-}
-
-// 👁️ Ou si je suis l’auteur et que quelqu’un d’autre l’a lu → bordure rouge aussi
-if (data.readBy && Object.keys(data.readBy).length > 0 && data.user === username) {
-  msgDiv.classList.add("deletion-pending");
-}
+       
 
       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
