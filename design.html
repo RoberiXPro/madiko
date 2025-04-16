@@ -322,10 +322,6 @@
       margin-bottom: 5px;
       display: inline-block;
     }
-.fade-out {
-  opacity: 0;
-  transition: opacity 1s ease;
-}
 
     .message.user2 .username-tag {
       background: #555;
@@ -544,7 +540,7 @@
 </head>
 <body>
    <div id="login-container">
-    <h1>DESIGN</h1>
+    <h1>RS-Villa</h1>
     <div class="login-card">
       <h2 class="login-title">Connexion</h2>
       <div class="input-group">
@@ -745,27 +741,23 @@ function initializeUserListeners() {
 
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
 function setOnlineStatus() {
-  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
-  const connectedRef = firebase.database().ref(".info/connected");
+    if (!username || !roomName) return;
 
-  connectedRef.on("value", (snap) => {
-    if (snap.val() === true) {
-      userRef.set({
-        status: "en ligne",
-        lastSeen: Date.now()
-      });
+    var userRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username);
 
-      userRef.onDisconnect().remove();
-
-      const intervalId = setInterval(() => {
-        userRef.update({ lastSeen: Date.now() });
-      }, 5000);
-
-      window.addEventListener("beforeunload", () => clearInterval(intervalId));
-    }
-  });
+    firebase.database().ref(".info/connected").on("value", function(snapshot) {
+        if (snapshot.val() === true) {
+            userRef.set({
+                status: "en ligne",
+                lastSeen: new Date().toISOString()
+            });
+            userRef.onDisconnect().remove();
+            setInterval(() => {
+                userRef.update({ lastSeen: new Date().toISOString() });
+            }, 5000);
+        }
+    });
 }
-
 
 //Fonction pour Supprimer un Utilisateur de l’Interface (removeUserFromUI)    
 function updateUserStatusUI(user, status) {
@@ -952,146 +944,135 @@ function quitRoom() {
     location.reload();
 }
 // Pour les messages gauche à droite
-function displayMessage(key, data) {
-  const msgDiv = document.createElement("div");
-  msgDiv.id = key;
-  msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
+   function displayMessage(key, data) {
+      const msgDiv = document.createElement("div");
+      msgDiv.id = key;
+      msgDiv.className = "message " + (data.user === username ? "user1" : "user2");
 
-  // 💬 Citation (réponse à un message)
-  if (data.replyTo) {
-    const replyDiv = document.createElement("div");
-    replyDiv.className = "citation flou";
-    replyDiv.textContent = "Réponse du : " + data.replyTo;
-    msgDiv.appendChild(replyDiv);
-  }
+      if (data.replyTo) {
+        const replyDiv = document.createElement("div");
+        replyDiv.className = "citation flou";
+        replyDiv.textContent = "Réponse du : " + data.replyTo;
+        msgDiv.appendChild(replyDiv);
+      }
 
-  // 🧠 Corps du message (texte / image / audio)
-  let content;
-  if (data.type === "audio") {
-    content = document.createElement("audio");
-    content.controls = true;
-    content.src = data.audioBase64;
-    content.className = "audio-message";
-  } else if (data.type === "image") {
-    content = document.createElement("img");
-    content.src = data.imageBase64;
-    content.className = "image-message";
-    content.style.maxWidth = "220px";
-    content.onclick = () => openImagePopup(data.imageBase64);
-  } else {
-    content = document.createElement("div");
-    content.className = "msg-text flou";
-    const urlRegex = /(https?:\/\/[^\s]+)/gi;
-    const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-    content.innerHTML = msg;
-  }
+      let content;
+      if (data.type === "audio") {
+        content = document.createElement("audio");
+        content.controls = true;
+        content.src = data.audioBase64;
+        content.className = "audio-message";
+      } else if (data.type === "image") {
+        content = document.createElement("img");
+        content.src = data.imageBase64;
+        content.className = "image-message";
+        content.style.maxWidth = "220px";
+        content.onclick = () => openImagePopup(data.imageBase64);
+      } else {
+        content = document.createElement("div");
+        content.className = "msg-text flou";
+        const urlRegex = /(https?:\/\/[^\s]+)/gi;
+        const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+        content.innerHTML = msg;
+      }
 
-  const userTag = document.createElement("div");
-  userTag.className = "username-tag";
-  userTag.textContent = data.user;
-  msgDiv.appendChild(userTag);
-  msgDiv.appendChild(content);
+      const userTag = document.createElement("div");
+      userTag.className = "username-tag";
+      userTag.textContent = data.user;
+      msgDiv.appendChild(userTag);
+      msgDiv.appendChild(content);
 
-  // ⏱️ Timestamp
-  const time = document.createElement("div");
-  time.className = "timestamp";
-  time.textContent = formatTime(data.timestamp);
-  msgDiv.dataset.timestamp = data.timestamp;
-  msgDiv.appendChild(time);
+      const time = document.createElement("div");
+      time.className = "timestamp";
+      time.textContent = formatTime(data.timestamp);
+      msgDiv.dataset.timestamp = data.timestamp;
+      msgDiv.appendChild(time);
 
-  // ❤️ Réactions live
-  const reactionContainer = document.createElement("div");
-  reactionContainer.className = "reaction-container";
-  db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
-    reactionContainer.innerHTML = "";
-    if (snap.exists()) {
-      const label = document.createElement("span");
-      label.className = "reaction-label";
-      label.textContent = "Réaction :";
-      reactionContainer.appendChild(label);
-      snap.forEach(child => {
-        const emoji = document.createElement("span");
-        emoji.textContent = child.val();
-        emoji.className = "reaction-emoji";
-        reactionContainer.appendChild(emoji);
+      const reactionContainer = document.createElement("div");
+      reactionContainer.className = "reaction-container";
+      db.child(`rooms/${roomName}/messages/${key}/reactions`).on("value", snap => {
+        reactionContainer.innerHTML = "";
+        if (snap.exists()) {
+          const label = document.createElement("span");
+          label.className = "reaction-label";
+          label.textContent = "Réaction :";
+          reactionContainer.appendChild(label);
+          snap.forEach(child => {
+            const emoji = document.createElement("span");
+            emoji.textContent = child.val();
+            emoji.className = "reaction-emoji";
+            reactionContainer.appendChild(emoji);
+          });
+        }
       });
-    }
-  });
-  msgDiv.appendChild(reactionContainer);
+      msgDiv.appendChild(reactionContainer);
 
-  // ⚙️ Boutons d'action
-  const actions = document.createElement("div");
-  actions.className = "action-buttons";
+      const actions = document.createElement("div");
+      actions.className = "action-buttons";
 
-  const emojiBtn = document.createElement("button");
-  emojiBtn.className = "emoji-btn";
-  emojiBtn.textContent = "😀";
-  emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
-  actions.appendChild(emojiBtn);
+      const emojiBtn = document.createElement("button");
+      emojiBtn.className = "emoji-btn";
+      emojiBtn.textContent = "😀";
+      emojiBtn.onclick = () => toggleEmojiPickerMessage(key);
+      actions.appendChild(emojiBtn);
 
-  const emojiPicker = document.createElement("div");
-  emojiPicker.className = "emoji-picker-message";
-  emojiPicker.id = `emoji-picker-${key}`;
-  emojis.forEach(emoji => {
-    const span = document.createElement("span");
-    span.className = "emoji";
-    span.textContent = emoji;
-    span.onclick = () => {
-      addReactionEmoji(key, emoji);
-      emojiPicker.style.display = "none";
-    };
-    emojiPicker.appendChild(span);
-  });
-  msgDiv.appendChild(emojiPicker);
+      const emojiPicker = document.createElement("div");
+      emojiPicker.className = "emoji-picker-message";
+      emojiPicker.id = `emoji-picker-${key}`;
+      emojis.forEach(emoji => {
+        const span = document.createElement("span");
+        span.className = "emoji";
+        span.textContent = emoji;
+        span.onclick = () => {
+          addReactionEmoji(key, emoji);
+          emojiPicker.style.display = "none";
+        };
+        emojiPicker.appendChild(span);
+      });
+      msgDiv.appendChild(emojiPicker);
 
-  const btnGroup = document.createElement("div");
-  btnGroup.style.display = "flex";
-  btnGroup.style.gap = "5px";
+      const btnGroup = document.createElement("div");
+      btnGroup.style.display = "flex";
+      btnGroup.style.gap = "5px";
 
-  const replyBtn = document.createElement("button");
-  replyBtn.className = "reply-btn";
-  replyBtn.textContent = "Répondre";
-  replyBtn.onclick = () => prepareReply(key, data.message);
-  btnGroup.appendChild(replyBtn);
+      const replyBtn = document.createElement("button");
+      replyBtn.className = "reply-btn";
+      replyBtn.textContent = "Répondre";
+      replyBtn.onclick = () => prepareReply(key, data.message);
+      btnGroup.appendChild(replyBtn);
 
-  if (data.user === username) {
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn-delete";
-    deleteBtn.textContent = "Supprimer";
-    deleteBtn.onclick = () => db.child(`rooms/${roomName}/messages/${key}`).remove();
-    btnGroup.appendChild(deleteBtn);
-  }
+      if (data.user === username) {
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-delete";
+        deleteBtn.textContent = "Supprimer";
+        deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+        btnGroup.appendChild(deleteBtn);
+      }
 
-  actions.appendChild(btnGroup);
-  msgDiv.appendChild(actions);
+      actions.appendChild(btnGroup);
+      msgDiv.appendChild(actions);
 
-  // 👁️ Effet de flou dynamique
-  if (content && content.classList.contains("flou")) {
-    setTimeout(() => content.classList.add("flou"), 15000);
-    msgDiv.onmouseover = () => content.classList.remove("flou");
-    msgDiv.onmouseleave = () => content.classList.add("flou");
-  }
-
-  // 🧽 Suppression automatique après survol
-  if (data.user !== username) {
-    msgDiv.addEventListener("mouseenter", () => {
-      msgDiv.classList.add("fade-out");
-      setTimeout(() => {
-        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-      }, 300000); // Laisse le temps à l'animation
-    }, { once: true });
-  }
-
-  // 📥 Ajout final dans le DOM
-  document.getElementById("messages").appendChild(msgDiv);
-  scrollToBottom();
-
-  // 🔔 Notification visuelle/audio si l’onglet est inactif
-  if (data.user !== username && document.visibilityState === 'hidden') {
-    document.title = "💬 Nouveau message !";
-    notificationSound.play().catch(() => {});
-  }
+      if (content && content.classList.contains("flou")) {
+        setTimeout(() => content.classList.add("flou"), 15000);
+        msgDiv.onmouseover = () => content.classList.remove("flou");
+        msgDiv.onmouseleave = () => content.classList.add("flou");
+      }
+if (data.user !== username) {
+  msgDiv.addEventListener("mouseenter", () => {
+    setTimeout(() => {
+      firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+    }, 120000); // 2 minutes après survol
+  }, { once: true });
 }
+
+      document.getElementById("messages").appendChild(msgDiv);
+      scrollToBottom();
+
+      if (data.user !== username && document.visibilityState === 'hidden') {
+        document.title = "💬 Nouveau message !";
+        notificationSound.play().catch(() => {});
+      }
+    }
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
@@ -1309,8 +1290,6 @@ setInterval(() => {
     }
   });
 }, 60000); // toutes les 60 secondes
-
 </script>
-
 </body>
 </html>
