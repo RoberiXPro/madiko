@@ -846,6 +846,24 @@ function loadMessages() {
         };
         db.child("rooms/" + roomName + "/messages").on("child_added", messageListener);
     }
+// 🔴 Nouvelle écoute des changements dans readBy
+db.child("rooms/" + roomName + "/messages").on("child_changed", function(snapshot) {
+  const key = snapshot.key;
+  const data = snapshot.val();
+
+  // Vérifie si le message est déjà affiché dans le DOM
+  const existingMsgDiv = document.getElementById(key);
+  if (!existingMsgDiv) return;
+
+  // Si readBy existe et l'utilisateur actuel est dedans → applique la bordure
+if (data.readBy && existingMsgDiv) {
+  const isReader = data.readBy[username] && data.user !== username;
+  const isSenderSeen = data.user === username && Object.keys(data.readBy).length > 0;
+
+  if (isReader || isSenderSeen) {
+    existingMsgDiv.classList.add("deletion-pending");
+  }
+}
 
     // Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
