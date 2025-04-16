@@ -849,7 +849,7 @@ db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
   const msg = snapshot.val();
   const key = snapshot.key;
   const msgDiv = document.getElementById(key);
- if (!msgDiv || msgDiv.dataset.timerStarted === "true") return;
+  if (!msgDiv || msgDiv.dataset.timerStarted === "true") return;
 
   if (msg.autoDeleteScheduledBy) {
     msgDiv.dataset.timerStarted = "true";
@@ -858,12 +858,20 @@ db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
     setTimeout(() => {
       msgDiv.classList.add("fondu");
       setTimeout(() => {
-        // Supprimer définitivement le message de Firebase
-        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-      }, 1000); // délai visuel pour effet "fondu"
+        firebase
+          .database()
+          .ref(`rooms/${roomName}/messages/${key}`)
+          .once("value")
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
+            }
+          });
+      }, 1000);
     }, 60000); // délai avant suppression réelle (60 secondes)
   }
 });
+
     // Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
         db.child("rooms/" + roomName + "/messages").on("child_removed", function(snapshot) {
@@ -1079,16 +1087,24 @@ msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
 if (data.user !== username) {
   msgDiv.addEventListener("mouseover", () => {
-    if (!msgDiv.dataset.timerStarted && !data.autoDeleteScheduledBy) {
-      msgDiv.dataset.timerStarted = "true";
-      // Indique dans Firebase que ce message doit être supprimé
+    if (!msgDiv.dataset.timerStarted) {
       firebase
         .database()
         .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
-        .set(username);
+        .once("value")
+        .then((snap) => {
+          if (!snap.exists()) {
+            msgDiv.dataset.timerStarted = "true";
+            firebase
+              .database()
+              .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
+              .set(username);
+          }
+        });
     }
   });
 }
+
        
 
       document.getElementById("messages").appendChild(msgDiv);
