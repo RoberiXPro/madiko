@@ -1038,15 +1038,26 @@ function quitRoom() {
       });
       msgDiv.appendChild(emojiPicker);
 
-      const btnGroup = document.createElement("div");
-      btnGroup.style.display = "flex";
-      btnGroup.style.gap = "5px";
+const btnGroup = document.createElement("div");
+btnGroup.style.display = "flex";
+btnGroup.style.gap = "5px";
 
-      const replyBtn = document.createElement("button");
-      replyBtn.className = "reply-btn";
-      replyBtn.textContent = "Répondre";
-      replyBtn.onclick = () => prepareReply(key, data.message);
-      btnGroup.appendChild(replyBtn);
+const replyBtn = document.createElement("button");
+replyBtn.className = "reply-btn";
+replyBtn.textContent = "Répondre";
+replyBtn.onclick = () => prepareReply(key, data.message);
+btnGroup.appendChild(replyBtn);
+
+if (data.user === username) {
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "btn-delete";
+  deleteBtn.textContent = "Supprimer";
+  deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+  btnGroup.appendChild(deleteBtn);
+}
+
+actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
+msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
 if (data.user !== username) {
   msgDiv.addEventListener("mouseover", () => {
