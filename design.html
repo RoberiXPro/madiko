@@ -924,39 +924,47 @@ function loadMessages() {
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-   function toggleEmojiPicker() {
+ function toggleEmojiPicker() {
   const button = document.querySelector("button[onclick='toggleEmojiPicker()']");
   const picker = document.getElementById("emoji-picker");
 
   if (!picker || !button) return;
 
+  // Toggle display
   if (picker.style.display === "flex") {
     picker.style.display = "none";
-  } else {
-    picker.style.display = "flex";
-    
-    // Position au-dessus du bouton
-    const rect = button.getBoundingClientRect();
-    picker.style.top = `${rect.top - picker.offsetHeight - 10 + window.scrollY}px`;
-    picker.style.left = `${rect.left}px`;
+    return;
   }
-}
 
+  // Affiche le picker et place-le juste au-dessus du bouton
+  picker.style.display = "flex";
+  const rect = button.getBoundingClientRect();
+  const scrollY = window.scrollY || window.pageYOffset;
+  const scrollX = window.scrollX || window.pageXOffset;
+
+  picker.style.position = "absolute";
+  picker.style.top = `${rect.top + scrollY - picker.offsetHeight - 8}px`;
+  picker.style.left = `${rect.left + scrollX}px`;
+}
 // ✅ Gère la fermeture de l'emoji picker global
 document.addEventListener("click", function(event) {
   const picker = document.getElementById("emoji-picker");
   const emojiButton = document.querySelector("button[onclick='toggleEmojiPicker()']");
-  if (!picker.contains(event.target) && event.target !== emojiButton) {
+  if (!picker.contains(event.target) && event.target !== emojiButton && !event.target.classList.contains("emoji")) {
     picker.style.display = "none";
   }
 });
 
+// Ferme avec touche échap
 document.addEventListener("keydown", function(event) {
   if (event.key === "Escape") {
     const picker = document.getElementById("emoji-picker");
     if (picker) picker.style.display = "none";
   }
 });
+
+// Initialise les émojis si pas encore fait (si pas appelé automatiquement au chargement)
+document.addEventListener("DOMContentLoaded", loadEmojis);
 
     function loadEmojis() {
         const picker = document.getElementById("emoji-picker");
