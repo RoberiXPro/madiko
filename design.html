@@ -1090,12 +1090,16 @@ function startDeletionTimer(msgDiv, key) {
 }
 
 function deleteMessage(msgDiv, key) {
+  if (msgDiv.classList.contains("deleting")) return; // 🧱 Stop si déjà lancé
+  msgDiv.classList.add("deleting");
+
   msgDiv.classList.add("fondu");
   setTimeout(() => {
     msgDiv.remove();
     db.child("messages").child(key).remove();
   }, 1000);
 }
+
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
@@ -1313,8 +1317,13 @@ setInterval(() => {
     }
   });
 }, 60000); // toutes les 60 secondes
+
 function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const date = new Date(Number(ts));
+  if (isNaN(date.getTime())) {
+    return typeof ts === 'string' ? ts : "🕓 invalide";
+  }
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 </script>
