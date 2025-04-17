@@ -803,7 +803,7 @@ function sendMessage() {
         return;
     }
 
-    var ttimestamp: new Date().toLocaleTimeString()
+ var timestamp = new Date().toLocaleTimeString();
 
     var msgData = { 
         "user": username, 
@@ -818,7 +818,7 @@ function sendMessage() {
     }
 
     // Correction : Cibler le bon chemin dans Firebase pour le roomName
-    var msgRef = db.child("rooms/" + roomName + "/messages").push();
+    var msgRef = firebase.database().ref("rooms/" + roomName + "/messages").push();
     msgRef.set(msgData);
 
     messageInput.value = '';
@@ -1245,7 +1245,7 @@ function handleImageUpload(event) {
                 user: username,
                 type: "image",
                 imageBase64: base64Image,
-                timestamp = new Date().toLocaleTimeString();
+                timestamp: new Date().toLocaleTimeString()
             };
 
             db.child("rooms/" + roomName + "/messages").push(imageMessage);
