@@ -17,22 +17,18 @@
   --button-hover-bg: #4c4c4c;
   --button-shadow: rgba(255, 215, 0, 0.25); /* pour le neon */
 }
-html, body {
-  height: 100%;
-  overflow: hidden; /* empêche tout scroll inutile */
-}
 
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh; /* au lieu de min-height */
-  background: var(--bg-color);
-  font-family: 'Arial', sans-serif;
-  color: var(--text-color);
-  margin: 0;
-}
+ body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: var(--bg-color);
+        font-family: 'Arial', sans-serif;
+        color: var(--text-color);
+        margin: 0;
+    }
 
   @media (max-width: 600px) {
   #emoji-picker {
@@ -141,7 +137,7 @@ body {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-  display: flex;                 /* ✅ Doit être FLEX dès le départ */
+  display: none;                 /* ✅ Doit être FLEX dès le départ */
   flex-direction: column;
   max-height: 100vh;            /* ✅ Jamais plus haut que la fenêtre */
   overflow: hidden;             /* ✅ Bloque les débordements */
