@@ -673,7 +673,15 @@ min-height: 120px;
   height: 24px;
   fill: #ffd700;
 }
-
+.danger-button {
+  background-color: #b71c1c;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+.danger-button:hover {
+  background-color: #d32f2f;
+  transform: scale(1.1);
+}
 </style>
 </head>
 <body>
@@ -758,6 +766,11 @@ min-height: 120px;
    <button class="icon-button" onclick="quitRoom()" title="Quitter">
     <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
   </button>
+<button class="icon-button danger-button" onclick="wipeRoom()" title="Panic - Supprimer la Villa">
+  <svg viewBox="0 0 24 24">
+    <path d="M12 2L2 22h20L12 2zm0 3.84L18.93 20H5.07L12 5.84zM11 10h2v5h-2v-5zm0 6h2v2h-2v-2z"/>
+  </svg>
+</button>
 </div>
 
 
@@ -1570,9 +1583,32 @@ function handleThemeChange(e) {
   const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
   userRef.update({ theme: selectedTheme });
 }
+//bouton d'urgence
+function wipeRoom() {
+  if (!db || !roomName) return;
 
-// ✅ Ajout de l'écouteur de changement (UNE SEULE FOIS)
-document.getElementById('theme-select').addEventListener('change', handleThemeChange);
+  const confirmWipe = confirm("⚠️ Es-tu sûr de vouloir supprimer toute la villa ? Cette action est irréversible.");
+  if (!confirmWipe) return;
+
+  // Supprime toute la room dans Firebase
+  firebase.database().ref("rooms/" + roomName).remove()
+    .then(() => {
+      alert("✅ La villa a été supprimée avec succès.");
+
+      // Option : vider les messages localement (au cas où Firebase tarde)
+      const messagesDiv = document.getElementById("messages");
+      if (messagesDiv) messagesDiv.innerHTML = "";
+
+      // Option : redirige vers une page neutre après 1s
+      setTimeout(() => {
+        window.location.href = "https://www.google.com"; // Tu peux personnaliser cette redirection
+      }, 1000);
+    })
+    .catch((error) => {
+      console.error("❌ Erreur lors de la suppression de la villa :", error);
+      alert("Erreur : la suppression a échoué.");
+    });
+}
 
 </script>
 
