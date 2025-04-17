@@ -674,13 +674,28 @@ min-height: 120px;
   fill: #ffd700;
 }
 .danger-button {
-  background-color: #b71c1c;
-  color: #fff;
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  background-color: transparent;
+  border: 1px solid #800000;
+  color: #800000;
+  opacity: 0.5;
+  transition: 0.2s;
 }
 .danger-button:hover {
-  background-color: #d32f2f;
-  transform: scale(1.1);
+  opacity: 1;
+  background-color: #b71c1c;
+  color: #fff;
+}
+
+.stealth-button {
+  background-color: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  opacity: 0.5;
+  transition: 0.2s;
+}
+.stealth-button:hover {
+  opacity: 1;
+  background-color: #222;
 }
 </style>
 </head>
@@ -766,11 +781,12 @@ min-height: 120px;
    <button class="icon-button" onclick="quitRoom()" title="Quitter">
     <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
   </button>
-<button class="icon-button danger-button" onclick="wipeRoom()" title="Panic - Supprimer la Villa">
-  <svg viewBox="0 0 24 24">
-    <path d="M12 2L2 22h20L12 2zm0 3.84L18.93 20H5.07L12 5.84zM11 10h2v5h-2v-5zm0 6h2v2h-2v-2z"/>
-  </svg>
-</button>
+    <button class="icon-button danger-button" onclick="panicWipe()" title="Panic">
+    🧨
+  </button>
+  <button class="icon-button stealth-button" onclick="activateStealth()" title="Camouflage">
+    🕶️
+  </button>
 </div>
 
 
@@ -784,6 +800,10 @@ min-height: 120px;
     <img id="popup-img" style="max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 20px #000;" />
     <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
   </div>
+</div>
+     <div id="stealth-screen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #111; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999;">
+  <p style="color:#ccc; font-size:1.2em;">Résous : 9 x 2548 + 236</p>
+  <input id="stealth-code" placeholder="Tape ici" style="padding:10px; border-radius:6px; border:none; font-size:1rem;">
 </div>
      </div>
 
@@ -807,6 +827,7 @@ min-height: 120px;
     var replyMessageId = null;
     var replyMessageText = "";
     var messageListener = null;
+    var passwordValue = "";
 
     // Fonction pour afficher la notification
     function showNotification() {
@@ -842,6 +863,7 @@ function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
+ passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -887,6 +909,7 @@ db.set({
     });
   });
 }
+document.getElementById("theme-select").addEventListener("change", handleThemeChange);
 
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
@@ -1584,30 +1607,33 @@ function handleThemeChange(e) {
   userRef.update({ theme: selectedTheme });
 }
 //bouton d'urgence
-function wipeRoom() {
-  if (!db || !roomName) return;
+function panicWipe() {
+  if (!roomName) return;
+  firebase.database().ref("rooms/" + roomName).remove().catch(() => {});
+  window.location.href = "https://www.google.com";
+}
 
-  const confirmWipe = confirm("⚠️ Es-tu sûr de vouloir supprimer toute la villa ? Cette action est irréversible.");
-  if (!confirmWipe) return;
+function activateStealth() {
+  document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "none");
+  document.getElementById("stealth-screen").style.display = "flex";
 
-  // Supprime toute la room dans Firebase
-  firebase.database().ref("rooms/" + roomName).remove()
-    .then(() => {
-      alert("✅ La villa a été supprimée avec succès.");
+  const input = document.getElementById("stealth-code");
+  input.value = "";
+  input.focus();
 
-      // Option : vider les messages localement (au cas où Firebase tarde)
-      const messagesDiv = document.getElementById("messages");
-      if (messagesDiv) messagesDiv.innerHTML = "";
-
-      // Option : redirige vers une page neutre après 1s
-      setTimeout(() => {
-        window.location.href = "https://www.google.com"; // Tu peux personnaliser cette redirection
-      }, 1000);
-    })
-    .catch((error) => {
-      console.error("❌ Erreur lors de la suppression de la villa :", error);
-      alert("Erreur : la suppression a échoué.");
-    });
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        
+const passwordValue = document.getElementById("password-input").value;
+if (input.value === passwordValue) {
+  document.getElementById("stealth-screen").style.display = "none";
+  document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "");
+} else {
+  input.value = "";
+  input.placeholder = "Erreur. Réessaye.";
+}
+    }
+  }, { once: true });
 }
 
 </script>
