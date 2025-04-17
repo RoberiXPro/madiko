@@ -674,31 +674,45 @@ function joinRoom() {
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
 
-  db = firebase.database().ref("rooms/" + roomName);
+  if (!username || !roomName || !password) {
+    alert("Tous les champs sont obligatoires.");
+    return;
+  }
 
-  db.once('value').then(function(snapshot) {
+  const userCheckRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username);
+
+  userCheckRef.once("value").then(snapshot => {
     if (snapshot.exists()) {
-      var dbPassword = snapshot.child("password").val();
-      if (dbPassword === password) {
-        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-        switchToChat();
-        initializeUserListeners();
-        setOnlineStatus();
-      } else {
-        alert("Mot de passe incorrect !");
-      }
-    } else {
-      // Room inexistant : on le crée
-      db.set({
-        password: password,
-        messages: {}
-      }).then(() => {
-        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-        switchToChat();
-        initializeUserListeners();
-        setOnlineStatus();
-      });
+      alert("Ce pseudo est déjà utilisé dans cette villa !");
+      return;
     }
+
+    db = firebase.database().ref("rooms/" + roomName);
+
+    db.once('value').then(function(snapshot) {
+      if (snapshot.exists()) {
+        var dbPassword = snapshot.child("password").val();
+        if (dbPassword === password) {
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+        } else {
+          alert("Mot de passe incorrect !");
+        }
+      } else {
+        // Room inexistante : on la crée
+        db.set({
+          password: password,
+          messages: {}
+        }).then(() => {
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+        });
+      }
+    });
   });
 }
 
@@ -803,13 +817,13 @@ function sendMessage() {
         return;
     }
 
- var timestamp = new Date().toLocaleTimeString();
+    var timestamp = new Date().toLocaleTimeString();
 
     var msgData = { 
-        "user": username, 
-        "message": message, 
-        "timestamp": timestamp,
-        "reactions": {}
+        user: username, 
+        message: message, 
+        timestamp: timestamp,
+        reactions: {}
     };
     
     if (replyMessageId) {
@@ -817,8 +831,8 @@ function sendMessage() {
         cancelReply();
     }
 
-    // Correction : Cibler le bon chemin dans Firebase pour le roomName
-    var msgRef = firebase.database().ref("rooms/" + roomName + "/messages").push();
+    // ✅ CORRECTION ICI : utilise le `db` déjà défini
+    var msgRef = db.child("messages").push();
     msgRef.set(msgData);
 
     messageInput.value = '';
