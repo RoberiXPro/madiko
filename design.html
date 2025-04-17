@@ -963,12 +963,24 @@ function quitRoom() {
         content.style.maxWidth = "220px";
         content.onclick = () => openImagePopup(data.imageBase64);
       } else {
-        content = document.createElement("div");
-        content.className = "msg-text flou";
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
-        const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-        content.innerHTML = msg;
-      }
+      content = document.createElement("div");
+content.className = "msg-text";
+
+if (data.user !== username) {
+  content.classList.add("flou");
+
+  msgDiv.addEventListener("mouseenter", function () {
+    content.classList.remove("flou");
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true";
+      startDeletionTimer(msgDiv, key);
+    }
+  });
+}
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+  content.innerHTML = msg;
+}
 
       const userTag = document.createElement("div");
       userTag.className = "username-tag";
@@ -1046,34 +1058,7 @@ if (data.user === username) {
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
-      // Fonction pour démarrer un compte à rebours avant suppression (10 secondes)
-  function startDeletionTimer(msgDiv, key) {
-    setTimeout(() => {
-        deleteMessage(msgDiv, key); // Supprime le message après 120 secondes
-    }, 15000); // Timer de 120 secondes
-}
-
-    // Fonction de suppression du message
-    function deleteMessage(msgDiv, key) {
-        msgDiv.classList.add("fondu"); // Effet de fondu pour la suppression
-        setTimeout(function() {
-            msgDiv.remove(); // Suppression de l'élément du DOM
-            db.child("rooms/" + roomName + "/messages/" + key).remove(); // Suppression du message dans Firebase
-        }, 1000); // Délai pour l'animation visuelle de suppression (1 seconde)
-    }
-
-   // L'événement pour démarrer la suppression après survol
-msgDiv.onmouseover = function() {
-    if (data.user !== username) { // Ne pas supprimer les messages envoyés par l'utilisateur
-        textSpan.classList.remove("flou"); // Retirer le flou
-        if (!msgDiv.dataset.timerStarted) { // Vérifie si un timer est déjà en cours
-            msgDiv.dataset.timerStarted = true; // Empêche de démarrer plusieurs fois
-            startDeletionTimer(msgDiv, key); // Lance la suppression automatique
-        }
-    }
-};  
-
-      document.getElementById("messages").appendChild(msgDiv);
+       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
 
       if (data.user !== username && document.visibilityState === 'hidden') {
@@ -1081,6 +1066,19 @@ msgDiv.onmouseover = function() {
         notificationSound.play().catch(() => {});
       }
     }
+function startDeletionTimer(msgDiv, key) {
+  setTimeout(() => {
+    deleteMessage(msgDiv, key);
+  }, 120000); // 2 minutes
+}
+
+function deleteMessage(msgDiv, key) {
+  msgDiv.classList.add("fondu");
+  setTimeout(() => {
+    msgDiv.remove();
+    db.child("rooms/" + roomName + "/messages/" + key).remove();
+  }, 1000);
+}
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
