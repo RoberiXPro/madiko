@@ -565,6 +565,27 @@
   min-height: 100vh;
   padding: 20px;
 }
+.icon-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  border-radius: 50%;
+}
+.icon-button:hover {
+  background-color: #444;
+  transform: scale(1.1);
+}
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+  fill: #ffd700;
+}
 
 </style>
 </head>
@@ -614,18 +635,28 @@
 </div>
 
 <div id="input-section">
-    <button onclick="toggleEmojiPicker()">😊</button>
-    <input type="text" id="message-input" placeholder="Écrivez un message">
-    <button type="button" onclick="sendMessage()">Envoyer</button>
-    <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-
-    <!-- BOUTON IMAGE -->
-    <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-    <button onclick="document.getElementById('image-input').click()">🖼️</button>
-
-    <button onclick="toggleAllMessages()">Afficher tous</button>
-    <button onclick="quitRoom()">Quitter</button>
+  <button class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
+    <svg viewBox="0 0 24 24"><path d="M12 22C6.48 22 2 17.52 2 12s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10zm0-4a6 6 0 006-6H6a6 6 0 006 6z"/></svg>
+  </button>
+  <input type="text" id="message-input" placeholder="Écrivez un message">
+  <button class="icon-button" onclick="sendMessage()" title="Envoyer">
+    <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+  </button>
+  <button class="icon-button" onclick="toggleRecording()" id="record-btn" title="Audio">
+    <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>
+  </button>
+  <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+  <button class="icon-button" onclick="document.getElementById('image-input').click()" title="Image">
+    <svg viewBox="0 0 24 24"><path d="M21 19V5H3v14h18zm-2-2H5V7h14v10z"/></svg>
+  </button>
+  <button class="icon-button" onclick="toggleAllMessages()" title="Afficher tous / Masquer tous">
+    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zM12 17a5 5 0 110-10 5 5 0 010 10z"/></svg>
+  </button>
+  <button class="icon-button" onclick="quitRoom()" title="Quitter">
+    <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
+  </button>
 </div>
+
 
         <div id="emoji-picker" style="display: none;">
     <!-- Emoji Picker Content -->
@@ -1081,15 +1112,15 @@ btnGroup.style.display = "flex";
 btnGroup.style.gap = "5px";
 
 const replyBtn = document.createElement("button");
-replyBtn.className = "reply-btn";
-replyBtn.textContent = "Répondre";
+replyBtn.className = "icon-button";
+replyBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c4.28 0 6.88 1.45 8.95 4.1-.5-5.04-3.95-10-8.95-10z"/></svg>';
 replyBtn.onclick = () => prepareReply(key, data.message);
 btnGroup.appendChild(replyBtn);
 
 if (data.user === username) {
   const deleteBtn = document.createElement("button");
-  deleteBtn.className = "btn-delete";
-  deleteBtn.textContent = "Supprimer";
+  deleteBtn.className = "icon-button";
+  deleteBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1z"/></svg>';
   deleteBtn.onclick = () => db.child("messages").child(key).remove();
   btnGroup.appendChild(deleteBtn);
 }
