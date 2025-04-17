@@ -910,8 +910,7 @@ function loadMessages() {
         childRemovedListenerSet = true;
     }
 }
-
-    
+   
     //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
     db.child("rooms/" + roomName + "/messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -920,16 +919,36 @@ function loadMessages() {
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
+function loadEmojis() {
+  const picker = document.getElementById("emoji-picker");
+  picker.innerHTML = "";
+  emojis.forEach(emoji => {
+    const emojiSpan = document.createElement("span");
+    emojiSpan.textContent = emoji;
+    emojiSpan.className = "emoji";
+    emojiSpan.onclick = function () {
+      insertEmoji(emoji);
+    };
+    picker.appendChild(emojiSpan);
+  });
+}
+
+function insertEmoji(emoji) {
+  const messageInput = document.getElementById("message-input");
+  messageInput.value += emoji;
+  document.getElementById("emoji-picker").style.display = "none";
+}
+
+
 function toggleEmojiPicker() {
   const button = document.querySelector("button[onclick='toggleEmojiPicker()']");
   const picker = document.getElementById("emoji-picker");
 
   if (!picker || !button) return;
 
-  // Toggle ON
-  if (picker.style.display !== "flex") {
+   if (picker.style.display !== "flex") {
     picker.style.display = "flex";
-    picker.style.visibility = "hidden"; // ne pas montrer le contenu tout de suite
+    picker.style.visibility = "hidden";
     requestAnimationFrame(() => {
       const rect = button.getBoundingClientRect();
       const scrollY = window.scrollY || window.pageYOffset;
@@ -939,12 +958,11 @@ function toggleEmojiPicker() {
       picker.style.left = `${rect.left + scrollX}px`;
       picker.style.visibility = "visible";
     });
-  } 
-  // Toggle OFF
-  else {
+  } else {
     picker.style.display = "none";
   }
 }
+
 
 // ✅ Gère la fermeture de l'emoji picker global
 document.addEventListener("click", function(event) {
@@ -955,30 +973,6 @@ document.addEventListener("click", function(event) {
   }
 });
 
-// Ferme avec touche échap
-document.addEventListener("keydown", function(event) {
-  if (event.key === "Escape") {
-    const picker = document.getElementById("emoji-picker");
-    if (picker) picker.style.display = "none";
-  }
-});
-
-// Initialise les émojis si pas encore fait (si pas appelé automatiquement au chargement)
-document.addEventListener("DOMContentLoaded", loadEmojis);
-
-    function loadEmojis() {
-        const picker = document.getElementById("emoji-picker");
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                insertEmoji(emoji);
-            };
-            picker.appendChild(emojiSpan);
-        });
-    }
-
     document.addEventListener("keydown", function(event) {
         if (event.key === "Escape") {
             document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
@@ -987,21 +981,7 @@ document.addEventListener("DOMContentLoaded", loadEmojis);
         }
     });
 
-    document.addEventListener("click", function(event) {
-        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
+     document.addEventListener("DOMContentLoaded", function() {
         loadEmojis();
 
         document.getElementById("message-input").addEventListener("keydown", function(event) {
