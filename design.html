@@ -1205,57 +1205,58 @@ function toggleEmojiPickerMessage(key) {
 let mediaRecorder;
 let audioChunks = [];
 let recordedBlob;
+let microAccessGranted = false;
 
-// 🎙️ Démarre ou arrête l’enregistrement
 function toggleRecording() {
-  const recordBtn = document.getElementById('record-btn');
+    const recordBtn = document.getElementById('record-btn');
 
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
+    // ✅ Bloquer si on a déjà tenté et refusé l’accès
+    if (!microAccessGranted && !mediaRecorder) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            microAccessGranted = true;
 
-      mediaRecorder.ondataavailable = event => {
-        audioChunks.push(event.data);
-      };
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
 
-      mediaRecorder.onstop = () => {
-        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioURL = URL.createObjectURL(recordedBlob);
-        document.getElementById('audio-player').src = audioURL;
-        document.getElementById('audio-preview').style.display = "block";
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
 
-        // 🔄 Revenir à l'icône micro après arrêt
-        recordBtn.innerHTML = svgMic;
-        recordBtn.classList.remove("recording");
-      };
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioURL = URL.createObjectURL(recordedBlob);
 
-      mediaRecorder.start();
+                document.getElementById('audio-player').src = audioURL;
+                document.getElementById('audio-preview').style.display = "block";
 
-      // ⏹️ Afficher l'icône "Stop"
-      recordBtn.innerHTML = svgStop;
-      recordBtn.classList.add("recording");
+                // ✅ Remettre l’icône SVG moderne
+                recordBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>`;
+                recordBtn.classList.remove("recording");
+            };
 
-      setTimeout(() => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-          alert("Durée maximale atteinte (30s)");
-        }
-      }, 30000);
+            // Démarre immédiatement après autorisation
+            mediaRecorder.start();
+            recordBtn.innerHTML = "⏹️ Stop";
+            recordBtn.classList.add("recording");
 
-    }).catch(error => {
-      console.error("Erreur micro :", error);
-      alert("Erreur : accès au micro refusé !");
-    });
+            // 🔴 Stop après 30s si pas fait manuellement
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                    alert("Durée maximale atteinte (30s)");
+                }
+            }, 30000);
 
-  } else {
-    mediaRecorder.stop();
+        }).catch(error => {
+            console.error("Erreur micro :", error);
+            alert("Erreur : accès au micro refusé !");
+        });
 
-    // 🔁 Ici aussi au cas où l'arrêt est manuel
-    recordBtn.innerHTML = svgMic;
-    recordBtn.classList.remove("recording");
-  }
+    } else if (mediaRecorder && mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+    }
 }
+
 
 function uploadAudio() {
     if (!recordedBlob) {
