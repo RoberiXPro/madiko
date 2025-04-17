@@ -1,32 +1,101 @@
 <!DOCTYPE html>
 <html>
-<head>    <!-- mandeha rehetra : fonction flou, vocale, envoie image sans clique
+<head>  <!-- TOUT FONCTION ICI  -->  
 
-    <title>RS-Villa - Room sécurisé</title>
+    <title>RS-VILLA</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-    body {
+:root {
+  --bg-color: #1f1f1f;
+  --text-color: #ffffff;
+  --accent-color: #ffd700;
+  --button-bg: #5a5a5a;
+  --button-hover-bg: #4c4c4c;
+  --button-shadow: rgba(255, 215, 0, 0.25); /* pour le neon */
+}
+
+ body {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
+        background: var(--bg-color);
         font-family: 'Arial', sans-serif;
-        color: #ffffff;
+        color: var(--text-color);
         margin: 0;
     }
-    #chat-container {
-        width: 70%;
-        max-width: 800px;
-        background: rgba(60, 60, 60, 0.9);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-        display: none;
-    }
+
+  @media (max-width: 600px) {
+  #emoji-picker {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 60px;
+  }
+}
+
+  #message-input {
+    font-size: 1rem;
+  }
+}
+  .theme-default {
+  --message-color-user1: linear-gradient(135deg, #4e54c8, #8f94fb);
+  --message-color-user2: #3a3a3a;
+}
+
+.theme-ocean {
+  --message-color-user1: linear-gradient(135deg, #00c9ff, #92fe9d);
+  --message-color-user2: #1b2b34;
+}
+
+.theme-forest {
+  --message-color-user1: linear-gradient(135deg, #43cea2, #185a9d);
+  --message-color-user2: #37474f;
+
+}
+    .theme-rosewood {
+  --message-color-user1: linear-gradient(135deg, #a83279, #d38312);
+  --message-color-user2: #502336;
+}
+
+.theme-noir {
+  --message-color-user1: linear-gradient(135deg, #434343, #000000);
+  --message-color-user2: #1e1e1e;
+}
+
+.theme-midnight {
+  --message-color-user1: linear-gradient(135deg, #1c92d2, #f2fcfe);
+  --message-color-user2: #172d51;
+}
+
+.theme-sepia {
+  --message-color-user1: linear-gradient(135deg, #a2836e, #e6ccb2);
+  --message-color-user2: #5a463b;
+}
+
+.theme-galaxy {
+  --message-color-user1: linear-gradient(135deg, #4a00e0, #8e2de2);
+  --message-color-user2: #2a2438;
+}
+
+
+#chat-container {
+  width: 70%;
+  max-width: 800px;
+  background: rgba(60, 60, 60, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+  display: none;                 /* ✅ Doit être FLEX dès le départ */
+  flex-direction: column;
+  max-height: 100vh;            /* ✅ Jamais plus haut que la fenêtre */
+  overflow: hidden;             /* ✅ Bloque les débordements */
+}
+
  #login-container {
       flex-grow: 1;
       display: flex;
@@ -188,19 +257,52 @@
         background-color: #4c4c4c;
     }
 
-    #emoji-picker {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        max-width: 200px;
-        background-color: #333;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        position: absolute;
-        bottom: 60px;
-        right: 130px;
-    }
+#input-section {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-color); /* s’adapte au thème */
+  z-index: 999;
+  padding: 10px;
+}
+
+    
+#input-section button {
+    background: linear-gradient(145deg, #3a3a3a, #222);
+    color: #ffd700;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 4px 2px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 1px solid #ffd70033;
+    box-shadow: 0 4px 10px rgba(255, 215, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#input-section button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.25);
+    background: linear-gradient(145deg, #444, #1f1f1f);
+}
+
+#input-section button:active {
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px rgba(255, 215, 0, 0.2);
+}
+
+  #emoji-picker {
+  display: none;
+  position: absolute;
+  z-index: 9999;
+  background-color: #333;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 200px;
+}
+
     @media (max-width: 600px) {
   #emoji-picker {
     right: 10px; /* ✅ Adapté pour mobile */
@@ -253,10 +355,18 @@
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    #messages {
-      display: flex;
-      flex-direction: column;
-    }
+#messages {
+  flex: 1;                      /* ✅ Prend tout l’espace disponible */
+  overflow-y: auto;             /* ✅ Scroll vertical uniquement ici */
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #2e2e2e;
+  border-radius: 5px;
+  margin-bottom: 10px;
+min-height: 120px;
+}
+
 
     .message {
       display: flex;
@@ -274,7 +384,7 @@
 
     .message.user1 {
       align-self: flex-end;
-      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      background: var(--message-color-user1);
       color: #fff;
       border-bottom-right-radius: 4px;
       border-top-right-radius: 18px;
@@ -294,7 +404,7 @@
 
     .message.user2 {
       align-self: flex-start;
-      background: #3a3a3a;
+      background: var(--message-color-user2);
       color: #fff;
       border-bottom-left-radius: 4px;
       border-top-left-radius: 18px;
@@ -542,12 +652,32 @@
   min-height: 100vh;
   padding: 20px;
 }
-
+.icon-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  border-radius: 50%;
+}
+.icon-button:hover {
+  background-color: #444;
+  transform: scale(1.1);
+}
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+  fill: #ffd700;
+}
 </style>
 </head>
 <body>
    <div id="login-container">
-    <h1>RS-Villa</h1>
+    <h1>TEST THEME</h1>
     <div class="login-card">
       <h2 class="login-title">Connexion</h2>
       <div class="input-group">
@@ -570,6 +700,24 @@
  <div class="container container-chat">  
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <!-- Sélecteur de thème -->
+<div id="theme-selector" style="text-align: right; margin-bottom: 10px;">
+  <label for="theme-select" style="margin-right: 8px; color: var(--text-color); font-size: 0.9rem;">
+    🎨 Thème :
+  </label>
+  <select id="theme-select" style="padding: 6px 10px; border-radius: 8px; background-color: #444; color: #ffd700; border: 1px solid #888;">
+    <option value="default">Sombre</option>
+    <option value="ocean">Océan</option>
+    <option value="forest">Forêt</option>
+    <option value="rosewood">Rosewood</option>
+<option value="rosewood">Amour</option>
+<option value="noir">Nuit discrète</option>
+<option value="midnight">Minuit</option>
+<option value="sepia">Sépia</option>
+<option value="galaxy">Galaxie</option>
+
+  </select>
+</div>
 <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -590,19 +738,27 @@
   <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
 </div>
 
+
 <div id="input-section">
-    <button onclick="toggleEmojiPicker()">😊</button>
-    <input type="text" id="message-input" placeholder="Écrivez un message">
-    <button onclick="sendMessage()">Envoyer</button>
-    <button onclick="toggleRecording()" id="record-btn">🎙️</button>
-
-    <!-- BOUTON IMAGE -->
-    <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
-    <button onclick="document.getElementById('image-input').click()">🖼️</button>
-
-    <button onclick="toggleAllMessages()">Afficher tous</button>
-    <button onclick="quitRoom()">Quitter</button>
+  <button class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
+    <svg viewBox="0 0 24 24"><path d="M12 22C6.48 22 2 17.52 2 12s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10zm0-4a6 6 0 006-6H6a6 6 0 006 6z"/></svg>
+  </button>
+  <input type="text" id="message-input" placeholder="Écrivez un message">
+  <button class="icon-button" onclick="sendMessage()" title="Envoyer">
+    <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+  </button>
+  <button class="icon-button" onclick="toggleRecording()" id="record-btn" title="Audio">
+    <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>
+  </button>
+  <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+  <button class="icon-button" onclick="document.getElementById('image-input').click()" title="Image">
+    <svg viewBox="0 0 24 24"><path d="M21 19V5H3v14h18zm-2-2H5V7h14v10z"/></svg>
+  </button>
+   <button class="icon-button" onclick="quitRoom()" title="Quitter">
+    <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
+  </button>
 </div>
+
 
         <div id="emoji-picker" style="display: none;">
     <!-- Emoji Picker Content -->
@@ -615,7 +771,7 @@
     <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
   </div>
 </div>
-     </div>
+        </div>
 
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
@@ -631,13 +787,13 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-       var db;
+    var db;
     var username;
     var roomName;
     var replyMessageId = null;
     var replyMessageText = "";
-    var allMessagesVisible = false;
     var messageListener = null;
+    var passwordValue = "";
 
     // Fonction pour afficher la notification
     function showNotification() {
@@ -650,10 +806,9 @@
       }, 5000);
     }
 //afaka atao entrée refa mi connecte
- document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   showNotification();
 
-  // ✅ Ajoute le support touche 'Entrée' sur les champs de login
   const loginContainer = document.getElementById("login-container");
   if (loginContainer) {
     loginContainer.addEventListener("keydown", function (e) {
@@ -663,55 +818,64 @@
       }
     });
   }
+
+  // ✅ Ici : assignation du clic du bouton
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) loginBtn.onclick = joinRoom;
 });
 
-//mampiseho anle delais msg
- function formatTime(timestamp) {
-    const now = Date.now();
-    const diffMs = now - timestamp;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHr = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHr / 24);
-
-    if (diffSec < 60) return "À l'instant";
-    if (diffMin < 60) return `il y a ${diffMin} min`;
-    if (diffHr < 24) return `il y a ${diffHr}h`;
-    return `il y a ${diffDay}j`;
-  }
-    
+   
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
+ passwordValue = password;
 
-  db = firebase.database().ref("rooms/" + roomName);
+  if (!username || !roomName || !password) {
+    alert("Tous les champs sont obligatoires.");
+    return;
+  }
 
-  db.once('value').then(function(snapshot) {
+  const userCheckRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username);
+
+  userCheckRef.once("value").then(snapshot => {
     if (snapshot.exists()) {
-      var dbPassword = snapshot.child("password").val();
-      if (dbPassword === password) {
-        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-        switchToChat();
-        initializeUserListeners();
-        setOnlineStatus();
-      } else {
-        alert("Mot de passe incorrect !");
-      }
-    } else {
-      // Room inexistant : on le crée
-      db.set({
-        password: password,
-        messages: {}
-      }).then(() => {
-        document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-        switchToChat();
-        initializeUserListeners();
-        setOnlineStatus();
-      });
+      alert("Ce pseudo est déjà utilisé dans cette villa !");
+      return;
     }
+
+    db = firebase.database().ref("rooms/" + roomName);
+
+    db.once('value').then(function(snapshot) {
+      if (snapshot.exists()) {
+        var dbPassword = snapshot.child("password").val();
+if (dbPassword === password) {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI
+}
+ else {
+          alert("Mot de passe incorrect !");
+        }
+      } else {
+        // Room inexistante : on la crée
+db.set({
+  password: password,
+  messages: {}
+}).then(() => {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI AUSSI
+});
+      }
+    });
   });
 }
+document.getElementById("theme-select").addEventListener("change", handleThemeChange);
 
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
@@ -721,7 +885,15 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
     updateUserStatusUI(user, data.status);
 });
-    
+
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  if (!theme) return;
+  Object.entries(theme).forEach(([varName, value]) => {
+    document.documentElement.style.setProperty(varName, value);
+  });
+}
+
 
 function initializeUserListeners() {
     var usersRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers");
@@ -739,12 +911,13 @@ function initializeUserListeners() {
         updateUserStatusUI(user, status);
     });
 
-    // Écoute les suppressions d'utilisateurs
+ // Écoute les suppressions d'utilisateurs
   usersRef.on("child_removed", function(snapshot) {
         const user = snapshot.key;
         removeUserFromUI(user);
     });
 }
+
 
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
 function setOnlineStatus() {
@@ -813,13 +986,13 @@ function sendMessage() {
         return;
     }
 
-    var timestamp = Date.now(); // stocke l'heure en millisecondes
+    var timestamp = Date.now();
 
     var msgData = { 
-        "user": username, 
-        "message": message, 
-        "timestamp": timestamp,
-        "reactions": {}
+        user: username, 
+        message: message, 
+        timestamp: timestamp,
+        reactions: {}
     };
     
     if (replyMessageId) {
@@ -827,8 +1000,8 @@ function sendMessage() {
         cancelReply();
     }
 
-    // Correction : Cibler le bon chemin dans Firebase pour le roomName
-    var msgRef = db.child("rooms/" + roomName + "/messages").push();
+    // ✅ CORRECTION ICI : utilise le `db` déjà défini
+    var msgRef = db.child("messages").push();
     msgRef.set(msgData);
 
     messageInput.value = '';
@@ -838,27 +1011,25 @@ function sendMessage() {
 var childRemovedListenerSet = false;
 
 function loadMessages() {
-    // Écoute les nouveaux messages ajoutés pour les afficher
     if (!messageListener) {
         messageListener = function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         };
-        db.child("rooms/" + roomName + "/messages").on("child_added", messageListener);
+        db.child("messages").on("child_added", messageListener);
     }
 
-    // Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
-        db.child("rooms/" + roomName + "/messages").on("child_removed", function(snapshot) {
+        db.child("messages").on("child_removed", function(snapshot) {
             const removedMessage = document.getElementById(snapshot.key);
             if (removedMessage) {
-                removedMessage.remove(); // Supprime le message de l'interface utilisateur pour tous les utilisateurs
+                removedMessage.remove();
                 console.log("Message supprimé de l'interface après suppression dans Firebase.");
             }
         });
         childRemovedListenerSet = true;
     }
 }
-
+   
     //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
     db.child("rooms/" + roomName + "/messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -867,38 +1038,59 @@ function loadMessages() {
     // Liste d'émojis de base
     const emojis = ["😀", "😂", "😍", "😎", "😊", "😢", "😡", "👍", "👎", "🎉", "❤️", "🔥"];
 
-    function toggleEmojiPicker() {
-        const picker = document.getElementById("emoji-picker");
-        picker.style.display = picker.style.display === "none" ? "flex" : "none";
-    }
+function loadEmojis() {
+  const picker = document.getElementById("emoji-picker");
+  picker.innerHTML = "";
+  emojis.forEach(emoji => {
+    const emojiSpan = document.createElement("span");
+    emojiSpan.textContent = emoji;
+    emojiSpan.className = "emoji";
+    emojiSpan.onclick = function () {
+      insertEmoji(emoji);
+    };
+    picker.appendChild(emojiSpan);
+  });
+}
+
+function insertEmoji(emoji) {
+  const messageInput = document.getElementById("message-input");
+  messageInput.value += emoji;
+  document.getElementById("emoji-picker").style.display = "none";
+}
+
+
+function toggleEmojiPicker() {
+  const button = document.querySelector("button[onclick='toggleEmojiPicker()']");
+  const picker = document.getElementById("emoji-picker");
+
+  if (!picker || !button) return;
+
+   if (picker.style.display !== "flex") {
+    picker.style.display = "flex";
+    picker.style.visibility = "hidden";
+    requestAnimationFrame(() => {
+      const rect = button.getBoundingClientRect();
+      const scrollY = window.scrollY || window.pageYOffset;
+      const scrollX = window.scrollX || window.pageXOffset;
+
+      picker.style.top = `${rect.top + scrollY - picker.offsetHeight - 10}px`;
+      picker.style.left = `${rect.left + scrollX}px`;
+      picker.style.visibility = "visible";
+    });
+  } else {
+    picker.style.display = "none";
+  }
+}
+
+
 // ✅ Gère la fermeture de l'emoji picker global
 document.addEventListener("click", function(event) {
   const picker = document.getElementById("emoji-picker");
   const emojiButton = document.querySelector("button[onclick='toggleEmojiPicker()']");
-  if (!picker.contains(event.target) && event.target !== emojiButton) {
+  if (!picker.contains(event.target) && event.target !== emojiButton && !event.target.classList.contains("emoji")) {
     picker.style.display = "none";
   }
 });
-
-document.addEventListener("keydown", function(event) {
-  if (event.key === "Escape") {
-    const picker = document.getElementById("emoji-picker");
-    if (picker) picker.style.display = "none";
-  }
-});
-
-    function loadEmojis() {
-        const picker = document.getElementById("emoji-picker");
-        emojis.forEach(emoji => {
-            const emojiSpan = document.createElement("span");
-            emojiSpan.textContent = emoji;
-            emojiSpan.className = "emoji";
-            emojiSpan.onclick = function() {
-                insertEmoji(emoji);
-            };
-            picker.appendChild(emojiSpan);
-        });
-    }
 
     document.addEventListener("keydown", function(event) {
         if (event.key === "Escape") {
@@ -908,21 +1100,7 @@ document.addEventListener("keydown", function(event) {
         }
     });
 
-    document.addEventListener("click", function(event) {
-        if (!event.target.closest(".emoji-picker-message") && !event.target.classList.contains("emoji-btn")) {
-            document.querySelectorAll(".emoji-picker-message").forEach(function(picker) {
-                picker.style.display = "none";
-            });
-        }
-    });
-
-    function insertEmoji(emoji) {
-        const messageInput = document.getElementById("message-input");
-        messageInput.value += emoji;
-        document.getElementById("emoji-picker").style.display = "none";
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
+     document.addEventListener("DOMContentLoaded", function() {
         loadEmojis();
 
         document.getElementById("message-input").addEventListener("keydown", function(event) {
@@ -976,12 +1154,24 @@ function quitRoom() {
         content.style.maxWidth = "220px";
         content.onclick = () => openImagePopup(data.imageBase64);
       } else {
-        content = document.createElement("div");
-        content.className = "msg-text flou";
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
-        const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-        content.innerHTML = msg;
-      }
+      content = document.createElement("div");
+content.className = "msg-text";
+
+if (data.user !== username) {
+  content.classList.add("flou");
+
+  msgDiv.addEventListener("mouseenter", function () {
+    content.classList.remove("flou");
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true";
+      startDeletionTimer(msgDiv, key);
+    }
+  });
+}
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+  content.innerHTML = msg;
+}
 
       const userTag = document.createElement("div");
       userTag.className = "username-tag";
@@ -1043,55 +1233,23 @@ btnGroup.style.display = "flex";
 btnGroup.style.gap = "5px";
 
 const replyBtn = document.createElement("button");
-replyBtn.className = "reply-btn";
-replyBtn.textContent = "Répondre";
+replyBtn.className = "icon-button";
+replyBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c4.28 0 6.88 1.45 8.95 4.1-.5-5.04-3.95-10-8.95-10z"/></svg>';
 replyBtn.onclick = () => prepareReply(key, data.message);
 btnGroup.appendChild(replyBtn);
 
 if (data.user === username) {
   const deleteBtn = document.createElement("button");
-  deleteBtn.className = "btn-delete";
-  deleteBtn.textContent = "Supprimer";
-  deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+  deleteBtn.className = "icon-button";
+  deleteBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1z"/></svg>';
+  deleteBtn.onclick = () => db.child("messages").child(key).remove();
   btnGroup.appendChild(deleteBtn);
 }
 
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
-if (data.user !== username) {
-  msgDiv.addEventListener("mouseover", () => {
-    if (!msgDiv.dataset.timerStarted && !data.autoDeleteScheduledBy) {
-      msgDiv.dataset.timerStarted = "true";
-      // Indique dans Firebase que ce message doit être supprimé
-      firebase
-        .database()
-        .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
-        .set(username);
-    }
-  });
-}
-       
-db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
-  const msg = snapshot.val();
-  const key = snapshot.key;
-  const msgDiv = document.getElementById(key);
-  if (!msgDiv || msgDiv.dataset.timerStarted) return;
-
-  if (msg.autoDeleteScheduledBy) {
-    msgDiv.dataset.timerStarted = "true";
-    msgDiv.classList.add("deletion-pending");
-
-    setTimeout(() => {
-      msgDiv.classList.add("fondu");
-      setTimeout(() => {
-        // Supprimer définitivement le message de Firebase
-        firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-      }, 1000); // délai visuel pour effet "fondu"
-    }, 60000); // délai avant suppression réelle (60 secondes)
-  }
-});
-      document.getElementById("messages").appendChild(msgDiv);
+       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
 
       if (data.user !== username && document.visibilityState === 'hidden') {
@@ -1099,6 +1257,24 @@ db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
         notificationSound.play().catch(() => {});
       }
     }
+function startDeletionTimer(msgDiv, key) {
+  msgDiv.classList.add("deletion-pending");
+    setTimeout(() => {
+    deleteMessage(msgDiv, key);
+  }, 120000); // 2 minutes
+}
+
+function deleteMessage(msgDiv, key) {
+  if (msgDiv.classList.contains("deleting")) return; // 🧱 Stop si déjà lancé
+  msgDiv.classList.add("deleting");
+
+  msgDiv.classList.add("fondu");
+  setTimeout(() => {
+    msgDiv.remove();
+    db.child("messages").child(key).remove();
+  }, 1000);
+}
+
 
    
 // Fonction toggleEmojiPickerMessage pour afficher/masquer l'emoji picker spécifique à chaque message
@@ -1129,20 +1305,7 @@ function toggleEmojiPickerMessage(key) {
     document.getElementById("reply-container").style.display = "none"; // Cache le conteneur de réponse
 }
 
-    function toggleAllMessages() {
-        var allMessages = document.querySelectorAll(".msg-text");
-        allMessages.forEach(function(message) {
-            if (allMessagesVisible) {
-                message.classList.add("flou");
-            } else {
-                message.classList.remove("flou");
-            }
-        });
-        allMessagesVisible = !allMessagesVisible;
-        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
-    }
-
-    function scrollToBottom() {
+   function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -1161,13 +1324,16 @@ function toggleEmojiPickerMessage(key) {
 let mediaRecorder;
 let audioChunks = [];
 let recordedBlob;
+let microAccessGranted = false;
 
-// 🎙️ Démarre ou arrête l’enregistrement
 function toggleRecording() {
     const recordBtn = document.getElementById('record-btn');
 
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    // ✅ Bloquer si on a déjà tenté et refusé l’accès
+    if (!microAccessGranted && !mediaRecorder) {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            microAccessGranted = true;
+
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
 
@@ -1181,15 +1347,18 @@ function toggleRecording() {
 
                 document.getElementById('audio-player').src = audioURL;
                 document.getElementById('audio-preview').style.display = "block";
-                recordBtn.textContent = "🎙️";
+
+                // ✅ Remettre l’icône SVG moderne
+                recordBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>`;
                 recordBtn.classList.remove("recording");
             };
 
+            // Démarre immédiatement après autorisation
             mediaRecorder.start();
-            recordBtn.textContent = "⏹️ Stop";
+            recordBtn.innerHTML = "⏹️ Stop";
             recordBtn.classList.add("recording");
 
-            // Limite d’enregistrement à 30s
+            // 🔴 Stop après 30s si pas fait manuellement
             setTimeout(() => {
                 if (mediaRecorder && mediaRecorder.state === "recording") {
                     mediaRecorder.stop();
@@ -1201,12 +1370,12 @@ function toggleRecording() {
             console.error("Erreur micro :", error);
             alert("Erreur : accès au micro refusé !");
         });
-    } else {
+
+    } else if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
-        recordBtn.textContent = "🎙️";
-        recordBtn.classList.remove("recording");
     }
 }
+
 
 function uploadAudio() {
     if (!recordedBlob) {
@@ -1231,7 +1400,7 @@ function uploadAudio() {
             timestamp: Date.now()
         };
 
-        db.child("rooms/" + roomName + "/messages").push(audioMessage);
+      db.child("messages").push(audioMessage);
 
         // Réinitialiser l’interface
         document.getElementById('audio-preview').style.display = "none";
@@ -1265,7 +1434,7 @@ function handleImageUpload(event) {
                 timestamp: Date.now()
             };
 
-            db.child("rooms/" + roomName + "/messages").push(imageMessage);
+            db.child("messages").push(imageMessage);
         };
         reader.readAsDataURL(file);
     });
@@ -1317,6 +1486,92 @@ setInterval(() => {
   });
 }, 60000); // toutes les 60 secondes
 
+function formatTime(ts) {
+  const date = new Date(Number(ts));
+  if (isNaN(date.getTime())) {
+    return typeof ts === 'string' ? ts : "🕓 invalide";
+  }
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+// Application des thèmes
+const themes = {
+  default: {
+    '--message-color-user1': 'linear-gradient(135deg, #4e54c8, #8f94fb)',
+    '--message-color-user2': '#3a3a3a'
+  },
+  ocean: {
+    '--message-color-user1': 'linear-gradient(135deg, #2193b0, #6dd5ed)',
+    '--message-color-user2': '#145374'
+  },
+  forest: {
+    '--message-color-user1': 'linear-gradient(135deg, #388e3c, #a5d6a7)',
+    '--message-color-user2': '#2e7d32'
+  },
+
+  // 💖 Nouveaux thèmes
+rosewood: {
+    '--message-color-user1': 'linear-gradient(135deg, #a83279, #d38312)',
+    '--message-color-user2': '#502336',
+
+  },
+  noir: {
+    '--message-color-user1': 'linear-gradient(135deg, #434343, #000000)',
+    '--message-color-user2': '#1e1e1e',
+
+  },
+  midnight: {
+    '--message-color-user1': 'linear-gradient(135deg, #1c92d2, #f2fcfe)',
+    '--message-color-user2': '#172d51',
+
+  },
+  sepia: {
+    '--message-color-user1': 'linear-gradient(135deg, #a2836e, #e6ccb2)',
+    '--message-color-user2': '#5a463b',
+
+  },
+  galaxy: {
+    '--message-color-user1': 'linear-gradient(135deg, #4a00e0, #8e2de2)',
+    '--message-color-user2': '#2a2438',
+  }
+};
+
+
+// ✅ Applique un thème donné
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  if (!theme) return;
+
+  Object.keys(theme).forEach(variable => {
+    document.documentElement.style.setProperty(variable, theme[variable]);
+  });
+}
+
+// ✅ Charge le thème de l'utilisateur depuis Firebase
+function loadUserTheme() {
+  if (!username || !roomName) return;
+  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
+  userRef.once("value").then(snapshot => {
+    const data = snapshot.val();
+    if (data && data.theme) {
+      applyTheme(data.theme);
+      document.getElementById("theme-select").value = data.theme;
+    } else {
+      applyTheme("default");
+      document.getElementById("theme-select").value = "default";
+    }
+  });
+}
+
+// ✅ Gère le changement de thème et enregistre dans Firebase
+function handleThemeChange(e) {
+  const selectedTheme = e.target.value;
+  applyTheme(selectedTheme);
+
+  if (!username || !roomName) return;
+
+  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
+  userRef.update({ theme: selectedTheme });
+}
 </script>
 
 </body>
