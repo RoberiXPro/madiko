@@ -859,12 +859,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const loginBtn = document.querySelector(".login-button");
   if (loginBtn) loginBtn.onclick = joinRoom;
 });
-   
+
+// ✅ Et tu déplaces `joinRoom()` tout seul en-dehors :
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
- passwordValue = password;
+  passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -884,32 +885,31 @@ function joinRoom() {
     db.once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         var dbPassword = snapshot.child("password").val();
-if (dbPassword === password) {
-  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-  switchToChat();
-  initializeUserListeners();
-  setOnlineStatus();
-  loadUserTheme(); // ICI
-}
- else {
+        if (dbPassword === password) {
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+          loadUserTheme();
+        } else {
           alert("Mot de passe incorrect !");
         }
       } else {
-        // Room inexistante : on la crée
-db.set({
-  password: password,
-  messages: {}
-}).then(() => {
-  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-  switchToChat();
-  initializeUserListeners();
-  setOnlineStatus();
-  loadUserTheme(); // ICI AUSSI
-});
+        db.set({
+          password: password,
+          messages: {}
+        }).then(() => {
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+          loadUserTheme();
+        });
       }
     });
   });
 }
+
 document.getElementById("theme-select").addEventListener("change", handleThemeChange);
 
 
