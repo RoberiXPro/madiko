@@ -1067,7 +1067,7 @@ if (data.user === username) {
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "btn-delete";
   deleteBtn.textContent = "Supprimer";
-  deleteBtn.onclick = () => db.child("rooms/" + roomName + "/messages/" + key).remove();
+  deleteBtn.onclick = () => db.child("messages").child(key).remove();
   btnGroup.appendChild(deleteBtn);
 }
 
