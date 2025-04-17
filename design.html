@@ -665,21 +665,7 @@
   }
 });
 
-//mampiseho anle delais msg
- function formatTime(timestamp) {
-    const now = Date.now();
-    const diffMs = now - timestamp;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHr = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHr / 24);
-
-    if (diffSec < 60) return "À l'instant";
-    if (diffMin < 60) return `il y a ${diffMin} min`;
-    if (diffHr < 24) return `il y a ${diffHr}h`;
-    return `il y a ${diffDay}j`;
-  }
-    
+   
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
@@ -739,12 +725,13 @@ function initializeUserListeners() {
         updateUserStatusUI(user, status);
     });
 
-    // Écoute les suppressions d'utilisateurs
+ // Écoute les suppressions d'utilisateurs
   usersRef.on("child_removed", function(snapshot) {
         const user = snapshot.key;
         removeUserFromUI(user);
     });
 }
+
 
 // Fonction pour gérer le statut en ligne et hors ligne de l'utilisateur
 function setOnlineStatus() {
@@ -813,7 +800,7 @@ function sendMessage() {
         return;
     }
 
-    var timestamp = Date.now(); // stocke l'heure en millisecondes
+    var timestamp = new Date().toLocaleTimeString();
 
     var msgData = { 
         "user": username, 
@@ -845,34 +832,8 @@ function loadMessages() {
         };
         db.child("rooms/" + roomName + "/messages").on("child_added", messageListener);
     }
-db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
-  const msg = snapshot.val();
-  const key = snapshot.key;
-  const msgDiv = document.getElementById(key);
-  if (!msgDiv || msgDiv.dataset.timerStarted === "true") return;
 
-  if (msg.autoDeleteScheduledBy) {
-    msgDiv.dataset.timerStarted = "true";
-    msgDiv.classList.add("deletion-pending");
-
-    setTimeout(() => {
-      msgDiv.classList.add("fondu");
-      setTimeout(() => {
-        firebase
-          .database()
-          .ref(`rooms/${roomName}/messages/${key}`)
-          .once("value")
-          .then((snapshot) => {
-            if (snapshot.exists()) {
-              firebase.database().ref(`rooms/${roomName}/messages/${key}`).remove();
-            }
-          });
-      }, 1000);
-    }, 60000); // délai avant suppression réelle (60 secondes)
-  }
-});
-
-    // Écoute la suppression de messages pour tous les utilisateurs dans la salle
+// Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
         db.child("rooms/" + roomName + "/messages").on("child_removed", function(snapshot) {
             const removedMessage = document.getElementById(snapshot.key);
@@ -884,7 +845,7 @@ db.child("rooms/" + roomName + "/messages").on("child_changed", (snapshot) => {
         childRemovedListenerSet = true;
     }
 }
-
+    
     //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
     db.child("rooms/" + roomName + "/messages/" + messageId + "/reactions/" + username).set(emoji);
@@ -1085,27 +1046,32 @@ if (data.user === username) {
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
 
-if (data.user !== username) {
-  msgDiv.addEventListener("mouseover", () => {
-    if (!msgDiv.dataset.timerStarted) {
-      firebase
-        .database()
-        .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
-        .once("value")
-        .then((snap) => {
-          if (!snap.exists()) {
-            msgDiv.dataset.timerStarted = "true";
-            firebase
-              .database()
-              .ref(`rooms/${roomName}/messages/${key}/autoDeleteScheduledBy`)
-              .set(username);
-          }
-        });
-    }
-  });
+      // Fonction pour démarrer un compte à rebours avant suppression (10 secondes)
+  function startDeletionTimer(msgDiv, key) {
+    setTimeout(() => {
+        deleteMessage(msgDiv, key); // Supprime le message après 120 secondes
+    }, 15000); // Timer de 120 secondes
 }
 
-       
+    // Fonction de suppression du message
+    function deleteMessage(msgDiv, key) {
+        msgDiv.classList.add("fondu"); // Effet de fondu pour la suppression
+        setTimeout(function() {
+            msgDiv.remove(); // Suppression de l'élément du DOM
+            db.child("rooms/" + roomName + "/messages/" + key).remove(); // Suppression du message dans Firebase
+        }, 1000); // Délai pour l'animation visuelle de suppression (1 seconde)
+    }
+
+   // L'événement pour démarrer la suppression après survol
+msgDiv.onmouseover = function() {
+    if (data.user !== username) { // Ne pas supprimer les messages envoyés par l'utilisateur
+        textSpan.classList.remove("flou"); // Retirer le flou
+        if (!msgDiv.dataset.timerStarted) { // Vérifie si un timer est déjà en cours
+            msgDiv.dataset.timerStarted = true; // Empêche de démarrer plusieurs fois
+            startDeletionTimer(msgDiv, key); // Lance la suppression automatique
+        }
+    }
+};  
 
       document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
@@ -1244,7 +1210,7 @@ function uploadAudio() {
             user: username,
             type: "audio",
             audioBase64: base64Audio,
-            timestamp: Date.now()
+            timestamp = new Date().toLocaleTimeString();
         };
 
         db.child("rooms/" + roomName + "/messages").push(audioMessage);
@@ -1278,7 +1244,7 @@ function handleImageUpload(event) {
                 user: username,
                 type: "image",
                 imageBase64: base64Image,
-                timestamp: Date.now()
+                timestamp = new Date().toLocaleTimeString();
             };
 
             db.child("rooms/" + roomName + "/messages").push(imageMessage);
