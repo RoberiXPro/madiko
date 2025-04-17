@@ -855,6 +855,10 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Ce bout peut rester ici
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) loginBtn.onclick = joinRoom;
+});
    
 function joinRoom() {
   username = document.getElementById("username").value;
