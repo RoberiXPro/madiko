@@ -1227,7 +1227,7 @@ function uploadAudio() {
             timestamp: new Date().toLocaleTimeString()
         };
 
-        db.child("rooms/" + roomName + "/messages").push(audioMessage);
+      db.child("messages").push(audioMessage);
 
         // Réinitialiser l’interface
         document.getElementById('audio-preview').style.display = "none";
@@ -1261,7 +1261,7 @@ function handleImageUpload(event) {
                 timestamp: new Date().toLocaleTimeString()
             };
 
-            db.child("rooms/" + roomName + "/messages").push(imageMessage);
+            db.child("messages").push(imageMessage);
         };
         reader.readAsDataURL(file);
     });
