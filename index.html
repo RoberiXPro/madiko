@@ -697,6 +697,7 @@ min-height: 120px;
   opacity: 1;
   background-color: #222;
 }
+
 </style>
 </head>
 <body>
@@ -762,7 +763,6 @@ min-height: 120px;
   <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
 </div>
 
-
 <div id="input-section">
   <button class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
     <svg viewBox="0 0 24 24"><path d="M12 22C6.48 22 2 17.52 2 12s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10zm0-4a6 6 0 006-6H6a6 6 0 006 6z"/></svg>
@@ -781,12 +781,7 @@ min-height: 120px;
    <button class="icon-button" onclick="quitRoom()" title="Quitter">
     <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
   </button>
-    <button class="icon-button danger-button" onclick="panicWipe()" title="Panic">
-    🧨
-  </button>
-  <button class="icon-button stealth-button" onclick="activateStealth()" title="Camouflage">
-    🕶️
-  </button>
+
 </div>
 
 
@@ -794,6 +789,13 @@ min-height: 120px;
     <!-- Emoji Picker Content -->
 </div>
     </div>
+     <!-- ✅ Écran de camouflage -->
+<div id="stealth-screen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #111; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999;">
+  <p style="color:#ccc; font-size:1.2em;">Résous : 9 x 2548 + 236</p>
+  <input id="stealth-code" placeholder="Tape ici" style="padding:10px; border-radius:6px; border:none; font-size:1rem; margin-bottom: 10px;">
+  <button onclick="quitStealthSafely()" style="padding:10px 20px; background-color:#555; color:#fff; border:none; border-radius:6px; font-size:1rem;">Quitter discrètement</button>
+</div>
+
 
 <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
   <div id="popup-inner" style="position: relative;">
@@ -801,12 +803,12 @@ min-height: 120px;
     <button id="close-popup-btn" style="position:absolute; top:-20px; right:-20px; background:#e74c3c; color:white; border:none; font-size:1.5rem; padding:5px 10px; border-radius:50%; cursor:pointer;">✖</button>
   </div>
 </div>
-     <div id="stealth-screen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #111; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999;">
-  <p style="color:#ccc; font-size:1.2em;">Résous : 9 x 2548 + 236</p>
-  <input id="stealth-code" placeholder="Tape ici" style="padding:10px; border-radius:6px; border:none; font-size:1rem;">
-</div>
      </div>
-
+<!-- ✅ Boutons Panic & Camouflage (coin bas droite, fixés) -->
+<div style="position: fixed; bottom: 10px; right: 10px; display: flex; gap: 10px; z-index: 9999;">
+  <button class="icon-button danger-button" onclick="panicWipe()" title="Panic">🧨</button>
+  <button class="icon-button stealth-button" onclick="activateStealth()" title="Camouflage">🕶️</button>
+</div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
     var firebaseConfig = {
@@ -1623,17 +1625,20 @@ function activateStealth() {
 
   input.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
-        
-const passwordValue = document.getElementById("password-input").value;
-if (input.value === passwordValue) {
-  document.getElementById("stealth-screen").style.display = "none";
-  document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "");
-} else {
-  input.value = "";
-  input.placeholder = "Erreur. Réessaye.";
-}
+      const passwordValue = document.getElementById("password-input")?.value;
+      if (input.value === passwordValue) {
+        document.getElementById("stealth-screen").style.display = "none";
+        document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "");
+      } else {
+        input.value = "";
+        input.placeholder = "Erreur. Réessaye.";
+      }
     }
   }, { once: true });
+}
+
+function quitStealthSafely() {
+  window.location.href = "https://www.google.com";
 }
 
 </script>
