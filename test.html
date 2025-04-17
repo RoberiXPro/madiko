@@ -6,32 +6,55 @@
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-  :root {
+:root {
   --bg-color: #1f1f1f;
   --text-color: #ffffff;
   --accent-color: #ffd700;
-  --message-color-user1: linear-gradient(135deg, #4e54c8, #8f94fb);
-  --message-color-user2: #3a3a3a;
+  --button-bg: #5a5a5a;
+  --button-hover-bg: #4c4c4c;
+  --button-shadow: rgba(255, 215, 0, 0.25); /* pour le neon */
 }
- 
-  body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: var(--bg-color);
-        font-family: 'Arial', sans-serif;
-        color: var(--text-color);
-        margin: 0;
-    }
+html, body {
+  height: 100%;
+  overflow: hidden; /* empêche tout scroll inutile */
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* au lieu de min-height */
+  background: var(--bg-color);
+  font-family: 'Arial', sans-serif;
+  color: var(--text-color);
+  margin: 0;
+}
+
+  @media (max-width: 600px) {
+  #emoji-picker {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 60px;
+  }
+}
+
+  #message-input {
+    font-size: 1rem;
+  }
+}
   .theme-default {
   --bg-color: #1f1f1f;
   --text-color: #ffffff;
   --accent-color: #ffd700;
   --message-color-user1: linear-gradient(135deg, #4e54c8, #8f94fb);
   --message-color-user2: #3a3a3a;
+--button-bg: #5a5a5a,
+--button-hover-bg': #4c4c4c,
+--button-shadow: rgba(255, 215, 0, 0.25)
 }
 
 .theme-ocean {
@@ -40,6 +63,9 @@
   --accent-color: #00ffff;
   --message-color-user1: linear-gradient(135deg, #00c9ff, #92fe9d);
   --message-color-user2: #1b2b34;
+    --button-bg: #5a5a5a,
+--button-hover-bg': #4c4c4c,
+--button-shadow: rgba(255, 215, 0, 0.25)
 }
 
 .theme-forest {
@@ -48,17 +74,79 @@
   --accent-color: #66bb6a;
   --message-color-user1: linear-gradient(135deg, #43cea2, #185a9d);
   --message-color-user2: #37474f;
+    --button-bg: #5a5a5a,
+--button-hover-bg': #4c4c4c,
+--button-shadow: rgba(255, 215, 0, 0.25)
+}
+    .theme-rosewood {
+  --bg-color: #2d1f24;
+  --text-color: #ffe4ec;
+  --accent-color: #ff4f81;
+  --message-color-user1: linear-gradient(135deg, #a83279, #d38312);
+  --message-color-user2: #502336;
+  --button-bg: #ff4f81;
+  --button-hover-bg: #c2185b;
+  --button-shadow: rgba(255, 105, 135, 0.4);
 }
 
-    #chat-container {
-        width: 70%;
-        max-width: 800px;
-        background: rgba(60, 60, 60, 0.9);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-        display: none;
-    }
+.theme-noir {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --accent-color: #9e9e9e;
+  --message-color-user1: linear-gradient(135deg, #434343, #000000);
+  --message-color-user2: #1e1e1e;
+  --button-bg: #333;
+  --button-hover-bg: #222;
+  --button-shadow: rgba(255, 255, 255, 0.2);
+}
+
+.theme-midnight {
+  --bg-color: #0c1b33;
+  --text-color: #dcdff1;
+  --accent-color: #4f83cc;
+  --message-color-user1: linear-gradient(135deg, #1c92d2, #f2fcfe);
+  --message-color-user2: #172d51;
+  --button-bg: #345678;
+  --button-hover-bg: #1c2e4a;
+  --button-shadow: rgba(79, 131, 204, 0.3);
+}
+
+.theme-sepia {
+  --bg-color: #3b2f2f;
+  --text-color: #f1e4d1;
+  --accent-color: #c7a17a;
+  --message-color-user1: linear-gradient(135deg, #a2836e, #e6ccb2);
+  --message-color-user2: #5a463b;
+  --button-bg: #a2836e;
+  --button-hover-bg: #8b6c59;
+  --button-shadow: rgba(199, 161, 122, 0.3);
+}
+
+.theme-galaxy {
+  --bg-color: #1a1a2e;
+  --text-color: #eae6ff;
+  --accent-color: #c56cf0;
+  --message-color-user1: linear-gradient(135deg, #4a00e0, #8e2de2);
+  --message-color-user2: #2a2438;
+  --button-bg: #8e2de2;
+  --button-hover-bg: #5c1e99;
+  --button-shadow: rgba(197, 108, 240, 0.4);
+}
+
+
+#chat-container {
+  width: 70%;
+  max-width: 800px;
+  background: rgba(60, 60, 60, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;                 /* ✅ Doit être FLEX dès le départ */
+  flex-direction: column;
+  max-height: 100vh;            /* ✅ Jamais plus haut que la fenêtre */
+  overflow: hidden;             /* ✅ Bloque les débordements */
+}
+
  #login-container {
       flex-grow: 1;
       display: flex;
@@ -219,6 +307,16 @@
     button:hover {
         background-color: #4c4c4c;
     }
+
+#input-section {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-color); /* s’adapte au thème */
+  z-index: 999;
+  padding: 10px;
+}
+
+    
 #input-section button {
     background: linear-gradient(145deg, #3a3a3a, #222);
     color: #ffd700;
@@ -308,10 +406,18 @@
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    #messages {
-      display: flex;
-      flex-direction: column;
-    }
+#messages {
+  flex: 1;                      /* ✅ Prend tout l’espace disponible */
+  overflow-y: auto;             /* ✅ Scroll vertical uniquement ici */
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #2e2e2e;
+  border-radius: 5px;
+  margin-bottom: 10px;
+min-height: 120px;
+}
+
 
     .message {
       display: flex;
@@ -656,10 +762,12 @@
     <option value="ocean">Océan</option>
     <option value="forest">Forêt</option>
     <option value="rosewood">Rosewood</option>
-<option value="noir">Noir Classique</option>
-<option value="midnight">Minuit Bleu</option>
-<option value="sepia">Sépia doux</option>
+<option value="rosewood">Amour</option>
+<option value="noir">Nuit discrète</option>
+<option value="midnight">Minuit</option>
+<option value="sepia">Sépia</option>
 <option value="galaxy">Galaxie</option>
+
   </select>
 </div>
 <div id="user-list">
@@ -827,9 +935,12 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     updateUserStatusUI(user, data.status);
 });
 
-  function applyTheme(themeName) {
-  document.body.classList.remove("theme-default", "theme-ocean", "theme-forest");
-  document.body.classList.add("theme-" + themeName);
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  if (!theme) return;
+  Object.entries(theme).forEach(([varName, value]) => {
+    document.documentElement.style.setProperty(varName, value);
+  });
 }
 
 
@@ -1456,40 +1567,55 @@ const themes = {
   },
 
   // 💖 Nouveaux thèmes
-  rosewood: {
+rosewood: {
     '--bg-color': '#2d1f24',
     '--text-color': '#ffe4ec',
     '--accent-color': '#ff4f81',
     '--message-color-user1': 'linear-gradient(135deg, #a83279, #d38312)',
-    '--message-color-user2': '#502336'
+    '--message-color-user2': '#502336',
+    '--button-bg': '#ff4f81',
+    '--button-hover-bg': '#c2185b',
+    '--button-shadow': 'rgba(255, 105, 135, 0.4)'
   },
   noir: {
     '--bg-color': '#121212',
     '--text-color': '#e0e0e0',
     '--accent-color': '#9e9e9e',
     '--message-color-user1': 'linear-gradient(135deg, #434343, #000000)',
-    '--message-color-user2': '#1e1e1e'
+    '--message-color-user2': '#1e1e1e',
+    '--button-bg': '#333',
+    '--button-hover-bg': '#222',
+    '--button-shadow': 'rgba(255, 255, 255, 0.2)'
   },
   midnight: {
     '--bg-color': '#0c1b33',
     '--text-color': '#dcdff1',
     '--accent-color': '#4f83cc',
     '--message-color-user1': 'linear-gradient(135deg, #1c92d2, #f2fcfe)',
-    '--message-color-user2': '#172d51'
+    '--message-color-user2': '#172d51',
+    '--button-bg': '#345678',
+    '--button-hover-bg': '#1c2e4a',
+    '--button-shadow': 'rgba(79, 131, 204, 0.3)'
   },
   sepia: {
     '--bg-color': '#3b2f2f',
     '--text-color': '#f1e4d1',
     '--accent-color': '#c7a17a',
     '--message-color-user1': 'linear-gradient(135deg, #a2836e, #e6ccb2)',
-    '--message-color-user2': '#5a463b'
+    '--message-color-user2': '#5a463b',
+    '--button-bg': '#a2836e',
+    '--button-hover-bg': '#8b6c59',
+    '--button-shadow': 'rgba(199, 161, 122, 0.3)'
   },
   galaxy: {
     '--bg-color': '#1a1a2e',
     '--text-color': '#eae6ff',
     '--accent-color': '#c56cf0',
     '--message-color-user1': 'linear-gradient(135deg, #4a00e0, #8e2de2)',
-    '--message-color-user2': '#2a2438'
+    '--message-color-user2': '#2a2438',
+    '--button-bg': '#8e2de2',
+    '--button-hover-bg': '#5c1e99',
+    '--button-shadow': 'rgba(197, 108, 240, 0.4)'
   }
 };
 
