@@ -593,7 +593,7 @@
 <div id="input-section">
     <button onclick="toggleEmojiPicker()">😊</button>
     <input type="text" id="message-input" placeholder="Écrivez un message">
-    <button onclick="sendMessage()">Envoyer</button>
+    <button type="button" onclick="sendMessage()">Envoyer</button>
     <button onclick="toggleRecording()" id="record-btn">🎙️</button>
 
     <!-- BOUTON IMAGE -->
@@ -842,26 +842,25 @@ function sendMessage() {
 var childRemovedListenerSet = false;
 
 function loadMessages() {
-    // Écoute les nouveaux messages ajoutés pour les afficher
     if (!messageListener) {
         messageListener = function(snapshot) {
             displayMessage(snapshot.key, snapshot.val());
         };
-        db.child("rooms/" + roomName + "/messages").on("child_added", messageListener);
+        db.child("messages").on("child_added", messageListener);
     }
 
-// Écoute la suppression de messages pour tous les utilisateurs dans la salle
     if (!childRemovedListenerSet) {
-        db.child("rooms/" + roomName + "/messages").on("child_removed", function(snapshot) {
+        db.child("messages").on("child_removed", function(snapshot) {
             const removedMessage = document.getElementById(snapshot.key);
             if (removedMessage) {
-                removedMessage.remove(); // Supprime le message de l'interface utilisateur pour tous les utilisateurs
+                removedMessage.remove();
                 console.log("Message supprimé de l'interface après suppression dans Firebase.");
             }
         });
         childRemovedListenerSet = true;
     }
 }
+
     
     //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
