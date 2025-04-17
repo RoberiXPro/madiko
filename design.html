@@ -649,10 +649,7 @@
   <button class="icon-button" onclick="document.getElementById('image-input').click()" title="Image">
     <svg viewBox="0 0 24 24"><path d="M21 19V5H3v14h18zm-2-2H5V7h14v10z"/></svg>
   </button>
-  <button class="icon-button" onclick="toggleAllMessages()" title="Afficher tous / Masquer tous">
-    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C21.27 7.61 17 4.5 12 4.5zM12 17a5 5 0 110-10 5 5 0 010 10z"/></svg>
-  </button>
-  <button class="icon-button" onclick="quitRoom()" title="Quitter">
+   <button class="icon-button" onclick="quitRoom()" title="Quitter">
     <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
   </button>
 </div>
@@ -690,7 +687,6 @@
     var roomName;
     var replyMessageId = null;
     var replyMessageText = "";
-    var allMessagesVisible = false;
     var messageListener = null;
 
     // Fonction pour afficher la notification
@@ -1206,20 +1202,7 @@ function toggleEmojiPickerMessage(key) {
     document.getElementById("reply-container").style.display = "none"; // Cache le conteneur de réponse
 }
 
-    function toggleAllMessages() {
-        var allMessages = document.querySelectorAll(".msg-text");
-        allMessages.forEach(function(message) {
-            if (allMessagesVisible) {
-                message.classList.add("flou");
-            } else {
-                message.classList.remove("flou");
-            }
-        });
-        allMessagesVisible = !allMessagesVisible;
-        document.querySelector("button[onclick='toggleAllMessages()']").textContent = allMessagesVisible ? "Masquer tous" : "Afficher tous";
-    }
-
-    function scrollToBottom() {
+   function scrollToBottom() {
         var messagesDiv = document.getElementById("messages");
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
