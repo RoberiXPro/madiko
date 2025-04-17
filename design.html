@@ -803,7 +803,7 @@ function sendMessage() {
         return;
     }
 
-    var timestamp = new Date().toLocaleTimeString();
+    var ttimestamp: new Date().toLocaleTimeString()
 
     var msgData = { 
         "user": username, 
@@ -1211,7 +1211,7 @@ function uploadAudio() {
             user: username,
             type: "audio",
             audioBase64: base64Audio,
-            timestamp = new Date().toLocaleTimeString();
+            timestamp: new Date().toLocaleTimeString()
         };
 
         db.child("rooms/" + roomName + "/messages").push(audioMessage);
@@ -1299,7 +1299,14 @@ setInterval(() => {
     }
   });
 }, 60000); // toutes les 60 secondes
+function formatTime(rawTime) {
+  // Si c’est une chaîne déjà lisible (comme HH:mm:ss), on retourne tel quel
+  if (typeof rawTime === "string") return rawTime;
 
+  // Sinon, on formate un timestamp
+  const date = new Date(rawTime);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 </script>
 
 </body>
