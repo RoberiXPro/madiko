@@ -817,7 +817,7 @@ function sendMessage() {
         return;
     }
 
-    var timestamp = new Date().toLocaleTimeString();
+    var timestamp: Date.now()
 
     var msgData = { 
         user: username, 
@@ -1083,7 +1083,8 @@ msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
       }
     }
 function startDeletionTimer(msgDiv, key) {
-  setTimeout(() => {
+  msgDiv.classList.add("deletion-pending");
+    setTimeout(() => {
     deleteMessage(msgDiv, key);
   }, 120000); // 2 minutes
 }
@@ -1092,7 +1093,7 @@ function deleteMessage(msgDiv, key) {
   msgDiv.classList.add("fondu");
   setTimeout(() => {
     msgDiv.remove();
-    db.child("rooms/" + roomName + "/messages/" + key).remove();
+    db.child("messages").child(key).remove();
   }, 1000);
 }
 
@@ -1224,7 +1225,7 @@ function uploadAudio() {
             user: username,
             type: "audio",
             audioBase64: base64Audio,
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: Date.now()
         };
 
       db.child("messages").push(audioMessage);
@@ -1258,7 +1259,7 @@ function handleImageUpload(event) {
                 user: username,
                 type: "image",
                 imageBase64: base64Image,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: Date.now()
             };
 
             db.child("messages").push(imageMessage);
@@ -1312,14 +1313,10 @@ setInterval(() => {
     }
   });
 }, 60000); // toutes les 60 secondes
-function formatTime(rawTime) {
-  // Si c’est une chaîne déjà lisible (comme HH:mm:ss), on retourne tel quel
-  if (typeof rawTime === "string") return rawTime;
-
-  // Sinon, on formate un timestamp
-  const date = new Date(rawTime);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
 </script>
 
 </body>
