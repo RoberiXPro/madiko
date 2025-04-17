@@ -646,6 +646,22 @@
  <div class="container container-chat">  
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <!-- Sélecteur de thème -->
+<div id="theme-selector" style="text-align: right; margin-bottom: 10px;">
+  <label for="theme-select" style="margin-right: 8px; color: var(--text-color); font-size: 0.9rem;">
+    🎨 Thème :
+  </label>
+  <select id="theme-select" style="padding: 6px 10px; border-radius: 8px; background-color: #444; color: #ffd700; border: 1px solid #888;">
+    <option value="default">Sombre</option>
+    <option value="ocean">Océan</option>
+    <option value="forest">Forêt</option>
+    <option value="rosewood">Rosewood</option>
+<option value="noir">Noir Classique</option>
+<option value="midnight">Minuit Bleu</option>
+<option value="sepia">Sépia doux</option>
+<option value="galaxy">Galaxie</option>
+  </select>
+</div>
 <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -665,22 +681,7 @@
   <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
   <button onclick="cancelAudio()" style="background-color: #e74c3c; color: white;">❌ Annuler</button>
 </div>
-<!-- Sélecteur de thème -->
-<div id="theme-selector" style="text-align: right; margin-bottom: 10px;">
-  <label for="theme-select" style="margin-right: 8px; color: var(--text-color); font-size: 0.9rem;">
-    🎨 Thème :
-  </label>
-  <select id="theme-select" style="padding: 6px 10px; border-radius: 8px; background-color: #444; color: #ffd700; border: 1px solid #888;">
-    <option value="default">Sombre</option>
-    <option value="ocean">Océan</option>
-    <option value="forest">Forêt</option>
-    <option value="rosewood">Rosewood</option>
-<option value="noir">Noir Classique</option>
-<option value="midnight">Minuit Bleu</option>
-<option value="sepia">Sépia doux</option>
-<option value="galaxy">Galaxie</option>
-  </select>
-</div>
+
 
 <div id="input-section">
   <button class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
