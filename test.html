@@ -842,29 +842,7 @@ min-height: 120px;
       }, 5000);
     }
 //afaka atao entrée refa mi connecte
-document.addEventListener("DOMContentLoaded", function () {
-  showNotification();
-
-  const form = document.getElementById("login-form");
-
-  if (form) {
-    // ✅ Soumission sécurisée depuis le bouton ou Entrée clavier
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      joinRoom();
-    });
-
-    // ✅ Support clavier : touche Entrée dans un champ input
-    form.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        joinRoom();
-      }
-    });
-  }
-});
-
-   
+ 
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
@@ -1140,16 +1118,7 @@ document.addEventListener("click", function(event) {
         }
     });
 
-     document.addEventListener("DOMContentLoaded", function() {
-        loadEmojis();
-
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-    });
+     
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
@@ -1489,31 +1458,7 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    const popup = document.getElementById("image-popup");
-    const popupImg = document.getElementById("popup-img");
-    const closeBtn = document.getElementById("close-popup-btn");
-    const popupInner = document.getElementById("popup-inner");
 
-    // ✖ Fermer avec le bouton
-    closeBtn.addEventListener("click", () => {
-        popup.style.display = "none";
-    });
-
-    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
-    popup.addEventListener("click", (e) => {
-        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
-            popup.style.display = "none";
-        }
-    });
-
-    // ⌨️ Fermer avec la touche Échap
-    document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-            popup.style.display = "none";
-        }
-    });
-});
 setInterval(() => {
   document.querySelectorAll('.message').forEach(msg => {
     const ts = msg.dataset.timestamp;
@@ -1644,7 +1589,59 @@ function activateStealth() {
 function quitStealthSafely() {
   window.location.href = "https://www.google.com";
 }
+ document.addEventListener("DOMContentLoaded", function () {
+  showNotification();
 
+  // Formulaire de connexion
+  const form = document.getElementById("login-form");
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      joinRoom();
+    });
+    form.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        joinRoom();
+      }
+    });
+  }
+
+  // Emojis
+  loadEmojis();
+  const messageInput = document.getElementById("message-input");
+  if (messageInput) {
+    messageInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  // Popup image
+  const popup = document.getElementById("image-popup");
+  const popupImg = document.getElementById("popup-img");
+  const closeBtn = document.getElementById("close-popup-btn");
+
+  if (popup && popupImg && closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      popup.style.display = "none";
+    });
+
+    popup.addEventListener("click", (e) => {
+      if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
+        popup.style.display = "none";
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        popup.style.display = "none";
+      }
+    });
+  }
+});
 </script>
 
 </body>
