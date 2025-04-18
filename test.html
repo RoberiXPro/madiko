@@ -703,7 +703,7 @@ min-height: 120px;
 <body>
    <div id="login-container">
     <h1>RS-Villa</h1>
-    <form id="login-form" class="login-card">
+    <div id="login-form" class="login-card">
   <h2 class="login-title">Connexion</h2>
   <div class="input-group">
     <label for="username">🕤 Votre pseudo</label>
@@ -717,8 +717,8 @@ min-height: 120px;
     <label for="password-input">🔐 Mot de passe</label>
     <input type="password" id="password-input" placeholder="*******" required />
   </div>
-  <button type="submit" class="login-button">🚪 Entrer dans la Villa</button>
-</form>
+  <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
+</div>
   </div>
 
     <!-- Section de chat -->
@@ -1591,21 +1591,6 @@ function quitStealthSafely() {
 }
  document.addEventListener("DOMContentLoaded", function () {
   showNotification();
-
-  // Formulaire de connexion
-  const form = document.getElementById("login-form");
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      joinRoom();
-    });
-    form.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        joinRoom();
-      }
-    });
-  }
 
   // Emojis
   loadEmojis();
