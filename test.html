@@ -19,16 +19,16 @@
 }
 
  body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: var(--bg-color);
-        font-family: 'Arial', sans-serif;
-        color: var(--text-color);
-        margin: 0;
-    }
+  height: 100vh;
+  overflow: hidden; /* ❌ empêche le scroll global */
+  margin: 0;
+  background: var(--bg-color);
+  font-family: 'Arial', sans-serif;
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
   @media (max-width: 600px) {
   #emoji-picker {
@@ -81,7 +81,16 @@
   --message-color-user1: linear-gradient(135deg, #4a00e0, #8e2de2);
   --message-color-user2: #2a2438;
 }
-
+#login-container,
+#chat-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  flex-direction: column;
+}
 
 #chat-container {
   width: 70%;
@@ -90,20 +99,10 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-  display: none;                 /* ✅ Doit être FLEX dès le départ */
-  flex-direction: column;
-  max-height: 100vh;            /* ✅ Jamais plus haut que la fenêtre */
-  overflow: hidden;             /* ✅ Bloque les débordements */
+  display: none;
 }
 
- #login-container {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px 0;
-    }
+
     .login-card {
       background: #2a2a3a;
       padding: 30px;
@@ -703,22 +702,22 @@ min-height: 120px;
 <body>
    <div id="login-container">
     <h1>RS-Villa</h1>
-    <div id="login-form" class="login-card">
-  <h2 class="login-title">Connexion</h2>
-  <div class="input-group">
-    <label for="username">🕤 Votre pseudo</label>
-    <input type="text" id="username" placeholder="*******" required />
-  </div>
-  <div class="input-group">
-    <label for="room-name-input">🏠 Nom de la Villa</label>
-    <input type="text" id="room-name-input" placeholder="*******" required />
-  </div>
-  <div class="input-group">
-    <label for="password-input">🔐 Mot de passe</label>
-    <input type="password" id="password-input" placeholder="*******" required />
-  </div>
-  <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
-</div>
+    <div class="login-card">
+      <h2 class="login-title">Connexion</h2>
+      <div class="input-group">
+        <label for="username">🕤 Votre pseudo</label>
+        <input type="text" id="username" placeholder="*******" required />
+      </div>
+      <div class="input-group">
+        <label for="room-name-input">🏠 Nom de la Villa</label>
+        <input type="text" id="room-name-input" placeholder="*******" required />
+      </div>
+      <div class="input-group">
+        <label for="password-input">🔐 Mot de passe</label>
+        <input type="password" id="password-input" placeholder="*******" required />
+      </div>
+      <button class="login-button" onclick="joinRoom()">🚪 Entrer dans la Villa</button>
+    </div>
   </div>
 
     <!-- Section de chat -->
@@ -842,7 +841,25 @@ min-height: 120px;
       }, 5000);
     }
 //afaka atao entrée refa mi connecte
- 
+document.addEventListener("DOMContentLoaded", function () {
+  showNotification();
+
+  const loginContainer = document.getElementById("login-container");
+  if (loginContainer) {
+    loginContainer.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const loginBtn = document.querySelector(".login-button");
+        if (loginBtn) loginBtn.click();
+      }
+    });
+  }
+
+  // ✅ Ici : assignation du clic du bouton
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) loginBtn.onclick = joinRoom;
+});
+
+   
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
@@ -990,12 +1007,11 @@ function removeUserFromUI(user) {
     }
 }
 
-function switchToChat() {
-  document.getElementById("login-container").style.display = "none";
-  document.querySelector(".container.container-chat").style.display = "flex"; // <- iOS fix ici
-  document.getElementById("chat-container").style.display = "block";
-  loadMessages();
-}
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
+    }
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -1119,7 +1135,16 @@ document.addEventListener("click", function(event) {
         }
     });
 
-     
+     document.addEventListener("DOMContentLoaded", function() {
+        loadEmojis();
+
+        document.getElementById("message-input").addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    });
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
@@ -1339,52 +1364,66 @@ let microAccessGranted = false;
 function toggleRecording() {
     const recordBtn = document.getElementById('record-btn');
 
-    // ✅ Bloquer si on a déjà tenté et refusé l’accès
     if (!microAccessGranted && !mediaRecorder) {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             microAccessGranted = true;
-
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioURL = URL.createObjectURL(recordedBlob);
-
-                document.getElementById('audio-player').src = audioURL;
-                document.getElementById('audio-preview').style.display = "block";
-
-                // ✅ Remettre l’icône SVG moderne
-                recordBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>`;
-                recordBtn.classList.remove("recording");
-            };
-
-            // Démarre immédiatement après autorisation
-            mediaRecorder.start();
-            recordBtn.innerHTML = "⏹️ Stop";
-            recordBtn.classList.add("recording");
-
-            // 🔴 Stop après 30s si pas fait manuellement
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.stop();
-                    alert("Durée maximale atteinte (30s)");
-                }
-            }, 30000);
-
+            startRecording(stream, recordBtn);
         }).catch(error => {
             console.error("Erreur micro :", error);
             alert("Erreur : accès au micro refusé !");
         });
-
     } else if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
+    } else {
+        // ✅ Re-demande le micro et recommence un nouvel enregistrement
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            startRecording(stream, recordBtn);
+        }).catch(error => {
+            console.error("Erreur lors de la reprise de l’enregistrement :", error);
+            alert("Impossible de relancer l’enregistrement.");
+        });
     }
 }
+
+function startRecording(stream, recordBtn) {
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioURL = URL.createObjectURL(recordedBlob);
+
+        document.getElementById('audio-player').src = audioURL;
+        document.getElementById('audio-preview').style.display = "block";
+
+        // Remet le bouton à l’état initial
+        recordBtn.innerHTML = `
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/>
+            </svg>`;
+        recordBtn.classList.remove("recording");
+
+        // 🔁 Reset pour pouvoir relancer un autre enregistrement
+        mediaRecorder = null;
+    };
+
+    // Lancement
+    mediaRecorder.start();
+    recordBtn.innerHTML = "⏹️ Stop";
+    recordBtn.classList.add("recording");
+
+    setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            alert("Durée maximale atteinte (30s)");
+        }
+    }, 30000);
+}
+
 
 
 function uploadAudio() {
@@ -1416,8 +1455,6 @@ function uploadAudio() {
         document.getElementById('audio-preview').style.display = "none";
         document.getElementById('audio-player').src = "";
         recordedBlob = null;
-
-        alert("Message vocal envoyé !");
     };
 
     reader.readAsDataURL(recordedBlob); // transforme le blob en base64
@@ -1425,9 +1462,10 @@ function uploadAudio() {
 
 function cancelAudio() {
     recordedBlob = null;
-    document.getElementById('audio-preview').style.display = "none";// transforme le blob en base64 cool
+    document.getElementById('audio-preview').style.display = "none";
     document.getElementById('audio-player').src = "";
 }
+
 function handleImageUpload(event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -1459,7 +1497,31 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+    const popup = document.getElementById("image-popup");
+    const popupImg = document.getElementById("popup-img");
+    const closeBtn = document.getElementById("close-popup-btn");
+    const popupInner = document.getElementById("popup-inner");
 
+    // ✖ Fermer avec le bouton
+    closeBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
+    popup.addEventListener("click", (e) => {
+        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
+            popup.style.display = "none";
+        }
+    });
+
+    // ⌨️ Fermer avec la touche Échap
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            popup.style.display = "none";
+        }
+    });
+});
 setInterval(() => {
   document.querySelectorAll('.message').forEach(msg => {
     const ts = msg.dataset.timestamp;
@@ -1590,44 +1652,7 @@ function activateStealth() {
 function quitStealthSafely() {
   window.location.href = "https://www.google.com";
 }
- document.addEventListener("DOMContentLoaded", function () {
-  showNotification();
 
-  // Emojis
-  loadEmojis();
-  const messageInput = document.getElementById("message-input");
-  if (messageInput) {
-    messageInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
-  }
-
-  // Popup image
-  const popup = document.getElementById("image-popup");
-  const popupImg = document.getElementById("popup-img");
-  const closeBtn = document.getElementById("close-popup-btn");
-
-  if (popup && popupImg && closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      popup.style.display = "none";
-    });
-
-    popup.addEventListener("click", (e) => {
-      if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
-        popup.style.display = "none";
-      }
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") {
-        popup.style.display = "none";
-      }
-    });
-  }
-});
 </script>
 
 </body>
