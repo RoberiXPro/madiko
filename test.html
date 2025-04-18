@@ -2,7 +2,7 @@
 <html>
 <head>  <!-- TOUT FONCTION ICI  -->  
 
-    <title>TEST</title>
+    <title>RS-VILLA</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
@@ -702,7 +702,7 @@ min-height: 120px;
 </head>
 <body>
    <div id="login-container">
-    <h1>TEST</h1>
+    <h1>RS-Villa</h1>
     <div class="login-card">
       <h2 class="login-title">Connexion</h2>
       <div class="input-group">
@@ -744,7 +744,7 @@ min-height: 120px;
   </select>
 </div>
 <div id="user-list">
-        <h2>En ligne </h2>
+        <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
             <!-- Les utilisateurs et leur statut seront ajoutés ici -->
         </ul>
@@ -855,17 +855,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Ce bout peut rester ici
+  // ✅ Ici : assignation du clic du bouton
   const loginBtn = document.querySelector(".login-button");
   if (loginBtn) loginBtn.onclick = joinRoom;
 });
 
-// ✅ Et tu déplaces `joinRoom()` tout seul en-dehors :
+   
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
-  passwordValue = password;
+ passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -885,31 +885,32 @@ function joinRoom() {
     db.once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         var dbPassword = snapshot.child("password").val();
-        if (dbPassword === password) {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-          loadUserTheme();
-        } else {
+if (dbPassword === password) {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI
+}
+ else {
           alert("Mot de passe incorrect !");
         }
       } else {
-        db.set({
-          password: password,
-          messages: {}
-        }).then(() => {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-          loadUserTheme();
-        });
+        // Room inexistante : on la crée
+db.set({
+  password: password,
+  messages: {}
+}).then(() => {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI AUSSI
+});
       }
     });
   });
 }
-
 document.getElementById("theme-select").addEventListener("change", handleThemeChange);
 
 
@@ -963,7 +964,7 @@ function setOnlineStatus() {
     firebase.database().ref(".info/connected").on("value", function(snapshot) {
         if (snapshot.val() === true) {
             userRef.set({
-                status: "",
+                status: "en ligne",
                 lastSeen: new Date().toISOString()
             });
             userRef.onDisconnect().remove();
@@ -980,7 +981,7 @@ function updateUserStatusUI(user, status) {
 
     if (!userElement) {
         userElement = document.createElement("li");
-        userElement.id = "user-status" + user;
+        userElement.id = "user-status-" + user;
         userElement.classList.add(status === "en ligne" ? "status-online" : "status-offline");
 
         const statusIndicator = document.createElement("span");
@@ -989,19 +990,19 @@ function updateUserStatusUI(user, status) {
 
         const userNameText = document.createElement("span");
         userNameText.classList.add("user-status");
-        userNameText.textContent = user + "  " + status;
+        userNameText.textContent = user + " - " + status;
         userElement.appendChild(userNameText);
 
         document.getElementById("online-users").appendChild(userElement);
     } else {
-        userElement.classList.toggle("status-online", status === "");
-        userElement.classList.toggle("status-offline", status !== "");
-        userElement.querySelector(".user-status").textContent = user + "  " + status;
+        userElement.classList.toggle("status-online", status === "en ligne");
+        userElement.classList.toggle("status-offline", status !== "en ligne");
+        userElement.querySelector(".user-status").textContent = user + " - " + status;
     }
 }
     
 function removeUserFromUI(user) {
-    const userElement = document.getElementById("user-status" + user);
+    const userElement = document.getElementById("user-status-" + user);
     if (userElement) {
         userElement.remove();
     }
@@ -1193,20 +1194,16 @@ function quitRoom() {
 content.className = "msg-text";
 
 if (data.user !== username) {
-content.classList.add("flou"); // flou activé par défaut
-
-msgDiv.addEventListener("mouseenter", () => {
-  content.classList.remove("flou");
-  if (data.user !== username && !msgDiv.dataset.timerStarted) {
-    msgDiv.dataset.timerStarted = "true";
-    startDeletionTimer(msgDiv, key);
-  }
-});
-
-msgDiv.addEventListener("mouseleave", () => {
   content.classList.add("flou");
-});
 
+  msgDiv.addEventListener("mouseenter", function () {
+    content.classList.remove("flou");
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true";
+      startDeletionTimer(msgDiv, key);
+    }
+  });
+}
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
   content.innerHTML = msg;
@@ -1643,21 +1640,6 @@ function activateStealth() {
 function quitStealthSafely() {
   window.location.href = "https://www.google.com";
 }
-document.addEventListener("touchstart", function(e) {
-  const msgDiv = e.target.closest(".message");
-  if (msgDiv) {
-    const content = msgDiv.querySelector(".msg-text");
-    if (content) content.classList.remove("flou");
-  }
-});
-
-document.addEventListener("touchend", function(e) {
-  const msgDiv = e.target.closest(".message");
-  if (msgDiv) {
-    const content = msgDiv.querySelector(".msg-text");
-    if (content) content.classList.add("flou");
-  }
-});
 
 </script>
 
