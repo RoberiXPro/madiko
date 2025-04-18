@@ -1456,8 +1456,6 @@ function uploadAudio() {
         document.getElementById('audio-preview').style.display = "none";
         document.getElementById('audio-player').src = "";
         recordedBlob = null;
-
-        alert("Message vocal envoyé !");
     };
 
     reader.readAsDataURL(recordedBlob); // transforme le blob en base64
