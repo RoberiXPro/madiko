@@ -990,11 +990,12 @@ function removeUserFromUI(user) {
     }
 }
 
-    function switchToChat() {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-        loadMessages();
-    }
+function switchToChat() {
+  document.getElementById("login-container").style.display = "none";
+  document.querySelector(".container.container-chat").style.display = "flex"; // <- iOS fix ici
+  document.getElementById("chat-container").style.display = "block";
+  loadMessages();
+}
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
