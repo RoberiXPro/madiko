@@ -171,68 +171,67 @@
     .reply-btn:hover {
         background-color: #2980b9;
     }
-    #user-list {
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #333;
-        border-radius: 10px;
-        color: #ffd700;
-        width: 100%;
-        max-width: 350px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        text-align: left;
-    }
+   #user-list {
+  margin-top: 20px;
+  padding: 15px 20px;
+  background: rgba(40, 40, 40, 0.95);
+  border-radius: 16px;
+  color: #fff;
+  width: 100%;
+  max-width: 350px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeIn 0.5s ease;
+}
 
-    #user-list h2 {
-        font-size: 1.2em;
-        margin-bottom: 10px;
-        color: #ffd700;
-        text-align: center;
-        text-shadow: 0 2px 5px rgba(255, 215, 0, 0.6);
-    }
+#user-list h2 {
+  font-size: 1.2rem;
+  color: #ffd700;
+  margin-bottom: 12px;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
 
-    #online-users {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-        max-height: 200px;
-        overflow-y: auto;
-    }
+#online-users {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ffd700 #333;
+}
 
-    #online-users li {
-        display: flex;
-        align-items: center;
-        padding: 8px;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        background-color: #444;
-        transition: background-color 0.3s ease;
-    }
+#online-users li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: #2a2a2a;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: background 0.3s;
+}
 
-    #online-users li:hover {
-        background-color: #555;
-    }
+#online-users li:hover {
+  background: #3a3a3a;
+}
 
-    .user-status {
-        font-weight: bold;
-        color: #fff;
-        font-size: 1em;
-        margin-left: 10px;
-    }
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: limegreen;
+  box-shadow: 0 0 4px limegreen;
+  transition: 0.3s;
+}
 
-    .status-indicator {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 10px;
-        background-color: green;
-        transition: background-color 0.3s ease;
-    }
-
-    .status-offline .status-indicator {
-        background-color: gray;
-    }
-
+.status-offline .status-indicator {
+  background-color: gray;
+  box-shadow: none;
+}
     input, button {
         padding: 10px;
         border-radius: 5px;
@@ -697,7 +696,24 @@ min-height: 120px;
   opacity: 1;
   background-color: #222;
 }
-
+.villa-name {
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: center;
+  color: #ffd700;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffcc00, #ff6600);
+  padding: 10px 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+  text-shadow: 0 0 6px #ffcc00;
+  letter-spacing: 1px;
+}
+.user-status {
+  font-size: 0.95rem;
+  color: #eee;
+  font-weight: 500;
+}
 </style>
 </head>
 <body>
@@ -724,7 +740,7 @@ min-height: 120px;
     <!-- Section de chat -->
  <div class="container container-chat">  
     <div id="chat-container">
-        <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+       <div id="room-name-display" class="villa-name"></div>
         <!-- Sélecteur de thème -->
 <div id="theme-selector" style="text-align: right; margin-bottom: 10px;">
   <label for="theme-select" style="margin-right: 8px; color: var(--text-color); font-size: 0.9rem;">
