@@ -703,22 +703,22 @@ min-height: 120px;
 <body>
    <div id="login-container">
     <h1>RS-Villa</h1>
-    <div class="login-card">
-      <h2 class="login-title">Connexion</h2>
-      <div class="input-group">
-        <label for="username">🕤 Votre pseudo</label>
-        <input type="text" id="username" placeholder="*******" required />
-      </div>
-      <div class="input-group">
-        <label for="room-name-input">🏠 Nom de la Villa</label>
-        <input type="text" id="room-name-input" placeholder="*******" required />
-      </div>
-      <div class="input-group">
-        <label for="password-input">🔐 Mot de passe</label>
-        <input type="password" id="password-input" placeholder="*******" required />
-      </div>
-      <button class="login-button">🚪 Entrer dans la Villa</button>
-    </div>
+    <form id="login-form" class="login-card">
+  <h2 class="login-title">Connexion</h2>
+  <div class="input-group">
+    <label for="username">🕤 Votre pseudo</label>
+    <input type="text" id="username" placeholder="*******" required />
+  </div>
+  <div class="input-group">
+    <label for="room-name-input">🏠 Nom de la Villa</label>
+    <input type="text" id="room-name-input" placeholder="*******" required />
+  </div>
+  <div class="input-group">
+    <label for="password-input">🔐 Mot de passe</label>
+    <input type="password" id="password-input" placeholder="*******" required />
+  </div>
+  <button type="submit" class="login-button">🚪 Entrer dans la Villa</button>
+</form>
   </div>
 
     <!-- Section de chat -->
@@ -845,19 +845,23 @@ min-height: 120px;
 document.addEventListener("DOMContentLoaded", function () {
   showNotification();
 
-  const loginContainer = document.getElementById("login-container");
-  if (loginContainer) {
-    loginContainer.addEventListener("keydown", function (e) {
+  const form = document.getElementById("login-form");
+
+  if (form) {
+    // ✅ Soumission sécurisée depuis le bouton ou Entrée clavier
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      joinRoom();
+    });
+
+    // ✅ Support clavier : touche Entrée dans un champ input
+    form.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
-        const loginBtn = document.querySelector(".login-button");
-        if (loginBtn) loginBtn.click();
+        e.preventDefault();
+        joinRoom();
       }
     });
   }
-
-  // ✅ Ici : assignation du clic du bouton
-  const loginBtn = document.querySelector(".login-button");
-  if (loginBtn) loginBtn.onclick = joinRoom;
 });
 
    
