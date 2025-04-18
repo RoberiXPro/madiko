@@ -725,26 +725,6 @@ min-height: 120px;
   color: #eee;
   font-weight: 500;
 }
-    .avatar-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.avatar-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  color: #fff;
-  font-weight: bold;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
 
 </style>
 </head>
@@ -1257,28 +1237,10 @@ if (data.user !== username) {
   content.innerHTML = msg;
 }
 
-// Nouveau bloc combiné pour l'avatar + username
-const userInfo = document.createElement("div");
-userInfo.className = "user-info";
-
-// 👤 Avatar avec initiale
-const avatar = document.createElement("div");
-avatar.className = "avatar";
-avatar.textContent = data.user[0].toUpperCase();
-
-// 🔖 Pseudo
 const userTag = document.createElement("div");
 userTag.className = "username-tag";
 userTag.textContent = data.user;
-
-// On assemble
-userInfo.appendChild(avatar);
-userInfo.appendChild(userTag);
-
-// On ajoute au message
-msgDiv.appendChild(userInfo);
-
-// ✅ Ensuite on ajoute le contenu du message (texte, image, audio, etc.)
+msgDiv.appendChild(userTag);
 msgDiv.appendChild(content);
 
       const time = document.createElement("div");
