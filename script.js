@@ -196,26 +196,64 @@ function removeUserFromUI(user) {
     }
 }
 
-    function switchToChat() {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-        loadMessages();
+function switchToChat() {
+  document.getElementById("login-container").style.display = "none";
+  document.getElementById("chat-container").style.display = "block";
+  loadMessages();
+
+  // 🔁 Écoute du changement de musique en cours
+  db.child("music/nowPlaying").on("value", snapshot => {
+    const data = snapshot.val();
+    if (!data || !data.audioBase64) return;
+
+    const audio = document.getElementById("shared-audio");
+
+    // 🎵 Évite de relancer si déjà en lecture
+    if (audio.src !== data.audioBase64) {
+      audio.src = data.audioBase64;
+      audio.play();
+
+      // ✨ Mise à jour visuelle : highlight dans la playlist
+      document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
+      const match = [...document.querySelectorAll("#playlist-display li")]
+        .find(el => el.dataset.title === data.title);
+      if (match) match.classList.add("playing");
     }
+  });
 
-db.child("music/playlist").on("child_added", snapshot => {
-  const music = snapshot.val();
-  const li = document.createElement("li");
-  li.textContent = music.title;
-  li.onclick = () => playSharedMusic(music.audioBase64);
-  document.getElementById("playlist-display").appendChild(li);
-});
+  // 🎵 Écoute des ajouts dans la playlist collaborative
+  db.child("music/playlist").on("child_added", snapshot => {
+    const music = snapshot.val();
 
-function playSharedMusic(audioBase64) {
-  const audio = document.getElementById("shared-audio");
-  audio.src = audioBase64;
-  audio.play();
+    const li = document.createElement("li");
+    li.dataset.title = music.title;
+
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("class", "playlist-icon");
+    icon.innerHTML = `<path d="M3 10v10a1 1 0 001 1h3a1 1 0 001-1v-6h3v6a1 1 0 001 1h3a1 1 0 001-1V10H3zm18-5H3a1 1 0 000 2h18a1 1 0 000-2z"/>`;
+
+    const text = document.createElement("span");
+    text.textContent = music.title;
+
+    li.appendChild(icon);
+    li.appendChild(text);
+
+    // ▶️ Quand on clique sur un titre, on le "broadcast"
+    li.onclick = () => playSharedMusic(music.audioBase64, music.title);
+
+    document.getElementById("playlist-display").appendChild(li);
+  });
 }
-
+function playSharedMusic(audioBase64, title) {
+  // 🔁 Enregistre la musique en cours pour tous
+  db.child("music/nowPlaying").set({
+    audioBase64,
+    triggeredBy: username,
+    title,
+    timestamp: Date.now()
+  });
+}
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
