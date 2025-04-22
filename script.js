@@ -18,7 +18,7 @@
     var replyMessageText = "";
     var messageListener = null;
     var passwordValue = "";
-var playlistListenerRef = null;
+    var playlistListenerRef = null;
 
 
     // Fonction pour afficher la notification
@@ -240,6 +240,8 @@ document.getElementById("playlist-display").innerHTML = ""; // 🧹 Vide l'affic
 
     const li = document.createElement("li");
     li.dataset.title = music.title;
+    li.dataset.base64 = music.audioBase64;
+
 
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     icon.setAttribute("viewBox", "0 0 24 24");
@@ -295,7 +297,6 @@ function sendMessage() {
 
     messageInput.value = '';
 }
-
 
 var childRemovedListenerSet = false;
 
@@ -758,6 +759,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const popupInner = document.getElementById("popup-inner");
     // 🎵 Quand on choisit une musique à uploader
 document.getElementById('music-upload').addEventListener('change', handleMusicUpload);
+// 🎵 Connexion des boutons de contrôle
+document.getElementById("play-music").addEventListener("click", () => {
+  const playing = document.querySelector("#playlist-display li.playing");
+  if (!playing) {
+    alert("Aucune musique sélectionnée.");
+    return;
+  }
+
+  const title = playing.dataset.title;
+  const base64 = playing.dataset.base64;
+  if (!base64) {
+    alert("Audio non trouvé.");
+    return;
+  }
+
+  playSharedMusic(base64, title);
+});
+
+document.getElementById("pause-music").addEventListener("click", () => {
+  const audio = document.getElementById("shared-audio");
+  audio.pause();
+});
+
+document.getElementById("stop-music")?.addEventListener("click", () => {
+  const audio = document.getElementById("shared-audio");
+  audio.pause();
+  audio.currentTime = 0;
+
+  const nowPlaying = document.getElementById("now-playing");
+  if (nowPlaying) nowPlaying.textContent = "";
+
+  document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
+});
+
+document.getElementById("volume-control").addEventListener("input", (e) => {
+  const volume = parseFloat(e.target.value);
+  const audio = document.getElementById("shared-audio");
+  audio.volume = volume;
+});
+    
     
 function handleMusicUpload(event) {
   const files = event.target.files;
