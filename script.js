@@ -202,6 +202,21 @@ function removeUserFromUI(user) {
         loadMessages();
     }
 
+db.child("music/playlist").on("child_added", snapshot => {
+  const music = snapshot.val();
+  const li = document.createElement("li");
+  li.textContent = music.title;
+  li.onclick = () => playSharedMusic(music.audioBase64);
+  document.getElementById("playlist-display").appendChild(li);
+});
+
+function playSharedMusic(audioBase64) {
+  const audio = document.getElementById("shared-audio");
+  audio.src = audioBase64;
+  audio.play();
+}
+
+
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
     var message = messageInput.value;
@@ -691,6 +706,45 @@ document.addEventListener("DOMContentLoaded", function () {
     const popupImg = document.getElementById("popup-img");
     const closeBtn = document.getElementById("close-popup-btn");
     const popupInner = document.getElementById("popup-inner");
+    // 🎵 Quand on choisit une musique à uploader
+document.getElementById('music-upload').addEventListener('change', handleMusicUpload);
+function handleMusicUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onloadend = function () {
+      const base64Audio = reader.result;
+      const musicData = {
+        title: file.name,
+        audioBase64: base64Audio
+      };
+
+      db.child("rooms/" + roomName + "/music/playlist").push(musicData);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  event.target.value = ""; // Reset après upload
+}
+
+// connecter les boutons de controle 
+document.getElementById("play-music").addEventListener("click", () => {
+  const audio = document.getElementById("shared-audio");
+  audio.play();
+});
+
+document.getElementById("pause-music").addEventListener("click", () => {
+  const audio = document.getElementById("shared-audio");
+  audio.pause();
+});
+
+document.getElementById("volume-control").addEventListener("input", (e) => {
+  const volume = parseFloat(e.target.value);
+  const audio = document.getElementById("shared-audio");
+  audio.volume = volume;
+});
 
     // ✖ Fermer avec le bouton
     closeBtn.addEventListener("click", () => {
