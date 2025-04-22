@@ -385,13 +385,12 @@ content.className = "msg-text";
 if (data.user !== username) {
   content.classList.add("flou");
 
-  msgDiv.addEventListener("mouseenter", function () {
-    content.classList.remove("flou");
-    if (!msgDiv.dataset.timerStarted) {
-      msgDiv.dataset.timerStarted = "true";
-      startDeletionTimer(msgDiv, key);
-    }
-  });
+ if (data.user !== username) {
+  content.classList.add("flou");
+}
+if (data.user === username) {
+  content.classList.add("flou");
+}
 }
   const urlRegex = /(https?:\/\/[^\s]+)/gi;
   const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
