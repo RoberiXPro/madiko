@@ -18,8 +18,6 @@
     var replyMessageText = "";
     var messageListener = null;
     var passwordValue = "";
-    var playlistListenerRef = null;
-
 
     // Fonction pour afficher la notification
     function showNotification() {
@@ -198,76 +196,11 @@ function removeUserFromUI(user) {
     }
 }
 
-function switchToChat() {
-  document.getElementById("login-container").style.display = "none";
-  document.getElementById("chat-container").style.display = "block";
-  loadMessages();
-
-  // 🔁 Écoute du changement de musique en cours
-db.child("rooms/" + roomName + "/music/nowPlaying").on("value", snapshot => {
-  const data = snapshot.val();
-  if (!data || !data.audioBase64) return;
-
-  const audio = document.getElementById("shared-audio");
-
-  // ✅ Ajout pour forcer la lecture (sur Chrome/Firefox/Safari)
-  audio.autoplay = true;
-  audio.src = "";
-  audio.src = data.audioBase64;
-  audio.play().catch(e => console.warn("🔇 Lecture bloquée par le navigateur :", e));
-
-  // Affiche qui a lancé
-  const nowPlaying = document.getElementById("now-playing");
-  if (nowPlaying) {
-    nowPlaying.textContent = "🎧 Lecture : " + data.title + " (par " + data.triggeredBy + ")";
-  }
-
-  // Highlight dans la liste
-  document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
-  const match = [...document.querySelectorAll("#playlist-display li")]
-    .find(el => el.dataset.title === data.title);
-  if (match) match.classList.add("playing");
-});
-
-  // 🎵 Écoute des ajouts dans la playlist collaborative
-if (playlistListenerRef) {
-  playlistListenerRef.off();
-}
-playlistListenerRef = db.child("rooms/" + roomName + "/music/playlist");
-document.getElementById("playlist-display").innerHTML = ""; // 🧹 Vide l'affichage
-    playlistListenerRef.on("child_added", snapshot => {
-    const music = snapshot.val();
-
-    const li = document.createElement("li");
-    li.dataset.title = music.title;
-    li.dataset.base64 = music.audioBase64;
-
-
-    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    icon.setAttribute("viewBox", "0 0 24 24");
-    icon.setAttribute("class", "playlist-icon");
-   icon.innerHTML = `<path d="M3 10v10a1 1 0 001 1h3a1 1 0 001-1v-6h3v6a1 1 0 001 1h3a1 1 0 001-1V10H3zm18-5H3a1 1 0 000 2h18a1 1 0 000-2z"/>`;
-
-    const text = document.createElement("span");
-    text.textContent = music.title;
-
-    li.appendChild(icon);
-    li.appendChild(text);
-
-    // ▶️ Quand on clique sur un titre, on le "broadcast"
-    li.onclick = () => playSharedMusic(music.audioBase64, music.title);
-
-    document.getElementById("playlist-display").appendChild(li);
-  });
-}
-function playSharedMusic(audioBase64, title) {
-  db.child("rooms/" + roomName + "/music/nowPlaying").set({
-    audioBase64,
-    triggeredBy: username,
-    title,
-    timestamp: Date.now()
-  });
-}
+    function switchToChat() {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("chat-container").style.display = "block";
+        loadMessages();
+    }
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -297,6 +230,7 @@ function sendMessage() {
 
     messageInput.value = '';
 }
+
 
 var childRemovedListenerSet = false;
 
@@ -757,76 +691,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const popupImg = document.getElementById("popup-img");
     const closeBtn = document.getElementById("close-popup-btn");
     const popupInner = document.getElementById("popup-inner");
-    // 🎵 Quand on choisit une musique à uploader
-document.getElementById('music-upload').addEventListener('change', handleMusicUpload);
-// 🎵 Connexion des boutons de contrôle
-document.getElementById("play-music").addEventListener("click", () => {
-  const playing = document.querySelector("#playlist-display li.playing");
-  if (!playing) {
-    alert("Aucune musique sélectionnée.");
-    return;
-  }
-
-  const title = playing.dataset.title;
-  const base64 = playing.dataset.base64;
-  if (!base64) {
-    alert("Audio non trouvé.");
-    return;
-  }
-
-  playSharedMusic(base64, title);
-});
-
-document.getElementById("pause-music").addEventListener("click", () => {
-  const audio = document.getElementById("shared-audio");
-  audio.pause();
-});
-
-document.getElementById("stop-music")?.addEventListener("click", () => {
-  const audio = document.getElementById("shared-audio");
-  audio.pause();
-  audio.currentTime = 0;
-
-  const nowPlaying = document.getElementById("now-playing");
-  if (nowPlaying) nowPlaying.textContent = "";
-
-  document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
-});
-
-document.getElementById("volume-control").addEventListener("input", (e) => {
-  const volume = parseFloat(e.target.value);
-  const audio = document.getElementById("shared-audio");
-  audio.volume = volume;
-});
-    
-    
-function handleMusicUpload(event) {
-  const files = event.target.files;
-  if (!files || files.length === 0) return;
-
-  if (!roomName) {
-    console.warn("Pas encore connecté à une villa. Upload ignoré.");
-    return;
-  }
-
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onloadend = function () {
-      const base64Audio = reader.result;
-      const musicData = {
-        title: file.name,
-        audioBase64: base64Audio
-      };
-
-      db.child("rooms/" + roomName + "/music/playlist").push(musicData);
-      console.log("✅ Musique ajoutée :", file.name);
-    };
-    reader.readAsDataURL(file);
-  });
-
-  event.target.value = ""; // Reset après upload
-}
-
 
     // ✖ Fermer avec le bouton
     closeBtn.addEventListener("click", () => {
