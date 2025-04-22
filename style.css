@@ -902,6 +902,7 @@ min-height: 120px;
   background-color: #444;
   font-weight: bold;
   color: #fff;
+  animation: playingPulse 1.5s infinite;
 }
 
 /* 🎵 Icône SVG dans chaque item de la playlist */
@@ -938,5 +939,12 @@ min-height: 120px;
   height: 6px;
   flex: 1;
 }
+@keyframes playingPulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+
 
 </style>
