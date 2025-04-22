@@ -18,6 +18,8 @@
     var replyMessageText = "";
     var messageListener = null;
     var passwordValue = "";
+var playlistListenerRef = null;
+
 
     // Fonction pour afficher la notification
     function showNotification() {
@@ -208,27 +210,32 @@ db.child("rooms/" + roomName + "/music/nowPlaying").on("value", snapshot => {
 
   const audio = document.getElementById("shared-audio");
 
-  // 🔁 Force la relecture pour éviter le bug de comparaison
+  // ✅ Ajout pour forcer la lecture (sur Chrome/Firefox/Safari)
+  audio.autoplay = true;
   audio.src = "";
   audio.src = data.audioBase64;
-  audio.play();
+  audio.play().catch(e => console.warn("🔇 Lecture bloquée par le navigateur :", e));
 
-  // 🎧 Affiche le nom de la musique en cours
+  // Affiche qui a lancé
   const nowPlaying = document.getElementById("now-playing");
   if (nowPlaying) {
-    nowPlaying.textContent = "🎧 Lecture : " + data.title;
+    nowPlaying.textContent = "🎧 Lecture : " + data.title + " (par " + data.triggeredBy + ")";
   }
 
-  // ✨ Highlight visuel
+  // Highlight dans la liste
   document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
   const match = [...document.querySelectorAll("#playlist-display li")]
     .find(el => el.dataset.title === data.title);
   if (match) match.classList.add("playing");
 });
 
-
   // 🎵 Écoute des ajouts dans la playlist collaborative
-db.child("rooms/" + roomName + "/music/playlist").on("child_added", snapshot => {
+if (playlistListenerRef) {
+  playlistListenerRef.off();
+}
+playlistListenerRef = db.child("rooms/" + roomName + "/music/playlist");
+document.getElementById("playlist-display").innerHTML = ""; // 🧹 Vide l'affichage
+    playlistListenerRef.on("child_added", snapshot => {
     const music = snapshot.val();
 
     const li = document.createElement("li");
