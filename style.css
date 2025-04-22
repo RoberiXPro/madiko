@@ -847,4 +847,22 @@ min-height: 120px;
 .emoji-picker-hidden {
   display: none;
 }
+/* 🎵 Musique */
+.music-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+#volume-control {
+  width: 120px;
+  cursor: pointer;
+  accent-color: #ffd700;
+  background-color: #444;
+  border-radius: 5px;
+  height: 6px;
+}
+
 </style>
