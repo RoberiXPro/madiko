@@ -337,7 +337,8 @@ document.addEventListener("click", function(event) {
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
-    firebase.database().ref("users/" + username).remove();
+firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove();
+
 
     // Supprime le listener de messages pour éviter les doublons
     if (messageListener) {
@@ -535,7 +536,7 @@ function toggleEmojiPickerMessage(key) {
     }
         // Supprime l'utilisateur de Firebase
     window.addEventListener("beforeunload", function() {
-    firebase.database().ref("users/" + username).remove();
+firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove();
 });
  document.addEventListener("visibilitychange", function () {
   if (document.visibilityState === "visible") {
