@@ -847,13 +847,47 @@ min-height: 120px;
 .emoji-picker-hidden {
   display: none;
 }
-/* 🎵 Musique */
+/* 🎵 Musique et Zone de playlist */
+#music-player {
+  margin-top: 20px;
+  padding: 10px;
+  border-top: 1px solid #444;
+}
+
+#playlist-display {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+#playlist-display li {
+  padding: 5px;
+  color: #ffd700;
+  cursor: pointer;
+}
+
+#playlist-display li:hover {
+  text-decoration: underline;
+  background-color: #333;
+  border-radius: 6px;
+}
+
+/* 🎵 Contrôles audio */
 .music-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
   margin-top: 15px;
+  background-color: #2e2e2e;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.music-controls .icon-button {
+  background-color: #444;
+  color: #ffd700;
+  border-radius: 50%;
 }
 
 #volume-control {
@@ -863,6 +897,6 @@ min-height: 120px;
   background-color: #444;
   border-radius: 5px;
   height: 6px;
+  flex: 1;
 }
-
 </style>
