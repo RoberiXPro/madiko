@@ -202,24 +202,30 @@ function switchToChat() {
   loadMessages();
 
   // 🔁 Écoute du changement de musique en cours
-  db.child("music/nowPlaying").on("value", snapshot => {
-    const data = snapshot.val();
-    if (!data || !data.audioBase64) return;
+db.child("rooms/" + roomName + "/music/nowPlaying").on("value", snapshot => {
+  const data = snapshot.val();
+  if (!data || !data.audioBase64) return;
 
-    const audio = document.getElementById("shared-audio");
+  const audio = document.getElementById("shared-audio");
 
-    // 🎵 Évite de relancer si déjà en lecture
-    if (audio.src !== data.audioBase64) {
-      audio.src = data.audioBase64;
-      audio.play();
+  // 🔁 Force la relecture pour éviter le bug de comparaison
+  audio.src = "";
+  audio.src = data.audioBase64;
+  audio.play();
 
-      // ✨ Mise à jour visuelle : highlight dans la playlist
-      document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
-      const match = [...document.querySelectorAll("#playlist-display li")]
-        .find(el => el.dataset.title === data.title);
-      if (match) match.classList.add("playing");
-    }
-  });
+  // 🎧 Affiche le nom de la musique en cours
+  const nowPlaying = document.getElementById("now-playing");
+  if (nowPlaying) {
+    nowPlaying.textContent = "🎧 Lecture : " + data.title;
+  }
+
+  // ✨ Highlight visuel
+  document.querySelectorAll("#playlist-display li").forEach(el => el.classList.remove("playing"));
+  const match = [...document.querySelectorAll("#playlist-display li")]
+    .find(el => el.dataset.title === data.title);
+  if (match) match.classList.add("playing");
+});
+
 
   // 🎵 Écoute des ajouts dans la playlist collaborative
   db.child("music/playlist").on("child_added", snapshot => {
@@ -246,8 +252,7 @@ function switchToChat() {
   });
 }
 function playSharedMusic(audioBase64, title) {
-  // 🔁 Enregistre la musique en cours pour tous
-  db.child("music/nowPlaying").set({
+  db.child("rooms/" + roomName + "/music/nowPlaying").set({
     audioBase64,
     triggeredBy: username,
     title,
