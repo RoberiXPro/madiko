@@ -2,31 +2,100 @@
 <html>
 <head>  <!-- TOUT FONCTION ICI  -->  
 
-    <title>RS-Villa - Room sécurisé</title>
+    <title>RS-VILLA</title>
     <!-- Inclure Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-    body {
+:root {
+  --bg-color: #1f1f1f;
+  --text-color: #ffffff;
+  --accent-color: #ffd700;
+  --button-bg: #5a5a5a;
+  --button-hover-bg: #4c4c4c;
+  --button-shadow: rgba(255, 215, 0, 0.25); /* pour le neon */
+}
+
+ body {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: linear-gradient(135deg, #2e2e2e, #1f1f1f);
+        background: var(--bg-color);
         font-family: 'Arial', sans-serif;
-        color: #ffffff;
+        color: var(--text-color);
         margin: 0;
     }
-    #chat-container {
-        width: 70%;
-        max-width: 800px;
-        background: rgba(60, 60, 60, 0.9);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
-        display: none;
-    }
+
+  @media (max-width: 600px) {
+  #emoji-picker {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 60px;
+  }
+}
+
+  #message-input {
+    font-size: 1rem;
+  }
+}
+  .theme-default {
+  --message-color-user1: linear-gradient(135deg, #4e54c8, #8f94fb);
+  --message-color-user2: #3a3a3a;
+}
+
+.theme-ocean {
+  --message-color-user1: linear-gradient(135deg, #00c9ff, #92fe9d);
+  --message-color-user2: #1b2b34;
+}
+
+.theme-forest {
+  --message-color-user1: linear-gradient(135deg, #43cea2, #185a9d);
+  --message-color-user2: #37474f;
+
+}
+    .theme-rosewood {
+  --message-color-user1: linear-gradient(135deg, #a83279, #d38312);
+  --message-color-user2: #502336;
+}
+
+.theme-noir {
+  --message-color-user1: linear-gradient(135deg, #434343, #000000);
+  --message-color-user2: #1e1e1e;
+}
+
+.theme-midnight {
+  --message-color-user1: linear-gradient(135deg, #1c92d2, #f2fcfe);
+  --message-color-user2: #172d51;
+}
+
+.theme-sepia {
+  --message-color-user1: linear-gradient(135deg, #a2836e, #e6ccb2);
+  --message-color-user2: #5a463b;
+}
+
+.theme-galaxy {
+  --message-color-user1: linear-gradient(135deg, #4a00e0, #8e2de2);
+  --message-color-user2: #2a2438;
+}
+
+
+#chat-container {
+  width: 70%;
+  max-width: 800px;
+  background: rgba(60, 60, 60, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+  display: none;                 /* ✅ Doit être FLEX dès le départ */
+  flex-direction: column;
+  max-height: 100vh;            /* ✅ Jamais plus haut que la fenêtre */
+  overflow: hidden;             /* ✅ Bloque les débordements */
+}
+
  #login-container {
       flex-grow: 1;
       display: flex;
@@ -187,6 +256,16 @@
     button:hover {
         background-color: #4c4c4c;
     }
+
+#input-section {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-color); /* s’adapte au thème */
+  z-index: 999;
+  padding: 10px;
+}
+
+    
 #input-section button {
     background: linear-gradient(145deg, #3a3a3a, #222);
     color: #ffd700;
@@ -276,10 +355,18 @@
         border-radius: 5px;
         margin-bottom: 10px;
     }
-    #messages {
-      display: flex;
-      flex-direction: column;
-    }
+#messages {
+  flex: 1;                      /* ✅ Prend tout l’espace disponible */
+  overflow-y: auto;             /* ✅ Scroll vertical uniquement ici */
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  background-color: #2e2e2e;
+  border-radius: 5px;
+  margin-bottom: 10px;
+min-height: 120px;
+}
+
 
     .message {
       display: flex;
@@ -297,7 +384,7 @@
 
     .message.user1 {
       align-self: flex-end;
-      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      background: var(--message-color-user1);
       color: #fff;
       border-bottom-right-radius: 4px;
       border-top-right-radius: 18px;
@@ -317,7 +404,7 @@
 
     .message.user2 {
       align-self: flex-start;
-      background: #3a3a3a;
+      background: var(--message-color-user2);
       color: #fff;
       border-bottom-left-radius: 4px;
       border-top-left-radius: 18px;
@@ -586,6 +673,30 @@
   height: 24px;
   fill: #ffd700;
 }
+.danger-button {
+  background-color: transparent;
+  border: 1px solid #800000;
+  color: #800000;
+  opacity: 0.5;
+  transition: 0.2s;
+}
+.danger-button:hover {
+  opacity: 1;
+  background-color: #b71c1c;
+  color: #fff;
+}
+
+.stealth-button {
+  background-color: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  opacity: 0.5;
+  transition: 0.2s;
+}
+.stealth-button:hover {
+  opacity: 1;
+  background-color: #222;
+}
 
 </style>
 </head>
@@ -614,6 +725,24 @@
  <div class="container container-chat">  
     <div id="chat-container">
         <div id="room-name-display" style="font-size: 1.5em; font-weight: bold; color: #ffd700; margin-bottom: 10px;"></div>
+        <!-- Sélecteur de thème -->
+<div id="theme-selector" style="text-align: right; margin-bottom: 10px;">
+  <label for="theme-select" style="margin-right: 8px; color: var(--text-color); font-size: 0.9rem;">
+    🎨 Thème :
+  </label>
+  <select id="theme-select" style="padding: 6px 10px; border-radius: 8px; background-color: #444; color: #ffd700; border: 1px solid #888;">
+    <option value="default">Sombre</option>
+    <option value="ocean">Océan</option>
+    <option value="forest">Forêt</option>
+    <option value="rosewood">Rosewood</option>
+<option value="rosewood">Amour</option>
+<option value="noir">Nuit discrète</option>
+<option value="midnight">Minuit</option>
+<option value="sepia">Sépia</option>
+<option value="galaxy">Galaxie</option>
+
+  </select>
+</div>
 <div id="user-list">
         <h2>Utilisateurs connectés</h2>
         <ul id="online-users">
@@ -652,6 +781,7 @@
    <button class="icon-button" onclick="quitRoom()" title="Quitter">
     <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/></svg>
   </button>
+
 </div>
 
 
@@ -659,6 +789,13 @@
     <!-- Emoji Picker Content -->
 </div>
     </div>
+     <!-- ✅ Écran de camouflage -->
+<div id="stealth-screen" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #111; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999;">
+  <p style="color:#ccc; font-size:1.2em;">Résous : 9 x 2548 + 236</p>
+  <input id="stealth-code" placeholder="Tape ici" style="padding:10px; border-radius:6px; border:none; font-size:1rem; margin-bottom: 10px;">
+  <button onclick="quitStealthSafely()" style="padding:10px 20px; background-color:#555; color:#fff; border:none; border-radius:6px; font-size:1rem;">Quitter discrètement</button>
+</div>
+
 
 <div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999;">
   <div id="popup-inner" style="position: relative;">
@@ -667,7 +804,11 @@
   </div>
 </div>
      </div>
-
+<!-- ✅ Boutons Panic & Camouflage (coin bas droite, fixés) -->
+<div style="position: fixed; bottom: 10px; right: 10px; display: flex; gap: 10px; z-index: 9999;">
+  <button class="icon-button danger-button" onclick="panicWipe()" title="Panic">🧨</button>
+  <button class="icon-button stealth-button" onclick="activateStealth()" title="Camouflage">🕶️</button>
+</div>
 <script>
     const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
     var firebaseConfig = {
@@ -682,12 +823,13 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-       var db;
+    var db;
     var username;
     var roomName;
     var replyMessageId = null;
     var replyMessageText = "";
     var messageListener = null;
+    var passwordValue = "";
 
     // Fonction pour afficher la notification
     function showNotification() {
@@ -723,6 +865,7 @@ function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
+ passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -742,29 +885,33 @@ function joinRoom() {
     db.once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         var dbPassword = snapshot.child("password").val();
-        if (dbPassword === password) {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-        } else {
+if (dbPassword === password) {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI
+}
+ else {
           alert("Mot de passe incorrect !");
         }
       } else {
         // Room inexistante : on la crée
-        db.set({
-          password: password,
-          messages: {}
-        }).then(() => {
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-        });
+db.set({
+  password: password,
+  messages: {}
+}).then(() => {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI AUSSI
+});
       }
     });
   });
 }
+document.getElementById("theme-select").addEventListener("change", handleThemeChange);
 
 
 firebase.database().ref("users").on("child_changed", function(snapshot) {
@@ -774,7 +921,15 @@ firebase.database().ref("users").on("child_changed", function(snapshot) {
     // Mettre à jour l'interface utilisateur pour afficher uniquement le statut de l'utilisateur
     updateUserStatusUI(user, data.status);
 });
-    
+
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  if (!theme) return;
+  Object.entries(theme).forEach(([varName, value]) => {
+    document.documentElement.style.setProperty(varName, value);
+  });
+}
+
 
 function initializeUserListeners() {
     var usersRef = firebase.database().ref("rooms/" + roomName + "/onlineUsers");
@@ -1210,52 +1365,66 @@ let microAccessGranted = false;
 function toggleRecording() {
     const recordBtn = document.getElementById('record-btn');
 
-    // ✅ Bloquer si on a déjà tenté et refusé l’accès
     if (!microAccessGranted && !mediaRecorder) {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             microAccessGranted = true;
-
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const audioURL = URL.createObjectURL(recordedBlob);
-
-                document.getElementById('audio-player').src = audioURL;
-                document.getElementById('audio-preview').style.display = "block";
-
-                // ✅ Remettre l’icône SVG moderne
-                recordBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>`;
-                recordBtn.classList.remove("recording");
-            };
-
-            // Démarre immédiatement après autorisation
-            mediaRecorder.start();
-            recordBtn.innerHTML = "⏹️ Stop";
-            recordBtn.classList.add("recording");
-
-            // 🔴 Stop après 30s si pas fait manuellement
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.stop();
-                    alert("Durée maximale atteinte (30s)");
-                }
-            }, 30000);
-
+            startRecording(stream, recordBtn);
         }).catch(error => {
             console.error("Erreur micro :", error);
             alert("Erreur : accès au micro refusé !");
         });
-
     } else if (mediaRecorder && mediaRecorder.state === "recording") {
         mediaRecorder.stop();
+    } else {
+        // ✅ Re-demande le micro et recommence un nouvel enregistrement
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            startRecording(stream, recordBtn);
+        }).catch(error => {
+            console.error("Erreur lors de la reprise de l’enregistrement :", error);
+            alert("Impossible de relancer l’enregistrement.");
+        });
     }
 }
+
+function startRecording(stream, recordBtn) {
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioURL = URL.createObjectURL(recordedBlob);
+
+        document.getElementById('audio-player').src = audioURL;
+        document.getElementById('audio-preview').style.display = "block";
+
+        // Remet le bouton à l’état initial
+        recordBtn.innerHTML = `
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/>
+            </svg>`;
+        recordBtn.classList.remove("recording");
+
+        // 🔁 Reset pour pouvoir relancer un autre enregistrement
+        mediaRecorder = null;
+    };
+
+    // Lancement
+    mediaRecorder.start();
+    recordBtn.innerHTML = "⏹️ Stop";
+    recordBtn.classList.add("recording");
+
+    setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            alert("Durée maximale atteinte (30s)");
+        }
+    }, 30000);
+}
+
 
 
 function uploadAudio() {
@@ -1287,8 +1456,6 @@ function uploadAudio() {
         document.getElementById('audio-preview').style.display = "none";
         document.getElementById('audio-player').src = "";
         recordedBlob = null;
-
-        alert("Message vocal envoyé !");
     };
 
     reader.readAsDataURL(recordedBlob); // transforme le blob en base64
@@ -1296,9 +1463,10 @@ function uploadAudio() {
 
 function cancelAudio() {
     recordedBlob = null;
-    document.getElementById('audio-preview').style.display = "none";// transforme le blob en base64 cool
+    document.getElementById('audio-preview').style.display = "none";
     document.getElementById('audio-player').src = "";
 }
+
 function handleImageUpload(event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -1373,6 +1541,117 @@ function formatTime(ts) {
     return typeof ts === 'string' ? ts : "🕓 invalide";
   }
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+// Application des thèmes
+const themes = {
+  default: {
+    '--message-color-user1': 'linear-gradient(135deg, #4e54c8, #8f94fb)',
+    '--message-color-user2': '#3a3a3a'
+  },
+  ocean: {
+    '--message-color-user1': 'linear-gradient(135deg, #2193b0, #6dd5ed)',
+    '--message-color-user2': '#145374'
+  },
+  forest: {
+    '--message-color-user1': 'linear-gradient(135deg, #388e3c, #a5d6a7)',
+    '--message-color-user2': '#2e7d32'
+  },
+
+  // 💖 Nouveaux thèmes
+rosewood: {
+    '--message-color-user1': 'linear-gradient(135deg, #a83279, #d38312)',
+    '--message-color-user2': '#502336',
+
+  },
+  noir: {
+    '--message-color-user1': 'linear-gradient(135deg, #434343, #000000)',
+    '--message-color-user2': '#1e1e1e',
+
+  },
+  midnight: {
+    '--message-color-user1': 'linear-gradient(135deg, #1c92d2, #f2fcfe)',
+    '--message-color-user2': '#172d51',
+
+  },
+  sepia: {
+    '--message-color-user1': 'linear-gradient(135deg, #a2836e, #e6ccb2)',
+    '--message-color-user2': '#5a463b',
+
+  },
+  galaxy: {
+    '--message-color-user1': 'linear-gradient(135deg, #4a00e0, #8e2de2)',
+    '--message-color-user2': '#2a2438',
+  }
+};
+
+
+// ✅ Applique un thème donné
+function applyTheme(themeName) {
+  const theme = themes[themeName];
+  if (!theme) return;
+
+  Object.keys(theme).forEach(variable => {
+    document.documentElement.style.setProperty(variable, theme[variable]);
+  });
+}
+
+// ✅ Charge le thème de l'utilisateur depuis Firebase
+function loadUserTheme() {
+  if (!username || !roomName) return;
+  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
+  userRef.once("value").then(snapshot => {
+    const data = snapshot.val();
+    if (data && data.theme) {
+      applyTheme(data.theme);
+      document.getElementById("theme-select").value = data.theme;
+    } else {
+      applyTheme("default");
+      document.getElementById("theme-select").value = "default";
+    }
+  });
+}
+
+// ✅ Gère le changement de thème et enregistre dans Firebase
+function handleThemeChange(e) {
+  const selectedTheme = e.target.value;
+  applyTheme(selectedTheme);
+
+  if (!username || !roomName) return;
+
+  const userRef = firebase.database().ref(`rooms/${roomName}/onlineUsers/${username}`);
+  userRef.update({ theme: selectedTheme });
+}
+//bouton d'urgence
+function panicWipe() {
+  if (!roomName) return;
+  firebase.database().ref("rooms/" + roomName).remove().catch(() => {});
+  window.location.href = "https://www.google.com";
+}
+
+function activateStealth() {
+  document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "none");
+  document.getElementById("stealth-screen").style.display = "flex";
+
+  const input = document.getElementById("stealth-code");
+  input.value = "";
+  input.focus();
+
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      const passwordValue = document.getElementById("password-input")?.value;
+      if (input.value === passwordValue) {
+        document.getElementById("stealth-screen").style.display = "none";
+        document.body.querySelectorAll("body > *:not(#stealth-screen)").forEach(el => el.style.display = "");
+      } else {
+        input.value = "";
+        input.placeholder = "Erreur. Réessaye.";
+      }
+    }
+  }, { once: true });
+}
+
+function quitStealthSafely() {
+  window.location.href = "https://www.google.com";
 }
 
 </script>
