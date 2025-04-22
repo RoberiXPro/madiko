@@ -841,3 +841,40 @@ function activateStealth() {
 function quitStealthSafely() {
   window.location.href = "https://www.google.com";
 }
+// 🎨 Système de Dark/Light mode
+const lightTheme = {
+  '--bg-color': '#ffffff',
+  '--text-color': '#1a1a1a',
+  '--accent-color': '#0055ff',
+  '--button-bg': '#dddddd',
+  '--button-hover-bg': '#cccccc',
+  '--message-color-user1': 'linear-gradient(135deg, #1976d2, #90caf9)',
+  '--message-color-user2': '#e0e0e0'
+};
+
+const darkTheme = {
+  '--bg-color': '#1f1f1f',
+  '--text-color': '#ffffff',
+  '--accent-color': '#ffd700',
+  '--button-bg': '#5a5a5a',
+  '--button-hover-bg': '#4c4c4c',
+  '--message-color-user1': 'linear-gradient(135deg, #4e54c8, #8f94fb)',
+  '--message-color-user2': '#3a3a3a'
+};
+
+let isDark = true; // Thème par défaut : sombre
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('theme-toggle');
+  if (!toggle) return;
+
+  toggle.addEventListener('click', () => {
+    const theme = isDark ? lightTheme : darkTheme;
+    Object.entries(theme).forEach(([key, val]) => {
+      document.documentElement.style.setProperty(key, val);
+    });
+
+    toggle.textContent = isDark ? '☀️' : '🌙';
+    isDark = !isDark;
+  });
+});
