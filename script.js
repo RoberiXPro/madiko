@@ -379,22 +379,13 @@ firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove
         content.style.maxWidth = "220px";
         content.onclick = () => openImagePopup(data.imageBase64);
       } else {
-      content = document.createElement("div");
-content.className = "msg-text";
+content = document.createElement("div");
+content.className = "msg-text flou"; // ajout direct des 2 classes
 
-content.classList.add("flou");
+const urlRegex = /(https?:\/\/[^\s]+)/gi;
+const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+content.innerHTML = msg;
 
- if (data.user !== username) {
-  content.classList.add("flou");
-}
-if (data.user === username) {
-  content.classList.add("flou");
-}
-}
-  const urlRegex = /(https?:\/\/[^\s]+)/gi;
-  const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-  content.innerHTML = msg;
-}
 
       const userTag = document.createElement("div");
       userTag.className = "username-tag";
