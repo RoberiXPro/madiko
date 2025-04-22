@@ -382,8 +382,7 @@ firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove
       content = document.createElement("div");
 content.className = "msg-text";
 
-if (data.user !== username) {
-  content.classList.add("flou");
+content.classList.add("flou");
 
  if (data.user !== username) {
   content.classList.add("flou");
