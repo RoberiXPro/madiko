@@ -39,6 +39,28 @@
   transition: var(--transition);
 }
 
+#playlist-display li {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  background: #2e2e2e;
+  margin-bottom: 6px;
+  transition: background 0.2s ease;
+}
+
+#playlist-display li:hover {
+  background: #3a3a3a;
+  cursor: pointer;
+}
+
+.playlist-icon {
+  width: 20px;
+  height: 20px;
+  fill: #ffd700;
+}
+
 .theme-toggle:hover {
   background-color: var(--button-hover-bg);
 }
