@@ -101,12 +101,21 @@
     <button id="close-popup-btn" class="close-popup-btn">✖</button>
   </div>
 </div>
-      <!-- 🎵 Contrôle musique -->
+<!-- 🎵 Playlist MP3 -->
+<div id="music-player">
+  <input type="file" id="music-upload" accept="audio/*" multiple style="display:none;">
+  <button onclick="document.getElementById('music-upload').click()">📂 Ajouter des musiques</button>
+  <ul id="playlist-display"></ul>
+  <audio id="shared-audio" controls style="width:100%; margin-top:10px;"></audio>
+</div>
+
+<!-- 🎵 Contrôle musique -->
 <div id="music-controls" class="music-controls">
   <button id="play-music" class="icon-button" title="Play musique">▶️</button>
   <button id="pause-music" class="icon-button" title="Pause musique">⏸️</button>
   <input type="range" id="volume-control" min="0" max="1" step="0.01" value="0.5" title="Volume">
 </div>
+
 
     </div>
 
