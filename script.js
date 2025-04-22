@@ -53,7 +53,7 @@ function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
- passwordValue = password;
+  passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -70,38 +70,50 @@ function joinRoom() {
 
     db = firebase.database().ref("rooms/" + roomName);
 
-    db.once('value').then(function(snapshot) {
+    db.once("value").then(function(snapshot) {
       if (snapshot.exists()) {
         var dbPassword = snapshot.child("password").val();
-if (dbPassword === password) {
-  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-  switchToChat();
-  initializeUserListeners();
-  setOnlineStatus();
-  loadUserTheme(); // ICI
-}
- else {
+        if (dbPassword === password) {
+
+          // ✅ Ajoute l'utilisateur immédiatement dans la liste des connectés
+          firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).set({
+            status: "en ligne",
+            lastSeen: new Date().toISOString()
+          });
+
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+          loadUserTheme();
+        } else {
           alert("Mot de passe incorrect !");
         }
       } else {
-        // Room inexistante : on la crée
-db.set({
-  password: password,
-  messages: {}
-}).then(() => {
-  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-  switchToChat();
-  initializeUserListeners();
-  setOnlineStatus();
-  loadUserTheme(); // ICI AUSSI
-});
+        // ✅ Crée la room si elle n'existe pas
+        db.set({
+          password: password,
+          messages: {}
+        }).then(() => {
+
+          // ✅ Ajoute l'utilisateur directement
+          firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).set({
+            status: "en ligne",
+            lastSeen: new Date().toISOString()
+          });
+
+          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+          switchToChat();
+          initializeUserListeners();
+          setOnlineStatus();
+          loadUserTheme();
+        });
       }
     });
   });
 }
+
 document.getElementById("theme-select").addEventListener("change", handleThemeChange);
-
-
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
     var data = snapshot.val();
