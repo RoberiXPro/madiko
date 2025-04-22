@@ -39,28 +39,6 @@
   transition: var(--transition);
 }
 
-#playlist-display li {
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 6px;
-  background: #2e2e2e;
-  margin-bottom: 6px;
-  transition: background 0.2s ease;
-}
-
-#playlist-display li:hover {
-  background: #3a3a3a;
-  cursor: pointer;
-}
-
-.playlist-icon {
-  width: 20px;
-  height: 20px;
-  fill: #ffd700;
-}
-
 .theme-toggle:hover {
   background-color: var(--button-hover-bg);
 }
@@ -869,13 +847,33 @@ min-height: 120px;
 .emoji-picker-hidden {
   display: none;
 }
-/* 🎵 Musique et Zone de playlist */
+/* 🎵 Zone du lecteur audio */
 #music-player {
   margin-top: 20px;
-  padding: 10px;
-  border-top: 1px solid #444;
+  padding: 15px;
+  border-top: 2px solid #ffd70033;
+  background-color: #1c1c1c;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
 }
 
+/* 🎵 Bouton "Ajouter des musiques" */
+#music-player button {
+  background-color: #333;
+  color: #ffd700;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+#music-player button:hover {
+  background-color: #444;
+}
+
+/* 🎵 Liste des musiques dans la playlist */
 #playlist-display {
   list-style: none;
   padding: 0;
@@ -883,18 +881,37 @@ min-height: 120px;
 }
 
 #playlist-display li {
-  padding: 5px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  background: #2e2e2e;
+  margin-bottom: 6px;
+  transition: background 0.2s ease;
   color: #ffd700;
   cursor: pointer;
 }
 
 #playlist-display li:hover {
+  background: #3a3a3a;
   text-decoration: underline;
-  background-color: #333;
-  border-radius: 6px;
 }
 
-/* 🎵 Contrôles audio */
+#playlist-display li.playing {
+  background-color: #444;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* 🎵 Icône SVG dans chaque item de la playlist */
+.playlist-icon {
+  width: 20px;
+  height: 20px;
+  fill: #ffd700;
+}
+
+/* 🎵 Contrôles audio (lecture, pause, volume) */
 .music-controls {
   display: flex;
   align-items: center;
@@ -921,4 +938,5 @@ min-height: 120px;
   height: 6px;
   flex: 1;
 }
+
 </style>
