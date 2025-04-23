@@ -29,6 +29,11 @@
         notification.style.display = "none";
       }, 5000);
     }
+loginBtn.onclick = () => {
+  alert("🟢 Clic reçu !");
+  console.log("⚡ joinRoom() déclenché par clic");
+  joinRoom();
+};
    
 function joinRoom() {
   username = document.getElementById("username").value;
