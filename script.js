@@ -485,7 +485,7 @@ function startDeletionTimer(msgDiv, key) {
   msgDiv.classList.add("deletion-pending");
     setTimeout(() => {
     deleteMessage(msgDiv, key);
-  }, 120000); // 2 minutes
+  }, 600000); // 10 minutes
 }
 
 function deleteMessage(msgDiv, key) {
