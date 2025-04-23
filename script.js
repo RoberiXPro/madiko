@@ -1,4 +1,4 @@
-    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
+    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
