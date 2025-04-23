@@ -30,12 +30,30 @@
       }, 5000);
     }
 //afaka atao entrée refa mi connecte
-  
+document.addEventListener("DOMContentLoaded", function () {
+  showNotification();
+
+  const loginContainer = document.getElementById("login-container");
+  if (loginContainer) {
+    loginContainer.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const loginBtn = document.querySelector(".login-button");
+        if (loginBtn) loginBtn.click();
+      }
+    });
+  }
+
+  // ✅ Ici : assignation du clic du bouton
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) loginBtn.onclick = joinRoom;
+});
+
+   
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
   var password = document.getElementById("password-input").value;
-  passwordValue = password;
+ passwordValue = password;
 
   if (!username || !roomName || !password) {
     alert("Tous les champs sont obligatoires.");
@@ -52,50 +70,38 @@ function joinRoom() {
 
     db = firebase.database().ref("rooms/" + roomName);
 
-    db.once("value").then(function(snapshot) {
+    db.once('value').then(function(snapshot) {
       if (snapshot.exists()) {
         var dbPassword = snapshot.child("password").val();
-        if (dbPassword === password) {
-
-          // ✅ Ajoute l'utilisateur immédiatement dans la liste des connectés
-          firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).set({
-            status: "en ligne",
-            lastSeen: new Date().toISOString()
-          });
-
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-          loadUserTheme();
-        } else {
+if (dbPassword === password) {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI
+}
+ else {
           alert("Mot de passe incorrect !");
         }
       } else {
-        // ✅ Crée la room si elle n'existe pas
-        db.set({
-          password: password,
-          messages: {}
-        }).then(() => {
-
-          // ✅ Ajoute l'utilisateur directement
-          firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).set({
-            status: "en ligne",
-            lastSeen: new Date().toISOString()
-          });
-
-          document.getElementById("room-name-display").textContent = "Villa : " + roomName;
-          switchToChat();
-          initializeUserListeners();
-          setOnlineStatus();
-          loadUserTheme();
-        });
+        // Room inexistante : on la crée
+db.set({
+  password: password,
+  messages: {}
+}).then(() => {
+  document.getElementById("room-name-display").textContent = "Villa : " + roomName;
+  switchToChat();
+  initializeUserListeners();
+  setOnlineStatus();
+  loadUserTheme(); // ICI AUSSI
+});
       }
     });
   });
 }
-
 document.getElementById("theme-select").addEventListener("change", handleThemeChange);
+
+
 firebase.database().ref("users").on("child_changed", function(snapshot) {
     var user = snapshot.key;
     var data = snapshot.val();
@@ -318,11 +324,20 @@ document.addEventListener("click", function(event) {
         }
     });
 
+     document.addEventListener("DOMContentLoaded", function() {
+        loadEmojis();
+
+        document.getElementById("message-input").addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    });
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
-firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove();
-
+    firebase.database().ref("users/" + username).remove();
 
     // Supprime le listener de messages pour éviter les doublons
     if (messageListener) {
@@ -363,13 +378,24 @@ firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove
         content.style.maxWidth = "220px";
         content.onclick = () => openImagePopup(data.imageBase64);
       } else {
-content = document.createElement("div");
-content.className = "msg-text flou"; // ajout direct des 2 classes
+      content = document.createElement("div");
+content.className = "msg-text";
 
-const urlRegex = /(https?:\/\/[^\s]+)/gi;
-const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
-content.innerHTML = msg;
+if (data.user !== username) {
+  content.classList.add("flou");
 
+  msgDiv.addEventListener("mouseenter", function () {
+    content.classList.remove("flou");
+    if (!msgDiv.dataset.timerStarted) {
+      msgDiv.dataset.timerStarted = "true";
+      startDeletionTimer(msgDiv, key);
+    }
+  });
+}
+  const urlRegex = /(https?:\/\/[^\s]+)/gi;
+  const msg = (data.message || "").replace(urlRegex, url => `<a href="${url}" target="_blank" style="color:#ffd700">${url}</a>`);
+  content.innerHTML = msg;
+}
 
       const userTag = document.createElement("div");
       userTag.className = "username-tag";
@@ -509,7 +535,7 @@ function toggleEmojiPickerMessage(key) {
     }
         // Supprime l'utilisateur de Firebase
     window.addEventListener("beforeunload", function() {
-firebase.database().ref("rooms/" + roomName + "/onlineUsers/" + username).remove();
+    firebase.database().ref("users/" + username).remove();
 });
  document.addEventListener("visibilitychange", function () {
   if (document.visibilityState === "visible") {
@@ -660,6 +686,31 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+    const popup = document.getElementById("image-popup");
+    const popupImg = document.getElementById("popup-img");
+    const closeBtn = document.getElementById("close-popup-btn");
+    const popupInner = document.getElementById("popup-inner");
+
+    // ✖ Fermer avec le bouton
+    closeBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+    });
+
+    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
+    popup.addEventListener("click", (e) => {
+        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
+            popup.style.display = "none";
+        }
+    });
+
+    // ⌨️ Fermer avec la touche Échap
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            popup.style.display = "none";
+        }
+    });
+});
 setInterval(() => {
   document.querySelectorAll('.message').forEach(msg => {
     const ts = msg.dataset.timestamp;
@@ -827,84 +878,3 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
-
-       //toutes les DOMContentloaded fusionné 
-document.addEventListener("DOMContentLoaded", function () {
-console.log("✅ DOMContentLoaded exécuté");
-
-  // ✅ Notification d'entrée
-  showNotification();
-
-  // ✅ Login par touche Enter
-  const loginContainer = document.getElementById("login-container");
-  if (!loginContainer) {
-    console.warn("⚠️ Élément #login-container introuvable au moment du chargement du DOM");
-  } else {
-    console.log("🔍 login-container trouvé dans le DOM");
-    loginContainer.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        console.log("⏎ Entrée détectée dans login-container");
-        const loginBtn = document.querySelector(".login-button");
-        if (loginBtn) {
-          console.log("🚪 Clic simulé sur bouton login");
-          loginBtn.click();
-        } else {
-          console.warn("⚠️ Bouton .login-button introuvable");
-        }
-      }
-    });
-  }
-
-  // ✅ Bouton de login (fonction joinRoom déjà définie)
-  const loginBtn = document.querySelector(".login-button");
-  if (loginBtn) {
-    console.log("🎯 Bouton login trouvé et listener attaché");
-    loginBtn.onclick = () => {
-      console.log("⚡ joinRoom() déclenché par clic");
-      joinRoom();
-    };
-  } else {
-    console.warn("⚠️ Bouton .login-button non détecté lors du DOMContentLoaded");
-  }
-
-  // ✅ Chargement des emojis
-  console.log("😀 Chargement des emojis...");
-  loadEmojis();
-
-  // ✅ Envoi du message avec Enter
-  const messageInput = document.getElementById("message-input");
-  if (messageInput) {
-    messageInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        console.log("✉️ Message envoyé via Entrée");
-        sendMessage();
-      }
-    });
-  }
-
-  // ✅ Fermeture du popup image + touche échappement
-  const popup = document.getElementById("image-popup");
-  const popupImg = document.getElementById("popup-img");
-  const closeBtn = document.getElementById("close-popup-btn");
-
-  if (popup && popupImg && closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      popup.style.display = "none";
-    });
-
-    popup.addEventListener("click", (e) => {
-      if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
-        popup.style.display = "none";
-      }
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") {
-        popup.style.display = "none";
-      }
-    });
-  }
-});
-
-
