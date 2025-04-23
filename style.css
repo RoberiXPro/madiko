@@ -847,25 +847,4 @@ min-height: 120px;
 .emoji-picker-hidden {
   display: none;
 }
-.seen-check {
-  font-size: 0.75rem;
-  color: #00ff88;
-  opacity: 0.85;
-  position: absolute;
-  bottom: 6px;
-  right: 12px;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-}
-
 </style>
