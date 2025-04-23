@@ -29,25 +29,6 @@
         notification.style.display = "none";
       }, 5000);
     }
-//afaka atao entrée refa mi connecte
-document.addEventListener("DOMContentLoaded", function () {
-  showNotification();
-
-  const loginContainer = document.getElementById("login-container");
-  if (loginContainer) {
-    loginContainer.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        const loginBtn = document.querySelector(".login-button");
-        if (loginBtn) loginBtn.click();
-      }
-    });
-  }
-
-  // ✅ Ici : assignation du clic du bouton
-  const loginBtn = document.querySelector(".login-button");
-  if (loginBtn) loginBtn.onclick = joinRoom;
-});
-
    
 function joinRoom() {
   username = document.getElementById("username").value;
@@ -233,26 +214,44 @@ function sendMessage() {
 
 
 var childRemovedListenerSet = false;
-
+//message vu ajouté ici
 function loadMessages() {
-    if (!messageListener) {
-        messageListener = function(snapshot) {
-            displayMessage(snapshot.key, snapshot.val());
-        };
-        db.child("messages").on("child_added", messageListener);
-    }
+  if (!messageListener) {
+    messageListener = function(snapshot) {
+      displayMessage(snapshot.key, snapshot.val());
+    };
+    db.child("messages").on("child_added", messageListener);
+  }
 
-    if (!childRemovedListenerSet) {
-        db.child("messages").on("child_removed", function(snapshot) {
-            const removedMessage = document.getElementById(snapshot.key);
-            if (removedMessage) {
-                removedMessage.remove();
-                console.log("Message supprimé de l'interface après suppression dans Firebase.");
-            }
-        });
-        childRemovedListenerSet = true;
+  if (!childRemovedListenerSet) {
+    db.child("messages").on("child_removed", function(snapshot) {
+      const removedMessage = document.getElementById(snapshot.key);
+      if (removedMessage) {
+        removedMessage.remove();
+        console.log("Message supprimé de l'interface après suppression dans Firebase.");
+      }
+    });
+    childRemovedListenerSet = true;
+  }
+
+  // ✅ Ajoute ce bloc pour mettre à jour le DOM si le message est "vu"
+  db.child("messages").on("child_changed", function(snapshot) {
+    const key = snapshot.key;
+    const data = snapshot.val();
+    const msgDiv = document.getElementById(key);
+
+    if (msgDiv && data.seen && data.user === username) {
+      // Vérifie si le ✓✓ n'est pas déjà là
+      if (!msgDiv.querySelector(".seen-check")) {
+        const seenCheck = document.createElement("span");
+        seenCheck.className = "seen-check";
+        seenCheck.textContent = "✓✓";
+        msgDiv.appendChild(seenCheck);
+      }
     }
+  });
 }
+
    
     //fonction pour les réactions dans les messages 
     function addReactionEmoji(messageId, emoji) {
@@ -324,17 +323,7 @@ document.addEventListener("click", function(event) {
         }
     });
 
-     document.addEventListener("DOMContentLoaded", function() {
-        loadEmojis();
-
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-    });
-//Bouton Quitter
+    //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
     firebase.database().ref("users/" + username).remove();
@@ -615,8 +604,6 @@ function startRecording(stream, recordBtn) {
     }, 30000);
 }
 
-
-
 function uploadAudio() {
     if (!recordedBlob) {
         alert("Aucun enregistrement à envoyer.");
@@ -688,31 +675,95 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
+//message vu, domcontentloaded fusionné 
+// ✅ Version nettoyée du DOMContentLoaded fusionné et patché
+
 document.addEventListener("DOMContentLoaded", function () {
-    const popup = document.getElementById("image-popup");
-    const popupImg = document.getElementById("popup-img");
-    const closeBtn = document.getElementById("close-popup-btn");
-    const popupInner = document.getElementById("popup-inner");
+  console.log("✅ DOMContentLoaded exécuté");
 
-    // ✖ Fermer avec le bouton
+  // ✅ Notification d'entrée
+  showNotification();
+
+  // ✅ Login par touche Enter
+  const loginContainer = document.getElementById("login-container");
+  if (loginContainer) {
+    loginContainer.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        console.log("⏎ Entrée détectée dans login-container");
+        const loginBtn = document.querySelector(".login-button");
+        if (loginBtn) {
+          console.log("🚪 Clic simulé sur bouton login");
+          loginBtn.click();
+        }
+      }
+    });
+  }
+
+  // ✅ Bouton de login (fonction joinRoom déjà définie)
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) {
+    console.log("🎯 Bouton login trouvé et listener attaché");
+    loginBtn.onclick = () => {
+      console.log("⚡ joinRoom() déclenché par clic");
+      joinRoom();
+    };
+  }
+
+  // ✅ Chargement des emojis
+  console.log("😀 Chargement des emojis...");
+  loadEmojis();
+
+  // ✅ Envoi du message avec Enter
+  const messageInput = document.getElementById("message-input");
+  if (messageInput) {
+    messageInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        console.log("✉️ Message envoyé via Entrée");
+        sendMessage();
+      }
+    });
+  }
+
+  // ✅ Theme toggle 🌙/☀️
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const theme = isDark ? lightTheme : darkTheme;
+      Object.entries(theme).forEach(([key, val]) => {
+        document.documentElement.style.setProperty(key, val);
+      });
+      toggle.textContent = isDark ? '☀️' : '🌙';
+      isDark = !isDark;
+    });
+  }
+
+  // ✅ Gestion du popup d'image (ouvrir, fermer, échap)
+  const popup = document.getElementById("image-popup");
+  const popupImg = document.getElementById("popup-img");
+  const closeBtn = document.getElementById("close-popup-btn");
+  const popupInner = document.getElementById("popup-inner");
+
+  if (popup && popupImg && closeBtn) {
     closeBtn.addEventListener("click", () => {
-        popup.style.display = "none";
+      popup.style.display = "none";
     });
 
-    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
     popup.addEventListener("click", (e) => {
-        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
-            popup.style.display = "none";
-        }
+      if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
+        popup.style.display = "none";
+      }
     });
 
-    // ⌨️ Fermer avec la touche Échap
     document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-            popup.style.display = "none";
-        }
+      if (e.key === "Escape") {
+        popup.style.display = "none";
+      }
     });
+  }
 });
+
+
 setInterval(() => {
   document.querySelectorAll('.message').forEach(msg => {
     const ts = msg.dataset.timestamp;
