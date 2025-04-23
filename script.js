@@ -1,4 +1,4 @@
-    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3');
+    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2356/2356-preview.mp3');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -472,9 +472,7 @@ if (data.user === username) {
 
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
-        
-       //message vu 
-       updateSeenStatus(msgDiv, data, key);
+
        document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
 
@@ -487,7 +485,7 @@ function startDeletionTimer(msgDiv, key) {
   msgDiv.classList.add("deletion-pending");
     setTimeout(() => {
     deleteMessage(msgDiv, key);
-  }, 600000); // 10 minutes
+  }, 120000); // 2 minutes
 }
 
 function deleteMessage(msgDiv, key) {
@@ -880,20 +878,3 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
-
-//marquage messag vu
-function updateSeenStatus(msgDiv, data, key) {
-  if (data.user !== username) {
-    msgDiv.addEventListener("mouseenter", () => {
-      if (!data.seen) {
-        db.child("messages").child(key).update({ seen: true });
-      }
-    });
-  } else if (data.user === username && data.seen) {
-    const seenCheck = document.createElement("span");
-    seenCheck.className = "seen-check";
-    seenCheck.textContent = "✓✓";
-    msgDiv.appendChild(seenCheck);
-  }
-}
-
