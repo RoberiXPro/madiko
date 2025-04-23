@@ -245,7 +245,7 @@ function loadMessages() {
       if (!msgDiv.querySelector(".seen-check")) {
         const seenCheck = document.createElement("span");
         seenCheck.className = "seen-check";
-        seenCheck.textContent = "✓✓";
+        seenCheck.textContent = "✓";
         msgDiv.appendChild(seenCheck);
       }
     }
