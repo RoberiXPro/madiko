@@ -472,7 +472,9 @@ if (data.user === username) {
 
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
-
+        
+       //message vu 
+       updateSeenStatus(msgDiv, data, key);
        document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
 
@@ -878,3 +880,20 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
+
+//marquage messag vu
+function updateSeenStatus(msgDiv, data, key) {
+  if (data.user !== username) {
+    msgDiv.addEventListener("mouseenter", () => {
+      if (!data.seen) {
+        db.child("messages").child(key).update({ seen: true });
+      }
+    });
+  } else if (data.user === username && data.seen) {
+    const seenCheck = document.createElement("span");
+    seenCheck.className = "seen-check";
+    seenCheck.textContent = "✓✓";
+    msgDiv.appendChild(seenCheck);
+  }
+}
+
