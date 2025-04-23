@@ -472,6 +472,8 @@ if (data.user === username) {
 
 actions.appendChild(btnGroup);     // ✅ Affiche le groupe dans actions
 msgDiv.appendChild(actions);       // ✅ Affiche tout dans le message
+//message vu
+       updateSeenStatus(msgDiv, data, key); // ✅ C’est ce qui déclenche l’apparition de la coche
 
        document.getElementById("messages").appendChild(msgDiv);
       scrollToBottom();
@@ -878,3 +880,21 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
+//message vu function
+function updateSeenStatus(msgDiv, data, key) {
+  if (data.user !== username) {
+    // 👁️ Quand l'autre survole son message
+    msgDiv.addEventListener("mouseenter", () => {
+      if (!data.seen) {
+        db.child("messages").child(key).update({ seen: true });
+      }
+    });
+  } else if (data.user === username && data.seen) {
+    // ✅ Tu vois que l'autre a vu ton message
+    const seenCheck = document.createElement("span");
+    seenCheck.className = "seen-check";
+    seenCheck.textContent = "✓✓";
+    msgDiv.appendChild(seenCheck);
+  }
+}
+
