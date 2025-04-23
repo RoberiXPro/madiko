@@ -934,18 +934,25 @@ document.addEventListener('DOMContentLoaded', () => {
 //message vu function
 function updateSeenStatus(msgDiv, data, key) {
   if (data.user !== username) {
-    // 👁️ Quand l'autre survole son message
     msgDiv.addEventListener("mouseenter", () => {
       if (!data.seen) {
         db.child("messages").child(key).update({ seen: true });
       }
     });
   } else if (data.user === username && data.seen) {
-    // ✅ Tu vois que l'autre a vu ton message
+    // ✅ Si c'est ton message et qu'il a été vu : afficher la coche
     const seenCheck = document.createElement("span");
     seenCheck.className = "seen-check";
-    seenCheck.textContent = "✓✓";
+
+    // ✅ Petite icône SVG (WhatsApp-style)
+    seenCheck.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M1 13l4 4L23 3M10 14l4 4" stroke="#00ff88" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+
     msgDiv.appendChild(seenCheck);
   }
 }
+
 
