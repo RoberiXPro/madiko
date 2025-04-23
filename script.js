@@ -30,25 +30,7 @@
       }, 5000);
     }
 //afaka atao entrée refa mi connecte
-document.addEventListener("DOMContentLoaded", function () {
-  showNotification();
-
-  const loginContainer = document.getElementById("login-container");
-  if (loginContainer) {
-    loginContainer.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        const loginBtn = document.querySelector(".login-button");
-        if (loginBtn) loginBtn.click();
-      }
-    });
-  }
-
-  // ✅ Ici : assignation du clic du bouton
-  const loginBtn = document.querySelector(".login-button");
-  if (loginBtn) loginBtn.onclick = joinRoom;
-});
-
-   
+  
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
@@ -336,16 +318,6 @@ document.addEventListener("click", function(event) {
         }
     });
 
-     document.addEventListener("DOMContentLoaded", function() {
-        loadEmojis();
-
-        document.getElementById("message-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-    });
 //Bouton Quitter
 function quitRoom() {
     // Supprime l'utilisateur de Firebase
@@ -688,31 +660,6 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    const popup = document.getElementById("image-popup");
-    const popupImg = document.getElementById("popup-img");
-    const closeBtn = document.getElementById("close-popup-btn");
-    const popupInner = document.getElementById("popup-inner");
-
-    // ✖ Fermer avec le bouton
-    closeBtn.addEventListener("click", () => {
-        popup.style.display = "none";
-    });
-
-    // 🖱️ Fermer en cliquant en dehors de l'image ou du bouton
-    popup.addEventListener("click", (e) => {
-        if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
-            popup.style.display = "none";
-        }
-    });
-
-    // ⌨️ Fermer avec la touche Échap
-    document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-            popup.style.display = "none";
-        }
-    });
-});
 setInterval(() => {
   document.querySelectorAll('.message').forEach(msg => {
     const ts = msg.dataset.timestamp;
@@ -880,3 +827,62 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
+//toutes les domloaded
+document.addEventListener("DOMContentLoaded", function () {
+  // ✅ 1. Notifications
+  showNotification();
+
+  // ✅ 2. Raccourci clavier Enter pour login
+  const loginContainer = document.getElementById("login-container");
+  if (loginContainer) {
+    loginContainer.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const loginBtn = document.querySelector(".login-button");
+        if (loginBtn) loginBtn.click();
+      }
+    });
+  }
+
+  // ✅ 3. Login button
+  const loginBtn = document.querySelector(".login-button");
+  if (loginBtn) loginBtn.onclick = joinRoom;
+
+  // ✅ 4. Emojis
+  loadEmojis();
+
+  // ✅ 5. Envoi message avec Enter
+  const messageInput = document.getElementById("message-input");
+  if (messageInput) {
+    messageInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  // ✅ 6. Popup image
+  const popup = document.getElementById("image-popup");
+  const popupImg = document.getElementById("popup-img");
+  const closeBtn = document.getElementById("close-popup-btn");
+
+  if (popup && popupImg && closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      popup.style.display = "none";
+    });
+
+    popup.addEventListener("click", (e) => {
+      if (!popupImg.contains(e.target) && !closeBtn.contains(e.target)) {
+        popup.style.display = "none";
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        popup.style.display = "none";
+      }
+    });
+  }
+});
+
+
