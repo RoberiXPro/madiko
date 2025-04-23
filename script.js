@@ -827,41 +827,63 @@ document.addEventListener('DOMContentLoaded', () => {
     isDark = !isDark;
   });
 });
-//toutes les domloaded
+
+       //toutes les DOMContentloaded fusionné 
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ 1. Notifications
+console.log("✅ DOMContentLoaded exécuté");
+
+  // ✅ Notification d'entrée
   showNotification();
 
-  // ✅ 2. Raccourci clavier Enter pour login
+  // ✅ Login par touche Enter
   const loginContainer = document.getElementById("login-container");
-  if (loginContainer) {
+  if (!loginContainer) {
+    console.warn("⚠️ Élément #login-container introuvable au moment du chargement du DOM");
+  } else {
+    console.log("🔍 login-container trouvé dans le DOM");
     loginContainer.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
+        console.log("⏎ Entrée détectée dans login-container");
         const loginBtn = document.querySelector(".login-button");
-        if (loginBtn) loginBtn.click();
+        if (loginBtn) {
+          console.log("🚪 Clic simulé sur bouton login");
+          loginBtn.click();
+        } else {
+          console.warn("⚠️ Bouton .login-button introuvable");
+        }
       }
     });
   }
 
-  // ✅ 3. Login button
+  // ✅ Bouton de login (fonction joinRoom déjà définie)
   const loginBtn = document.querySelector(".login-button");
-  if (loginBtn) loginBtn.onclick = joinRoom;
+  if (loginBtn) {
+    console.log("🎯 Bouton login trouvé et listener attaché");
+    loginBtn.onclick = () => {
+      console.log("⚡ joinRoom() déclenché par clic");
+      joinRoom();
+    };
+  } else {
+    console.warn("⚠️ Bouton .login-button non détecté lors du DOMContentLoaded");
+  }
 
-  // ✅ 4. Emojis
+  // ✅ Chargement des emojis
+  console.log("😀 Chargement des emojis...");
   loadEmojis();
 
-  // ✅ 5. Envoi message avec Enter
+  // ✅ Envoi du message avec Enter
   const messageInput = document.getElementById("message-input");
   if (messageInput) {
     messageInput.addEventListener("keydown", function(event) {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
+        console.log("✉️ Message envoyé via Entrée");
         sendMessage();
       }
     });
   }
 
-  // ✅ 6. Popup image
+  // ✅ Fermeture du popup image + touche échappement
   const popup = document.getElementById("image-popup");
   const popupImg = document.getElementById("popup-img");
   const closeBtn = document.getElementById("close-popup-btn");
