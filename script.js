@@ -233,23 +233,6 @@ function loadMessages() {
     });
     childRemovedListenerSet = true;
   }
-
-  // ✅ Ajoute ce bloc pour mettre à jour le DOM si le message est "vu"
-  db.child("messages").on("child_changed", function(snapshot) {
-    const key = snapshot.key;
-    const data = snapshot.val();
-    const msgDiv = document.getElementById(key);
-
-    if (msgDiv && data.seen && data.user === username) {
-      // Vérifie si le ✓✓ n'est pas déjà là
-      if (!msgDiv.querySelector(".seen-check")) {
-        const seenCheck = document.createElement("span");
-        seenCheck.className = "seen-check";
-        seenCheck.textContent = "✓✓";
-        msgDiv.appendChild(seenCheck);
-      }
-    }
-  });
 }
 
    
@@ -675,7 +658,6 @@ function openImagePopup(src) {
     popup.style.display = "flex";
 }
 
-//message vu, domcontentloaded fusionné 
 // ✅ Version nettoyée du DOMContentLoaded fusionné et patché
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -761,6 +743,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+    // ✅ Supprime les coches internes (au cas où déjà présentes dans les bulles)
+document.querySelectorAll('.message .seen-check').forEach(el => el.remove());
+
 });
 
 
