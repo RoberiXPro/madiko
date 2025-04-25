@@ -965,7 +965,7 @@ function updateSeenStatus(msgDiv, data, key) {
     // ✅ Petite icône SVG (WhatsApp-style)
 seenCheck.innerHTML = `
   <svg viewBox="0 0 24 24">
-    <path d="M1 13l4 4L23 3M10 14l4 4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1 13l4 4L23 3M10 14l4 4" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 `;
 
