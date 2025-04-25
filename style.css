@@ -225,15 +225,14 @@
         margin-left: 10px;
     }
 
-    .status-indicator {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 10px;
-        background-color: green;
-        transition: background-color 0.3s ease;
-    }
-
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+  background-color: green;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Animation douce */
+}
     .status-offline .status-indicator {
         background-color: gray;
     }
