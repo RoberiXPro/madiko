@@ -182,6 +182,24 @@ function removeUserFromUI(user) {
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
     }
+// 🔥 Détection de changement d'onglet pour changer le statut visuel
+document.addEventListener("visibilitychange", function () {
+  const userElement = document.getElementById("user-status-" + username);
+  if (!userElement) return;
+
+  const indicator = userElement.querySelector(".status-indicator");
+  if (!indicator) return;
+
+  if (document.visibilityState === "visible") {
+    // 🟢 Actif
+    indicator.style.backgroundColor = "#00c853"; // Vert
+    indicator.style.boxShadow = "0 0 8px #00c85399"; // Ajout glow léger vert
+  } else {
+    // 🟠 Occupé (onglet quitté)
+    indicator.style.backgroundColor = "#ff9800"; // Orange
+    indicator.style.boxShadow = "0 0 8px #ff980099"; // Ajout glow léger orange
+  }
+});
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
