@@ -182,7 +182,7 @@ function removeUserFromUI(user) {
         document.getElementById("chat-container").style.display = "block";
         loadMessages();
     }
-// 🔥 Détection de changement d'onglet pour changer le statut visuel
+// 🔥 Détection de changement d'onglet pour changer seulement la couleur du rond
 document.addEventListener("visibilitychange", function () {
   const userElement = document.getElementById("user-status-" + username);
   if (!userElement) return;
@@ -191,13 +191,13 @@ document.addEventListener("visibilitychange", function () {
   if (!indicator) return;
 
   if (document.visibilityState === "visible") {
-    // 🟢 Actif
+    // 🟢 Actif sur l'onglet
     indicator.style.backgroundColor = "#00c853"; // Vert
-    indicator.style.boxShadow = "0 0 8px #00c85399"; // Ajout glow léger vert
+    indicator.style.boxShadow = "0 0 8px #00c85399";
   } else {
-    // 🟠 Occupé (onglet quitté)
+    // 🟠 L'onglet est ouvert mais pas actif
     indicator.style.backgroundColor = "#ff9800"; // Orange
-    indicator.style.boxShadow = "0 0 8px #ff980099"; // Ajout glow léger orange
+    indicator.style.boxShadow = "0 0 8px #ff980099";
   }
 });
 
