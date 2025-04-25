@@ -231,8 +231,9 @@
   border-radius: 50%;
   margin-right: 10px;
   background-color: green;
-  transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Animation douce */
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
+
     .status-offline .status-indicator {
         background-color: gray;
     }
