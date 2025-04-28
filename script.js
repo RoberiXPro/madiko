@@ -177,29 +177,30 @@ function removeUserFromUI(user) {
     }
 }
 
-    function switchToChat() {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("chat-container").style.display = "block";
-        loadMessages();
-    }
-// 🔥 Détection de changement d'onglet pour changer seulement la couleur du rond
-document.addEventListener("visibilitychange", function () {
-  const userElement = document.getElementById("user-status-" + username);
-  if (!userElement) return;
+function switchToChat() {
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("chat-container").style.display = "block";
+    loadMessages();
 
-  const indicator = userElement.querySelector(".status-indicator");
-  if (!indicator) return;
+    firebase.database().ref(`rooms/${roomName}/call`).on("value", snapshot => {
+        const data = snapshot.val();
+        if (!data || data.from === username) return;
 
-  if (document.visibilityState === "visible") {
-    // 🟢 Actif sur l'onglet
-    indicator.style.backgroundColor = "#00c853"; // Vert
-    indicator.style.boxShadow = "0 0 8px #00c85399";
-  } else {
-    // 🟠 L'onglet est ouvert mais pas actif
-    indicator.style.backgroundColor = "#ff9800"; // Orange
-    indicator.style.boxShadow = "0 0 8px #ff980099";
-  }
-});
+        if (data.type === "offer") {
+            document.getElementById("outgoing-call-popup").style.display = "none";
+            ringtone.pause();
+            ringtone.currentTime = 0;
+            showIncomingCall(data.from);
+        } else if (data.type === "answer" && peerConnection) {
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            document.getElementById("outgoing-call-popup").style.display = "none";
+            ringtone.pause();
+            ringtone.currentTime = 0;
+        } else if (data.type === "candidate" && peerConnection) {
+            peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+    });
+}
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -1081,27 +1082,6 @@ function cancelOutgoingCall() {
   firebase.database().ref(`rooms/${roomName}/call`).remove();
 }
 
-// ✅ Écoute propre sur la bonne room
-firebase.database().ref(`rooms/${roomName}/call`).on("value", snapshot => {
-  const data = snapshot.val();
-  if (!data || data.from === username) return;
-
-  if (data.type === "offer") {
-    // Arrête l'attente côté appelant
-    document.getElementById("outgoing-call-popup").style.display = "none";
-    ringtone.pause();
-    ringtone.currentTime = 0;
-
-    showIncomingCall(data.from);
-  } else if (data.type === "answer" && peerConnection) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-    document.getElementById("outgoing-call-popup").style.display = "none";
-    ringtone.pause();
-    ringtone.currentTime = 0;
-  } else if (data.type === "candidate" && peerConnection) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-  }
-});
 
 function showIncomingCall(fromUser) {
   document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
