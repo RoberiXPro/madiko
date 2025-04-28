@@ -1021,9 +1021,29 @@ function startCall() {
     localStream = stream;
     peerConnection = new RTCPeerConnection(servers);
 
+    // Ajoute tes pistes audio locales
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
     });
+
+    // 🔥 IMPORTANT : écoute les pistes audio entrantes
+    peerConnection.ontrack = event => {
+      const remoteAudio = new Audio();
+      remoteAudio.srcObject = event.streams[0];
+      remoteAudio.play();
+    };
+
+    // 🔥 IMPORTANT : écoute l'état de connexion
+    peerConnection.onconnectionstatechange = () => {
+      console.log("🔄 État connexion (startCall) :", peerConnection.connectionState);
+
+      if (peerConnection.connectionState === "connected") {
+        console.log("✅ Connexion WebRTC établie (startCall)");
+        document.getElementById("outgoing-call-popup").style.display = "none";
+        ringtone.pause();
+        ringtone.currentTime = 0;
+      }
+    };
 
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
@@ -1042,15 +1062,17 @@ function startCall() {
         type: "offer",
         offer: peerConnection.localDescription,
         from: username,
-        status: "calling" // ➡️ Nouvelle propriété
+        status: "calling"
       });
     });
 
     ringtone.play().catch(() => {});
     document.getElementById("outgoing-call-popup").style.display = "block";
+  }).catch(error => {
+    console.error("Erreur accès au micro (startCall) :", error);
+    alert("Erreur d'accès au micro !");
   });
 }
-
 function acceptCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
   ringtone.pause();
@@ -1060,14 +1082,27 @@ function acceptCall() {
     localStream = stream;
     peerConnection = new RTCPeerConnection(servers);
 
+    // Ajoute tes pistes audio locales
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
     });
 
+    // 🔥 IMPORTANT : écoute les pistes audio entrantes
     peerConnection.ontrack = event => {
       const remoteAudio = new Audio();
       remoteAudio.srcObject = event.streams[0];
       remoteAudio.play();
+    };
+
+    // 🔥 IMPORTANT : écoute l'état de connexion
+    peerConnection.onconnectionstatechange = () => {
+      console.log("🔄 État connexion (acceptCall) :", peerConnection.connectionState);
+
+      if (peerConnection.connectionState === "connected") {
+        console.log("✅ Connexion WebRTC établie (acceptCall)");
+        ringtone.pause();
+        ringtone.currentTime = 0;
+      }
     };
 
     peerConnection.onicecandidate = event => {
@@ -1092,13 +1127,17 @@ function acceptCall() {
             type: "answer",
             answer: peerConnection.localDescription,
             from: username,
-            status: "accepted" // ➡️ Indique que l'appel est accepté
+            status: "accepted"
           });
         });
       }
     });
+  }).catch(error => {
+    console.error("Erreur accès au micro (acceptCall) :", error);
+    alert("Erreur d'accès au micro !");
   });
 }
+
 
 function declineCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
