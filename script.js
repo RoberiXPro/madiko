@@ -968,22 +968,21 @@ seenCheck.innerHTML = `
     <path d="M1 13l4 4L23 3M10 14l4 4" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 `;
-          msgDiv.appendChild(seenCheck);
+
+    msgDiv.appendChild(seenCheck);
   }
 }
-
 // WebRTC Variables
 let peerConnection;
 let localStream;
 let remoteStream;
 const servers = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" }
-  ]
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 };
 
-// Sonnerie d'appel entrant
+// Sonnerie
 const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2576/2576-preview.mp3');
+ringtone.loop = true;
 
 function startCall() {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -996,8 +995,8 @@ function startCall() {
 
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
-        db.child("rooms/" + roomName + "/call").set({
-          type: "offer",
+        firebase.database().ref(`rooms/${roomName}/call`).update({
+          type: "candidate",
           candidate: event.candidate,
           from: username
         });
@@ -1007,33 +1006,17 @@ function startCall() {
     peerConnection.createOffer().then(offer => {
       return peerConnection.setLocalDescription(offer);
     }).then(() => {
-      db.child("rooms/" + roomName + "/call").set({
+      firebase.database().ref(`rooms/${roomName}/call`).set({
         type: "offer",
         offer: peerConnection.localDescription,
         from: username
       });
     });
+
+    // ➡️ Lance la sonnerie et montre "appel en cours"
+    ringtone.play().catch(() => {});
+    document.getElementById("outgoing-call-popup").style.display = "block";
   });
-}
-
-db.child("call").on("value", snapshot => {
-  const data = snapshot.val();
-  if (!data || data.from === username) return;
-
-  if (data.type === "offer") {
-    showIncomingCall(data.from);
-  } else if (data.type === "answer" && peerConnection) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-  } else if (data.type === "candidate" && peerConnection) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-  }
-});
-
-function showIncomingCall(fromUser) {
-  document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
-  document.getElementById("incoming-call-popup").style.display = "block";
-  ringtone.loop = true;
-  ringtone.play().catch(() => {});
 }
 
 function acceptCall() {
@@ -1057,7 +1040,7 @@ function acceptCall() {
 
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
-        db.child("rooms/" + roomName + "/call").set({
+        firebase.database().ref(`rooms/${roomName}/call`).update({
           type: "candidate",
           candidate: event.candidate,
           from: username
@@ -1065,7 +1048,7 @@ function acceptCall() {
       }
     };
 
-    db.child("rooms/" + roomName + "/call").once("value").then(snapshot => {
+    firebase.database().ref(`rooms/${roomName}/call`).once("value").then(snapshot => {
       const callData = snapshot.val();
       if (callData.offer) {
         peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer)).then(() => {
@@ -1073,7 +1056,7 @@ function acceptCall() {
         }).then(answer => {
           return peerConnection.setLocalDescription(answer);
         }).then(() => {
-          db.child("rooms/" + roomName + "/call").set({
+          firebase.database().ref(`rooms/${roomName}/call`).update({
             type: "answer",
             answer: peerConnection.localDescription,
             from: username
@@ -1088,7 +1071,40 @@ function declineCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
   ringtone.pause();
   ringtone.currentTime = 0;
-  db.child("rooms/" + roomName + "/call").remove();
+  firebase.database().ref(`rooms/${roomName}/call`).remove();
 }
 
-  
+function cancelOutgoingCall() {
+  document.getElementById("outgoing-call-popup").style.display = "none";
+  ringtone.pause();
+  ringtone.currentTime = 0;
+  firebase.database().ref(`rooms/${roomName}/call`).remove();
+}
+
+// ✅ Écoute propre sur la bonne room
+firebase.database().ref(`rooms/${roomName}/call`).on("value", snapshot => {
+  const data = snapshot.val();
+  if (!data || data.from === username) return;
+
+  if (data.type === "offer") {
+    // Arrête l'attente côté appelant
+    document.getElementById("outgoing-call-popup").style.display = "none";
+    ringtone.pause();
+    ringtone.currentTime = 0;
+
+    showIncomingCall(data.from);
+  } else if (data.type === "answer" && peerConnection) {
+    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    document.getElementById("outgoing-call-popup").style.display = "none";
+    ringtone.pause();
+    ringtone.currentTime = 0;
+  } else if (data.type === "candidate" && peerConnection) {
+    peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+  }
+});
+
+function showIncomingCall(fromUser) {
+  document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
+  document.getElementById("incoming-call-popup").style.display = "block";
+  ringtone.play().catch(() => {});
+}
