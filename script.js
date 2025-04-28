@@ -178,29 +178,52 @@ function removeUserFromUI(user) {
 }
 
 function switchToChat() {
-    document.getElementById("login-container").style.display = "none";
-    document.getElementById("chat-container").style.display = "block";
-    loadMessages();
+  document.getElementById("login-container").style.display = "none";
+  document.getElementById("chat-container").style.display = "block";
+  loadMessages();
 
-    firebase.database().ref(`rooms/${roomName}/call`).on("value", snapshot => {
-        const data = snapshot.val();
-        if (!data || data.from === username) return;
+  // ✅ Important : supprime d'abord l'ancien listener s'il existe
+  if (callListener) {
+    firebase.database().ref(`rooms/${roomName}/call`).off("value", callListener);
+  }
 
-        if (data.type === "offer") {
-            document.getElementById("outgoing-call-popup").style.display = "none";
-            ringtone.pause();
-            ringtone.currentTime = 0;
-            showIncomingCall(data.from);
-        } else if (data.type === "answer" && peerConnection) {
-            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            document.getElementById("outgoing-call-popup").style.display = "none";
-            ringtone.pause();
-            ringtone.currentTime = 0;
-        } else if (data.type === "candidate" && peerConnection) {
-            peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-        }
-    });
+  callListener = function(snapshot) {
+    const data = snapshot.val();
+    if (!data) return;
+
+    if (data.status === "refused") {
+      document.getElementById("outgoing-call-popup").style.display = "none";
+      ringtone.pause();
+      ringtone.currentTime = 0;
+      alert("❌ Appel refusé !");
+      firebase.database().ref(`rooms/${roomName}/call`).remove();
+      return;
+    }
+
+    if (data.status === "accepted" && peerConnection) {
+      document.getElementById("outgoing-call-popup").style.display = "none";
+      ringtone.pause();
+      ringtone.currentTime = 0;
+    }
+
+    if (data.type === "offer" && data.from !== username) {
+      document.getElementById("outgoing-call-popup").style.display = "none";
+      ringtone.pause();
+      ringtone.currentTime = 0;
+      showIncomingCall(data.from);
+    } else if (data.type === "answer" && peerConnection) {
+      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      document.getElementById("outgoing-call-popup").style.display = "none";
+      ringtone.pause();
+      ringtone.currentTime = 0;
+    } else if (data.type === "candidate" && peerConnection) {
+      peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  };
+
+  firebase.database().ref(`rooms/${roomName}/call`).on("value", callListener);
 }
+
 
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
@@ -977,14 +1000,14 @@ seenCheck.innerHTML = `
 let peerConnection;
 let localStream;
 let remoteStream;
+let callListener = null; // ✅ Evite plusieurs écoutes
 const servers = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 };
-
-// Sonnerie
 const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2576/2576-preview.mp3');
 ringtone.loop = true;
 
+//fonction d'appel 
 function startCall() {
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
     localStream = stream;
@@ -1010,11 +1033,11 @@ function startCall() {
       firebase.database().ref(`rooms/${roomName}/call`).set({
         type: "offer",
         offer: peerConnection.localDescription,
-        from: username
+        from: username,
+        status: "calling" // ➡️ Nouvelle propriété
       });
     });
 
-    // ➡️ Lance la sonnerie et montre "appel en cours"
     ringtone.play().catch(() => {});
     document.getElementById("outgoing-call-popup").style.display = "block";
   });
@@ -1060,7 +1083,8 @@ function acceptCall() {
           firebase.database().ref(`rooms/${roomName}/call`).update({
             type: "answer",
             answer: peerConnection.localDescription,
-            from: username
+            from: username,
+            status: "accepted" // ➡️ Indique que l'appel est accepté
           });
         });
       }
@@ -1072,7 +1096,9 @@ function declineCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
   ringtone.pause();
   ringtone.currentTime = 0;
-  firebase.database().ref(`rooms/${roomName}/call`).remove();
+  firebase.database().ref(`rooms/${roomName}/call`).update({
+    status: "refused"
+  });
 }
 
 function cancelOutgoingCall() {
@@ -1082,9 +1108,10 @@ function cancelOutgoingCall() {
   firebase.database().ref(`rooms/${roomName}/call`).remove();
 }
 
-
 function showIncomingCall(fromUser) {
   document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
   document.getElementById("incoming-call-popup").style.display = "block";
   ringtone.play().catch(() => {});
 }
+
+
