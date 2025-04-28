@@ -968,6 +968,125 @@ seenCheck.innerHTML = `
     <path d="M1 13l4 4L23 3M10 14l4 4" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 `;
+// WebRTC Variables
+let peerConnection;
+let localStream;
+let remoteStream;
+const servers = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }
+  ]
+};
+
+// Sonnerie d'appel entrant
+const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2576/2576-preview.mp3');
+
+function startCall() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    localStream = stream;
+    peerConnection = new RTCPeerConnection(servers);
+
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        db.child("rooms/" + roomName + "/call").set({
+          type: "offer",
+          candidate: event.candidate,
+          from: username
+        });
+      }
+    };
+
+    peerConnection.createOffer().then(offer => {
+      return peerConnection.setLocalDescription(offer);
+    }).then(() => {
+      db.child("rooms/" + roomName + "/call").set({
+        type: "offer",
+        offer: peerConnection.localDescription,
+        from: username
+      });
+    });
+  });
+}
+
+db.child("call").on("value", snapshot => {
+  const data = snapshot.val();
+  if (!data || data.from === username) return;
+
+  if (data.type === "offer") {
+    showIncomingCall(data.from);
+  } else if (data.type === "answer" && peerConnection) {
+    peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+  } else if (data.type === "candidate" && peerConnection) {
+    peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+  }
+});
+
+function showIncomingCall(fromUser) {
+  document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
+  document.getElementById("incoming-call-popup").style.display = "block";
+  ringtone.loop = true;
+  ringtone.play().catch(() => {});
+}
+
+function acceptCall() {
+  document.getElementById("incoming-call-popup").style.display = "none";
+  ringtone.pause();
+  ringtone.currentTime = 0;
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    localStream = stream;
+    peerConnection = new RTCPeerConnection(servers);
+
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+
+    peerConnection.ontrack = event => {
+      const remoteAudio = new Audio();
+      remoteAudio.srcObject = event.streams[0];
+      remoteAudio.play();
+    };
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        db.child("rooms/" + roomName + "/call").set({
+          type: "candidate",
+          candidate: event.candidate,
+          from: username
+        });
+      }
+    };
+
+    db.child("rooms/" + roomName + "/call").once("value").then(snapshot => {
+      const callData = snapshot.val();
+      if (callData.offer) {
+        peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer)).then(() => {
+          return peerConnection.createAnswer();
+        }).then(answer => {
+          return peerConnection.setLocalDescription(answer);
+        }).then(() => {
+          db.child("rooms/" + roomName + "/call").set({
+            type: "answer",
+            answer: peerConnection.localDescription,
+            from: username
+          });
+        });
+      }
+    });
+  });
+}
+
+function declineCall() {
+  document.getElementById("incoming-call-popup").style.display = "none";
+  ringtone.pause();
+  ringtone.currentTime = 0;
+  db.child("rooms/" + roomName + "/call").remove();
+}
+
 
     msgDiv.appendChild(seenCheck);
   }
