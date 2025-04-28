@@ -968,9 +968,10 @@ seenCheck.innerHTML = `
     <path d="M1 13l4 4L23 3M10 14l4 4" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
 `;
+          msgDiv.appendChild(seenCheck);
   }
 }
-    msgDiv.appendChild(seenCheck);
+
 // WebRTC Variables
 let peerConnection;
 let localStream;
