@@ -182,7 +182,7 @@ function switchToChat() {
   document.getElementById("chat-container").style.display = "block";
   loadMessages();
 
-  // ✅ Important : supprime d'abord l'ancien listener s'il existe
+  // ✅ Avant tout, retire l'ancien listener s'il existe
   if (callListener) {
     firebase.database().ref(`rooms/${roomName}/call`).off("value", callListener);
   }
@@ -191,6 +191,7 @@ function switchToChat() {
     const data = snapshot.val();
     if (!data) return;
 
+    // ✅ Si User 2 refuse l'appel
     if (data.status === "refused") {
       document.getElementById("outgoing-call-popup").style.display = "none";
       ringtone.pause();
@@ -200,29 +201,36 @@ function switchToChat() {
       return;
     }
 
-    if (data.status === "accepted" && peerConnection) {
+    // ✅ Si User 2 accepte l'appel
+    if (data.status === "accepted") {
       document.getElementById("outgoing-call-popup").style.display = "none";
       ringtone.pause();
       ringtone.currentTime = 0;
+
+      // 🔥 Très important : ici on traite l'answer correctement
+      if (data.answer && peerConnection) {
+        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      }
     }
 
+    // ✅ Si User 1 reçoit une offre (appel entrant)
     if (data.type === "offer" && data.from !== username) {
-      document.getElementById("outgoing-call-popup").style.display = "none";
+      document.getElementById("outgoing-call-popup").style.display = "none"; // cas où tu es aussi appelant
       ringtone.pause();
       ringtone.currentTime = 0;
       showIncomingCall(data.from);
-    } else if (data.type === "answer" && peerConnection) {
-      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-      document.getElementById("outgoing-call-popup").style.display = "none";
-      ringtone.pause();
-      ringtone.currentTime = 0;
-    } else if (data.type === "candidate" && peerConnection) {
+    }
+
+    // ✅ Si User 1 reçoit des candidats ICE
+    if (data.type === "candidate" && peerConnection) {
       peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   };
 
+  // ✅ Crée l'écoute au bon moment
   firebase.database().ref(`rooms/${roomName}/call`).on("value", callListener);
 }
+
 
 
 function sendMessage() {
