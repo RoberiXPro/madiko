@@ -881,7 +881,7 @@ min-height: 120px;
   height: 100%;
   stroke: #00ff88; /* ou #ffd700 pour doré */
 }
-.incoming-call {
+.outgoing-call {
   position: fixed;
   top: 30%;
   left: 50%;
@@ -893,25 +893,13 @@ min-height: 120px;
   text-align: center;
   z-index: 9999;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  animation: pulseCall 1.5s infinite;
 }
 
-.accept-button, .decline-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-weight: bold;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-}
-
-.accept-button {
-  background-color: #00c853;
-  color: white;
-}
-
-.decline-button {
-  background-color: #d32f2f;
-  color: white;
+@keyframes pulseCall {
+  0% { box-shadow: 0 0 0 0 rgba(255,215,0,0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(255,215,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
 }
 
 </style>
