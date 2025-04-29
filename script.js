@@ -182,7 +182,6 @@ function switchToChat() {
   document.getElementById("chat-container").style.display = "block";
   loadMessages();
 
-  // ✅ Avant tout, retire l'ancien listener s'il existe
   if (callListener) {
     firebase.database().ref(`rooms/${roomName}/call`).off("value", callListener);
   }
@@ -191,7 +190,6 @@ function switchToChat() {
     const data = snapshot.val();
     if (!data) return;
 
-    // ✅ Si User 2 refuse l'appel
     if (data.status === "refused") {
       document.getElementById("outgoing-call-popup").style.display = "none";
       ringtone.pause();
@@ -201,38 +199,35 @@ function switchToChat() {
       return;
     }
 
-    // ✅ Si User 2 accepte l'appel
-    if (data.status === "accepted") {
+    if (data.status === "accepted" && peerConnection) {
+      if (data.answer) {
+        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      }
       document.getElementById("outgoing-call-popup").style.display = "none";
       ringtone.pause();
       ringtone.currentTime = 0;
-
-      // 🔥 Très important : ici on traite l'answer correctement
-      if (data.answer && peerConnection) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-      }
     }
 
-    // ✅ Si User 1 reçoit une offre (appel entrant)
     if (data.type === "offer" && data.from !== username) {
-      document.getElementById("outgoing-call-popup").style.display = "none"; // cas où tu es aussi appelant
-      ringtone.pause();
-      ringtone.currentTime = 0;
       showIncomingCall(data.from);
-    }
-
-    // ✅ Si User 1 reçoit des candidats ICE
-    if (data.type === "candidate" && peerConnection) {
-      peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   };
 
-  // ✅ Crée l'écoute au bon moment
   firebase.database().ref(`rooms/${roomName}/call`).on("value", callListener);
+
+  // 🔥 Listener pour les ICE candidates
+  firebase.database().ref(`rooms/${roomName}/candidates`).on("child_added", snapshot => {
+    const candidates = snapshot.val();
+    for (const key in candidates) {
+      const candidate = candidates[key];
+      if (peerConnection) {
+        peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    }
+  });
 }
 
-
-
+//function envoi message
 function sendMessage() {
     var messageInput = document.getElementById("message-input");
     var message = messageInput.value;
@@ -1021,37 +1016,19 @@ function startCall() {
     localStream = stream;
     peerConnection = new RTCPeerConnection(servers);
 
-    // Ajoute tes pistes audio locales
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
     });
 
-    // 🔥 IMPORTANT : écoute les pistes audio entrantes
     peerConnection.ontrack = event => {
       const remoteAudio = new Audio();
       remoteAudio.srcObject = event.streams[0];
       remoteAudio.play();
     };
 
-    // 🔥 IMPORTANT : écoute l'état de connexion
-    peerConnection.onconnectionstatechange = () => {
-      console.log("🔄 État connexion (startCall) :", peerConnection.connectionState);
-
-      if (peerConnection.connectionState === "connected") {
-        console.log("✅ Connexion WebRTC établie (startCall)");
-        document.getElementById("outgoing-call-popup").style.display = "none";
-        ringtone.pause();
-        ringtone.currentTime = 0;
-      }
-    };
-
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
-        firebase.database().ref(`rooms/${roomName}/call`).update({
-          type: "candidate",
-          candidate: event.candidate,
-          from: username
-        });
+        firebase.database().ref(`rooms/${roomName}/candidates/${username}`).push(event.candidate.toJSON());
       }
     };
 
@@ -1069,10 +1046,12 @@ function startCall() {
     ringtone.play().catch(() => {});
     document.getElementById("outgoing-call-popup").style.display = "block";
   }).catch(error => {
-    console.error("Erreur accès au micro (startCall) :", error);
+    console.error("Erreur accès micro:", error);
     alert("Erreur d'accès au micro !");
   });
 }
+
+//function acceptcall
 function acceptCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
   ringtone.pause();
@@ -1082,36 +1061,19 @@ function acceptCall() {
     localStream = stream;
     peerConnection = new RTCPeerConnection(servers);
 
-    // Ajoute tes pistes audio locales
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
     });
 
-    // 🔥 IMPORTANT : écoute les pistes audio entrantes
     peerConnection.ontrack = event => {
       const remoteAudio = new Audio();
       remoteAudio.srcObject = event.streams[0];
       remoteAudio.play();
     };
 
-    // 🔥 IMPORTANT : écoute l'état de connexion
-    peerConnection.onconnectionstatechange = () => {
-      console.log("🔄 État connexion (acceptCall) :", peerConnection.connectionState);
-
-      if (peerConnection.connectionState === "connected") {
-        console.log("✅ Connexion WebRTC établie (acceptCall)");
-        ringtone.pause();
-        ringtone.currentTime = 0;
-      }
-    };
-
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
-        firebase.database().ref(`rooms/${roomName}/call`).update({
-          type: "candidate",
-          candidate: event.candidate,
-          from: username
-        });
+        firebase.database().ref(`rooms/${roomName}/candidates/${username}`).push(event.candidate.toJSON());
       }
     };
 
@@ -1133,12 +1095,12 @@ function acceptCall() {
       }
     });
   }).catch(error => {
-    console.error("Erreur accès au micro (acceptCall) :", error);
+    console.error("Erreur accès micro:", error);
     alert("Erreur d'accès au micro !");
   });
 }
 
-
+//function refuse l'appel eto
 function declineCall() {
   document.getElementById("incoming-call-popup").style.display = "none";
   ringtone.pause();
@@ -1159,6 +1121,23 @@ function showIncomingCall(fromUser) {
   document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
   document.getElementById("incoming-call-popup").style.display = "block";
   ringtone.play().catch(() => {});
+}
+function hangupCall() {
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+  ringtone.pause();
+  ringtone.currentTime = 0;
+
+  // Nettoyer la base Firebase
+  firebase.database().ref(`rooms/${roomName}/call`).remove();
+  firebase.database().ref(`rooms/${roomName}/candidates`).remove();
+
+  document.getElementById("outgoing-call-popup").style.display = "none";
+  document.getElementById("incoming-call-popup").style.display = "none";
+
+  alert("📞 Appel terminé !");
 }
 
 
