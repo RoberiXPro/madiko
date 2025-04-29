@@ -201,20 +201,15 @@ function switchToChat() {
       return;
     }
 
-    if (data.status === "accepted" && peerConnection) {
-      if (data.answer) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer)).then(() => {
-          console.log("✅ Answer appliquée");
-          // Appliquer tous les ICE candidats reçus pendant l'attente
-          pendingCandidates.forEach(candidate => {
-            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-          });
-          pendingCandidates = []; // Vide la liste
+    if (data.status === "accepted" && peerConnection && data.answer) {
+      peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer)).then(() => {
+        console.log("✅ Answer appliquée");
+
+        pendingCandidates.forEach(candidate => {
+          peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         });
-      }
-      document.getElementById("outgoing-call-popup").style.display = "none";
-      ringtone.pause();
-      ringtone.currentTime = 0;
+        pendingCandidates = [];
+      });
     }
 
     if (data.type === "offer" && data.from !== username) {
@@ -232,13 +227,12 @@ function switchToChat() {
         if (peerConnection.remoteDescription) {
           peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         } else {
-          pendingCandidates.push(candidate); // ⏳ Attend que la remoteDescription soit posée
+          pendingCandidates.push(candidate);
         }
       }
     });
   });
 }
-
 
 //function envoi message
 function sendMessage() {
@@ -1012,8 +1006,7 @@ seenCheck.innerHTML = `
     msgDiv.appendChild(seenCheck);
   }
 }
-// WebRTC Variables
-// 🌟 Variables Globales WebRTC
+// WebRTC Variables pour Appel Vocal
 let peerConnection;
 let localStream;
 let remoteStream;
@@ -1028,6 +1021,7 @@ const servers = {
 
 const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/2576/2576-preview.mp3');
 ringtone.loop = true;
+
 
 // 🎯 Fonction pour démarrer un appel
 function startCall() {
@@ -1059,6 +1053,7 @@ function startCall() {
     alert("Erreur d'accès au micro !");
   });
 }
+
 
 // 🎯 Fonction pour accepter un appel entrant
 function acceptCall() {
@@ -1114,10 +1109,9 @@ function setupPeerConnectionHandlers() {
   };
 
   peerConnection.onconnectionstatechange = () => {
-    console.log("État connexion :", peerConnection.connectionState);
+    console.log("État de connexion :", peerConnection.connectionState);
 
     if (peerConnection.connectionState === "connected") {
-      console.log("✅ Connexion WebRTC établie !");
       document.getElementById("outgoing-call-popup").style.display = "none";
       document.getElementById("incoming-call-popup").style.display = "none";
       ringtone.pause();
@@ -1135,7 +1129,6 @@ function declineCall() {
   firebase.database().ref(`rooms/${roomName}/call`).update({ status: "refused" });
 }
 
-// 🎯 Annuler un appel sortant
 function cancelOutgoingCall() {
   document.getElementById("outgoing-call-popup").style.display = "none";
   ringtone.pause();
@@ -1144,7 +1137,6 @@ function cancelOutgoingCall() {
   stopCallTimer();
 }
 
-// 🎯 Raccrocher un appel actif
 function hangupCall() {
   if (peerConnection) {
     peerConnection.close();
@@ -1162,14 +1154,6 @@ function hangupCall() {
   alert("📞 Appel terminé !");
 }
 
-// 🎯 Afficher un appel entrant
-function showIncomingCall(fromUser) {
-  document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
-  document.getElementById("incoming-call-popup").style.display = "block";
-  ringtone.play().catch(() => {});
-}
-
-// 🎯 Démarrer le Timer d'appel
 function startCallTimer() {
   const outgoingPopup = document.getElementById("outgoing-call-popup");
   if (!outgoingPopup) return;
@@ -1186,7 +1170,6 @@ function startCallTimer() {
   }, 1000);
 }
 
-// 🎯 Stopper le Timer d'appel
 function stopCallTimer() {
   if (callTimerInterval) {
     clearInterval(callTimerInterval);
@@ -1199,3 +1182,10 @@ function stopCallTimer() {
     outgoingPopup.querySelector("p").textContent = "📞 Appel en cours...";
   }
 }
+
+function showIncomingCall(fromUser) {
+  document.getElementById("caller-name").textContent = `📞 Appel de ${fromUser}`;
+  document.getElementById("incoming-call-popup").style.display = "block";
+  ringtone.play().catch(() => {});
+}
+
