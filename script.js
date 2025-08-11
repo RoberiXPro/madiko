@@ -1,4 +1,4 @@
-    const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3');
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2870/2870-preview.mp3');
     var firebaseConfig = {
         apiKey: "AIzaSyAN7IrOQfHYJAeO49I1EZxDfupv62Ew9XI",
         authDomain: "madiko-rs.firebaseapp.com",
@@ -10,24 +10,6 @@
         measurementId: "G-EBWFWCMWFT"
     };
     firebase.initializeApp(firebaseConfig);
-// ======== Auto-reconnexion =========
-window.addEventListener('load', () => {
-    const savedUser = localStorage.getItem('chat_username');
-    const savedRoom = localStorage.getItem('chat_room');
-    if (savedUser && savedRoom) {
-        username = savedUser;
-        roomName = savedRoom;
-        console.log("Reconnexion automatique de", username, "dans", roomName);
-        autoJoinRoom();
-    }
-});
-
-function autoJoinRoom() {
-    db = firebase.database().ref("rooms/" + roomName + "/messages");
-    setOnlineStatus();
-    loadMessages();
-}
-
 
     var db;
     var username;
@@ -53,11 +35,6 @@ function autoJoinRoom() {
 function joinRoom() {
   username = document.getElementById("username").value;
   roomName = document.getElementById("room-name-input").value;
-
-    // Sauvegarde dans localStorage pour reconnexion auto
-    localStorage.setItem('chat_username', username);
-    localStorage.setItem('chat_room', roomName);
-    
   var password = document.getElementById("password-input").value;
  passwordValue = password;
 
@@ -600,7 +577,7 @@ function toggleEmojiPickerMessage(key) {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
         // Supprime l'utilisateur de Firebase
-    // window.addEventListener("beforeunload", function() {
+    window.addEventListener("beforeunload", function() {
     firebase.database().ref("users/" + username).remove();
 });
  document.addEventListener("visibilitychange", function () {
@@ -1211,4 +1188,3 @@ function showIncomingCall(fromUser) {
   document.getElementById("incoming-call-popup").style.display = "block";
   ringtone.play().catch(() => {});
 }
-
