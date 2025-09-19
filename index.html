@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head> <!-- ISOLÉ -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RS-VILLA</title>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-  <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
 
-  <!-- Feuille de style externe -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Login -->
   <div id="login-container">
     <h1>RS-Villa</h1>
     <div class="login-card">
@@ -34,21 +34,19 @@
     </div>
   </div>
 
-  <!-- Section de chat -->
-  <div class="container container-chat">
+  <!-- Chat -->
+  <div class="container container-chat" style="display:none;">
     <div id="chat-container">
       <div id="room-name-display" class="room-title"></div>
 
-      <!-- Sélecteur de thème -->
       <div id="theme-selector" class="theme-selector">
-        <button id="theme-toggle" class="theme-toggle">🌙</button>
+        <button id="theme-toggle" class="theme-toggle" title="Thème clair/sombre">🌙</button>
         <label for="theme-select" class="theme-label">🎨 Thème :</label>
         <select id="theme-select" class="theme-select">
           <option value="default">Sombre</option>
           <option value="ocean">Océan</option>
           <option value="forest">Forêt</option>
           <option value="rosewood">Rosewood</option>
-          <option value="rosewood">Amour</option>
           <option value="noir">Nuit discrète</option>
           <option value="midnight">Minuit</option>
           <option value="sepia">Sépia</option>
@@ -63,36 +61,32 @@
 
       <div id="reply-container" class="reply-container">
         <span id="reply-message"></span>
-        <button onclick="cancelReply()" class="reply-cancel">Annuler</button>
+        <button onclick="cancelReply()" class="btn-cancel-reply">Annuler</button>
       </div>
 
       <div id="messages"></div>
 
       <div id="audio-preview" class="audio-preview">
-        <audio id="audio-player" controls></audio>
-        <br>
+        <audio id="audio-player" controls></audio><br/>
         <button onclick="uploadAudio()">✅ Envoyer le vocal</button>
         <button onclick="cancelAudio()" class="cancel-audio">❌ Annuler</button>
       </div>
 
       <div id="input-section">
-        <button class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
-          <svg viewBox="0 0 24 24"><path d="M12 22C6.48 22 2 17.52 2 12s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10zm0-4a6 6 0 006-6H6a6 6 0 006 6z"/></svg>
+        <button id="emoji-toggle-btn" class="icon-button" onclick="toggleEmojiPicker()" title="Emoji">
+          <svg viewBox="0 0 24 24"><path d="M12 22C6.48 22 2 17.52 2 12S6.48 2 12 2s10 4.48 10 10-4.48 10-10 10zm0-4a6 6 0 006-6H6a6 6 0 006 6z"/></svg>
         </button>
-        <input type="text" id="message-input" placeholder="Écrivez un message">
+        <input type="text" id="message-input" placeholder="Écrivez un message" />
         <button class="icon-button" onclick="sendMessage()" title="Envoyer">
           <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
         </button>
         <button class="icon-button" onclick="startCall()" title="Appel">
-  <svg viewBox="0 0 24 24">
-    <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.21c1.21.49 2.53.76 3.88.76a1 1 0 011 1v3.5a1 1 0 01-1 1C7.27 22 2 16.73 2 10a1 1 0 011-1h3.5a1 1 0 011 1c0 1.35.27 2.67.76 3.88a1 1 0 01-.21 1.11l-2.2 2.2z"></path>
-  </svg>
-</button>
-
+          <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.21c1.21.49 2.53.76 3.88.76a1 1 0 011 1v3.5a1 1 0 01-1 1C7.27 22 2 16.73 2 10a1 1 0 011-1h3.5a1 1 0 011 1c0 1.35.27 2.67.76 3.88a1 1 0 01-.21 1.11l-2.2 2.2z"/></svg>
+        </button>
         <button class="icon-button" onclick="toggleRecording()" id="record-btn" title="Audio">
           <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm6-3a6 6 0 01-12 0H4a8 8 0 0016 0h-2zm-6 8c2.21 0 4-1.79 4-4h-2a2 2 0 01-4 0H8c0 2.21 1.79 4 4 4z"/></svg>
         </button>
-        <input type="file" id="image-input" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+        <input type="file" id="image-input" accept="image/*" multiple style="display:none" onchange="handleImageUpload(event)" />
         <button class="icon-button" onclick="document.getElementById('image-input').click()" title="Image">
           <svg viewBox="0 0 24 24"><path d="M21 19V5H3v14h18zm-2-2H5V7h14v10z"/></svg>
         </button>
@@ -102,32 +96,34 @@
       </div>
 
       <div id="emoji-picker"></div>
-<div id="image-popup" class="image-popup">
-  <div id="popup-inner" class="popup-inner">
-    <img id="popup-img" class="popup-img" />
-    <button id="close-popup-btn" class="close-popup-btn">✖</button>
-  </div>
-</div>
-      <!-- Popup pour appel entrant -->
-<div id="incoming-call-popup" class="incoming-call" style="display: none;">
-  <p id="caller-name">📞 Appel de ...</p>
-  <button onclick="acceptCall()" class="accept-button">✅ Accepter</button>
-  <button onclick="declineCall()" class="decline-button">❌ Refuser</button>
-</div>
 
-<!-- Popup pour appel en cours (appellant) -->
-<div id="outgoing-call-popup" class="outgoing-call" style="display: none;">
-  <p>📞 Appel en cours...</p>
-  <button onclick="cancelOutgoingCall()" class="decline-button">❌ Annuler</button>
-  <button onclick="hangupCall()" class="decline-button">🚫 Raccrocher</button>
-</div>
+      <!-- Image popup -->
+      <div id="image-popup" class="image-popup">
+        <div id="popup-inner" class="popup-inner">
+          <img id="popup-img" class="popup-img" alt="apercu"/>
+          <button id="close-popup-btn" class="close-popup-btn">✖</button>
+        </div>
+      </div>
 
+      <!-- Appel entrant -->
+      <div id="incoming-call-popup" class="incoming-call" style="display:none;">
+        <p id="caller-name">📞 Appel de ...</p>
+        <button onclick="acceptCall()" class="accept-button">✅ Accepter</button>
+        <button onclick="declineCall()" class="decline-button">❌ Refuser</button>
+      </div>
+
+      <!-- Appel sortant -->
+      <div id="outgoing-call-popup" class="outgoing-call" style="display:none;">
+        <p>📞 Appel en cours...</p>
+        <button onclick="cancelOutgoingCall()" class="decline-button">❌ Annuler</button>
+        <button onclick="hangupCall()" class="decline-button">🚫 Raccrocher</button>
+      </div>
     </div>
 
-    <!-- Camouflage ne sert à rien  -->
+    <!-- Stealth -->
     <div id="stealth-screen" class="stealth-screen">
-      <p class="stealth-question">Résous : 9 x 2548 + 236</p>
-      <input id="stealth-code" class="stealth-input" placeholder="Tape ici">
+      <p class="stealth-question">Résous : 9 × 2548 + 236</p>
+      <input id="stealth-code" class="stealth-input" placeholder="Tape ici" />
       <button onclick="quitStealthSafely()" class="stealth-quit">Quitter discrètement</button>
     </div>
   </div>
@@ -138,7 +134,10 @@
     <button class="icon-button stealth-button" onclick="activateStealth()" title="Camouflage">🕶️</button>
   </div>
 
-  <!-- Script principal -->
+  <!-- Toaster notification -->
+  <div id="notification" class="toast" style="display:none;">✅ Connecté à la villa</div>
+
+  <!-- Script -->
   <script src="script.js"></script>
 </body>
 </html>
